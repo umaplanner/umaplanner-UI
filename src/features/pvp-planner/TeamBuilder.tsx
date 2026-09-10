@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Select from "react-select";
 
 function cacheData(key: string, data: any): void {
   localStorage.setItem(key, JSON.stringify(data));
@@ -11,6 +12,7 @@ function getCachedData<T>(key: string): T | null {
 
 const TeamBuilder: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>("");
+  const [umaList, setUmaList] = useState<string[]>([]);
   
   const [umas, setUmas] = useState<{ [key: string]: string }>({
     uma1: "",
@@ -22,10 +24,11 @@ const TeamBuilder: React.FC = () => {
     setSelectedOption(event.target.value);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleInputChange = (key:string, selectedUma: {value:string; label:string} | null) => {
+    if (!selectedOption) return;
+
     setUmas((prev) => {
-      const updated = { ...prev, [name]: value };
+      const updated = { ...prev, [key]: selectedUma.value };
       cacheData(selectedOption, updated);
       return updated;
     });
@@ -48,6 +51,21 @@ const TeamBuilder: React.FC = () => {
     }
   }, [selectedOption]);
 
+  useEffect(() => {
+    fetch("http://localhost:5063/umas/variants")
+      .then((response) => response.json())
+      .then((data) => { 
+        setUmaList(data);
+        // cache for future use (would want some sort of "periodic refresh" of this data, but for now just cache it)
+        cacheData("umaList", data);
+      })
+      .catch((error) => console.error("Error fetching UMA variants:", error));
+  }, []);
+
+  const options = umaList.map((uma) => ({
+    value: uma.name,
+    label: uma.name,
+  }));
 
   return (
     <section>
@@ -62,25 +80,34 @@ const TeamBuilder: React.FC = () => {
       {selectedOption && 
       <label>
         Uma 1:
-        <input
-          type="text"
+        <Select
+          id="uma1-select"
           name="uma1"
-          value={umas["uma1"] || ""}
-          onChange={handleInputChange}
+          options={options}
+          value={options.find((option) => option.value === umas.uma1) || null}
+          onChange={(selectedOption) => handleInputChange("uma1", selectedOption)}
+          placeholder="Select an option"
+          isSearchable
         />
         Uma 2:
-        <input
-          type="text"
+        <Select
+          id="uma2-select"
           name="uma2"
-          value={umas["uma2"] || ""}
-          onChange={handleInputChange}
+          options={options}
+          value={options.find((option) => option.value === umas.uma1) || null}
+          onChange={(selectedOption) => handleInputChange("uma2", selectedOption)}
+          placeholder="Select an option"
+          isSearchable
         />
         Uma 3:
-        <input
-          type="text"
+        <Select
+          id="uma3-select"
           name="uma3"
-          value={umas["uma3"] || ""}
-          onChange={handleInputChange}
+          options={options}
+          value={options.find((option) => option.value === umas.uma1) || null}
+          onChange={(selectedOption) => handleInputChange("uma3", selectedOption)}
+          placeholder="Select an option"
+          isSearchable
         />
       </label>
       }

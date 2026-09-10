@@ -1,6 +1,17 @@
 import { useState, useEffect } from "react";
 import Select from "react-select";
 
+//move this to a separate file and import it when there are more data types to share between components
+interface UmaEntry {
+  id: number;
+  charaId: number;
+  variantNumber: number;
+  name: string;
+  outfitTitle: string;
+  baseCharacterName: string;
+  baseCharacterExistsInCharaData: boolean;
+}
+
 function cacheData(key: string, data: any): void {
   localStorage.setItem(key, JSON.stringify(data));
 }
@@ -12,7 +23,7 @@ function getCachedData<T>(key: string): T | null {
 
 const TeamBuilder: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string>("");
-  const [umaList, setUmaList] = useState<string[]>([]);
+  const [umaList, setUmaList] = useState<UmaEntry[]>([]);
   
   const [umas, setUmas] = useState<{ [key: string]: string }>({
     uma1: "",
@@ -24,11 +35,11 @@ const TeamBuilder: React.FC = () => {
     setSelectedOption(event.target.value);
   };
 
-  const handleInputChange = (key:string, selectedUma: {value:string; label:string} | null) => {
+  const handleInputChange = (key:string, selectedUma: UmaEntry | null) => {
     if (!selectedOption) return;
 
     setUmas((prev) => {
-      const updated = { ...prev, [key]: selectedUma.value };
+      const updated = { ...prev, [key]: selectedUma?.name ?? ""};
       cacheData(selectedOption, updated);
       return updated;
     });
@@ -56,16 +67,12 @@ const TeamBuilder: React.FC = () => {
       .then((response) => response.json())
       .then((data) => { 
         setUmaList(data);
+        console.log(data);
         // cache for future use (would want some sort of "periodic refresh" of this data, but for now just cache it)
         cacheData("umaList", data);
       })
       .catch((error) => console.error("Error fetching UMA variants:", error));
   }, []);
-
-  const options = umaList.map((uma) => ({
-    value: uma.name,
-    label: uma.name,
-  }));
 
   return (
     <section>
@@ -77,40 +84,54 @@ const TeamBuilder: React.FC = () => {
       </select>
       <p>Selected event: {selectedOption}</p>
 
-      {selectedOption && 
-      <label>
-        Uma 1:
-        <Select
-          id="uma1-select"
-          name="uma1"
-          options={options}
-          value={options.find((option) => option.value === umas.uma1) || null}
-          onChange={(selectedOption) => handleInputChange("uma1", selectedOption)}
-          placeholder="Select an option"
-          isSearchable
-        />
-        Uma 2:
-        <Select
-          id="uma2-select"
-          name="uma2"
-          options={options}
-          value={options.find((option) => option.value === umas.uma1) || null}
-          onChange={(selectedOption) => handleInputChange("uma2", selectedOption)}
-          placeholder="Select an option"
-          isSearchable
-        />
-        Uma 3:
-        <Select
-          id="uma3-select"
-          name="uma3"
-          options={options}
-          value={options.find((option) => option.value === umas.uma1) || null}
-          onChange={(selectedOption) => handleInputChange("uma3", selectedOption)}
-          placeholder="Select an option"
-          isSearchable
-        />
-      </label>
-      }
+      {selectedOption && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <label htmlFor="uma1-select">
+            Uma 1:
+            <Select<UmaEntry>
+              id="uma1-select"
+              name="uma1"
+              options={umaList}
+              getOptionLabel={(uma) => uma.name}
+              getOptionValue={(uma) => String(uma.id)}
+              value={umaList.find((uma) => uma.name === umas.uma1) ?? null}
+              onChange={(selected) => handleInputChange("uma1", selected)}
+              placeholder="Select an option"
+              isSearchable
+            />
+          </label>
+
+          <label htmlFor="uma2-select">
+            Uma 2:
+            <Select<UmaEntry>
+              id="uma2-select"
+              name="uma2"
+              options={umaList}
+              getOptionLabel={(uma) => uma.name}
+              getOptionValue={(uma) => String(uma.id)}
+              value={umaList.find((uma) => uma.name === umas.uma2) ?? null}
+              onChange={(selected) => handleInputChange("uma2", selected)}
+              placeholder="Select an option"
+              isSearchable
+            />
+          </label>
+
+          <label htmlFor="uma3-select">
+            Uma 3:
+            <Select<UmaEntry>
+              id="uma3-select"
+              name="uma3"
+              options={umaList}
+              getOptionLabel={(uma) => uma.name}
+              getOptionValue={(uma) => String(uma.id)}
+              value={umaList.find((uma) => uma.name === umas.uma3) ?? null}
+              onChange={(selected) => handleInputChange("uma3", selected)}
+              placeholder="Select an option"
+              isSearchable
+            />
+          </label>
+        </div>
+      )}
     </section>
 
   );

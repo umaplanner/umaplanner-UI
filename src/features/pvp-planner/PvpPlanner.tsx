@@ -5,11 +5,6 @@ type PlannerTab = "event" | "teams";
 
 export default function PvpPlanner() {
   const [activeTab, setActiveTab] = useState<PlannerTab>("event");
-  const [selectedOption, setSelectedOption] = useState<string>("");
-
-  const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedOption(event.target.value);
-  };
 
   return (
     <section>

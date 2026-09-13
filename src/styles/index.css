@@ -1,7 +1,15 @@
 :root {
+  --text-color: #f7f7f8;
+  --background-color: #373737;
+
+  --header-background-color: #205065;
+  --main-background-color: #373738;
+
+
+
   font-family: Inter, system-ui, sans-serif;
-  color: #202124;
-  background: #f7f7f8;
+  color: var(--text-color);
+  background: var(--background-color);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -16,8 +24,8 @@ body {
 }
 
 .site-header {
-  border-bottom: 1px solid #ddd;
-  background: #fff;
+  border-bottom: 1px solid rgba(var(--header-background-color), 0.5);
+  background: var(--header-background-color);
 }
 
 .site-header nav {
@@ -26,11 +34,17 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 1rem;
+  justify-content: center;
 }
 
 .site-header a {
   color: inherit;
   text-decoration: none;
+}
+
+.site-header a:hover {
+  /* add slight animation */
+  filter: brightness(0.8);
 }
 
 .site-header a.active {
@@ -41,10 +55,17 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 2rem 1rem;
+  width: 50%;
+  height: 100vh;
+  background: var(--main-background-color);
 }
 
 button {
   margin-right: 0.5rem;
   padding: 0.5rem 0.75rem;
   cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(0.95);
 }

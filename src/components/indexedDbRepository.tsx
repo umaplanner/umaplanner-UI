@@ -22,7 +22,12 @@ export class IndexedDbRepository<T extends object> {
       config.databaseName,
       config.version,
       {
-        upgrade: (database, _oldVersion, _newVersion, transaction) => {
+        upgrade: (
+          database,
+          _oldVersion,
+          _newVersion,
+          transaction
+        ) => {
           const store = database.objectStoreNames.contains(
             config.storeName
           )
@@ -43,6 +48,15 @@ export class IndexedDbRepository<T extends object> {
     );
   }
 
+  async getByKey(key: T[keyof T]): Promise<T | undefined> {
+    const database = await this.databasePromise;
+
+    return database.get(
+      this.config.storeName,
+      key as IDBValidKey
+    ) as Promise<T | undefined>;
+  }
+
   async getSingle<K extends keyof T>(
     column: K,
     key: T[K]
@@ -60,6 +74,15 @@ export class IndexedDbRepository<T extends object> {
     const database = await this.databasePromise;
 
     return database.getAll(this.config.storeName) as Promise<T[]>;
+  }
+
+  async put(entry: T): Promise<IDBValidKey> {
+    const database = await this.databasePromise;
+
+    return database.put(
+      this.config.storeName,
+      entry
+    ) as Promise<IDBValidKey>;
   }
 
   async addMany(entries: T[]): Promise<void> {

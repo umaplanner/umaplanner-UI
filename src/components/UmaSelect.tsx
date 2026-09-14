@@ -75,7 +75,7 @@ export default function UmaSelect({
         name={`uma${teamNumber}`}
         options={umaList}
         getOptionLabel={(uma) => `${uma.outfitTitle} ${uma.baseCharacterName}`}
-        getOptionValue={(uma) => uma.id}
+        getOptionValue={(uma) => String(uma.id)}
         value={value}
         onChange={onChange}
         placeholder="Select an Uma"

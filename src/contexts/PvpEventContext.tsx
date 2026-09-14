@@ -16,7 +16,7 @@ const EventContext = createContext<EventContextValue | undefined>(
 
 export function EventProvider({ children }: { children: ReactNode }) {
   const [selectedEvent, setSelectedEvent] = useState<string>(() => {
-    return localStorage.getItem("selectedEvent");
+    return localStorage.getItem("selectedEvent") ?? "";
   });
 
   function handleEventChange(event: string) {

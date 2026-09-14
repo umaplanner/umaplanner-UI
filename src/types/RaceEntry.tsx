@@ -9,6 +9,7 @@ export interface RaceEntry {
   groundCondition: string;
   direction: string;
   season: string;
+  weather: string;
   releaseDate: string;
   isConfirmed: boolean;
 }

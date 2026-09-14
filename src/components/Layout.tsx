@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { useEvent } from "../contexts/PvpEventContext";
-import type { RaceEntry } from "../types/UmaEntry";
+import type { RaceEntry } from "../types/RaceEntry";
 import { IndexedDbRepository } from "./indexedDbRepository";
 
 type LayoutProps = {
@@ -24,7 +24,7 @@ export default function Layout({children}: LayoutProps) {
           });
 
 
-        const storedEntries = await db.getAll("races");
+        const storedEntries = await db.getAll();
         if (storedEntries.length > 0) {
           setRaceEntries(storedEntries as RaceEntry[]);
           console.log("Loaded race entries from IndexedDB");

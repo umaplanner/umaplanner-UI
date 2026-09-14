@@ -9,16 +9,16 @@ import type { RaceEntry } from "../../types/RaceEntry";
 
 type EventTeam = {
   event: string;
-  uma1: string;
-  uma2: string;
-  uma3: string;
+  uma1: number | null;
+  uma2: number | null;
+  uma3: number | null;
 };
 
 const emptyUmas: EventTeam = {
   event: "",
-  uma1: "",
-  uma2: "",
-  uma3: "",
+  uma1: null,
+  uma2: null,
+  uma3: null,
 };
 
 function cacheData<T>(key: string, data: T): void {
@@ -143,9 +143,9 @@ export default function PvpPlanner() {
 
         const newTeam: EventTeam = {
           event: selectedEvent,
-          uma1: "",
-          uma2: "",
-          uma3: "",
+          uma1: null,
+          uma2: null,
+          uma3: null,
         };
 
         await db.put(newTeam);
@@ -210,7 +210,7 @@ export default function PvpPlanner() {
     const updatedUmas: EventTeam = {
       ...umas,
       event: selectedEvent,
-      [key]: selectedUma?.name ?? "",
+      [key]: selectedUma?.id ?? null,
     };
 
     setUmas(updatedUmas);
@@ -224,8 +224,12 @@ export default function PvpPlanner() {
     }
   }
 
-  function getSelectedUma(name: string): UmaEntry | null {
-    return umaList.find((uma) => uma.name === name) ?? null;
+  function getSelectedUma(id: number | null): UmaEntry | null {
+    if (id === null) {
+      return null;
+    }
+
+    return umaList.find((uma) => uma.id === id) ?? null;
   }
 
   return (

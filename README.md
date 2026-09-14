@@ -1,32 +1,90 @@
-# React + TypeScript + Vite
+# UmaPlanner
+A tool for managing PvP related data and results
+Here's the links to the [Design](./docs/design.md) and [Roadmap](./docs/roadmap.md) of the project.
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+## Planned Core Features
+Possible future improvements is listed in **bold**, and features in *italics* are not fully decided how it should be implemented.
 
-Currently, two official plugins are available:
+- [x] Creation of teams for CM/LoH
+    - [ ] **During uma selection, it should show the proc time of their unique on the track**
+- [ ] Have public stats for uma/card usage for each event
+- [ ] Create a discord bot for easier acces/sharing of plans
+- [ ] Auth using Discord
+- [ ] ***Simulation of most impactful skills for each CM***
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Design and Setup of the Project
 
-## React Compiler
+Basic description of the different pages and their functionalities.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Navbar
+The navbar is the core of this tool. It should contain a selector for the events which should change the content of all the pages.
 
-## Expanding the Oxlint configuration
+### Pages
+**Home Page**
+The main dashboard where you can see an overview of upcoming events.
+- [ ] The ability to pin teams or events is planned for future updates.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+**PvP Overview**
+A page dedicated to the general plans the community has for whichever pvp event is selected.
+- [ ] Should show PvP events their most common individual uma, team comp, and allow to further inspect.
+- [ ] Past PvP events should have the "most common" locked in this page even if users change their plans
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+**PvP Planner Page**
+A page where you can plan and organize your umas, support cards, and lineages. 
+The content of this page should change based on the event selected in the navbar.
+- [ ] Should have public stats for uma/card usage for each event
+- [ ] Should allow users to private their plans if they wish
+- [ ] Should allow users to share their plans as an anonymous user if they wish
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Roadmap
+
+### v0.1.0 - Basic planner
+- [x] PvP Planner page 
+    - [x] Only own team for the next couple of CMs
+    - [x] Umas only in searchable dropdowns
+    - [x] Implement cache as the initial method for saving
+
+### v0.2.0 - Expand PvP Planner
+- [ ] Dynamic list of events in the navbar
+    - [ ] All events until current JP server events
+    - [ ] Track conditions for each event
+    - [ ] Focus on Current event, if no current event, focus on next
+
+### v0.2.1 - Improve uma search
+- [ ] Implement images and a new search instead of dropdowns for uma selection
+    - [ ] Use cloudflare r2 or similar object storage for images
+
+### v0.3.0 - Auth
+- [ ] Auth using Discord
+- [ ] Save and retrieve based on auth
+- [ ] Design and implement database
+
+### v0.3.1 - Admin Page
+- [ ] Implement admin page to allow admins to:
+    - [ ] Add new events
+    - [ ] Add new uma and cards 
+        - Also upload images to object storage to them
+
+### v0.3.2 - Settings
+- [ ] Implement settings for:
+    - [ ] Private/Anonymous plans
+    - [ ] Past events toggle
+    - [ ] How far into the future the event selector should look
+    - More to come
+
+### v0.4.0 - Implement failsafes
+- [ ] Implement failsafes for users to not lose their plans if they accidentally close the page or refresh
+- [ ] Ensure it is not possible to select several of the same uma in a team
+- More to come
+
+
+### v1.0.0 - PvP Overview
+- PvP Overview page
+    - Show PvP events their most common uma and most common uma
+    - Past PvP events should have the "most common" locked even if users change their plans
+
+### v3.0.0 - Team sharing, Privacy, and Discord bot
+- Implement discord bot (as a separate repository) for easier access/sharing of plans
+- Allow users to private their plans or become anonymous if they wish
+
+

@@ -46,8 +46,8 @@ The content of this page should change based on the event selected in the navbar
 
 ### v0.2.0 - Expand PvP Planner
 - [ ] Dynamic list of events in the navbar
-    - [ ] All events until current JP server events
-    - [ ] Track conditions for each event
+    - [x] All events until current JP server events
+    - [x] Track conditions for each event
     - [ ] Focus on Current event, if no current event, focus on next
 
 ### v0.2.1 - Improve uma search

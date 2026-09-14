@@ -69,3 +69,21 @@ button {
 button:hover {
   filter: brightness(0.95);
 }
+
+.uma-select__control {
+  background-color: #f0f0f0;
+  border-color: #007bff;
+}
+
+.uma-select__option {
+  color: #000000;
+}
+
+.uma-select__option--is-selected {
+  background-color: #007bff;
+  color: #000000;
+}
+
+.uma-select__option--is-focused {
+  background-color: #e6f7ff;
+}

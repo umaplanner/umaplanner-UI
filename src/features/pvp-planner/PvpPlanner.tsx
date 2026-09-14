@@ -2,12 +2,23 @@ import { useEffect, useState } from "react";
 import "../../styles/PvpPlanner.css";
 import { useEvent } from "../../contexts/PvpEventContext";
 import UmaSelect from "../../components/UmaSelect";
+import RaceDisplay from "../../components/RaceDisplay";
+import { IndexedDbRepository } from "../../components/indexedDbRepository";
 import type { UmaEntry } from "../../types/UmaEntry";
+import type { RaceEntry } from "../../types/RaceEntry";
 
-type SelectedUmas = {
-  uma1: string;
-  uma2: string;
-  uma3: string;
+type EventTeam = {
+  event: string;
+  uma1: number | null;
+  uma2: number | null;
+  uma3: number | null;
+};
+
+const emptyUmas: EventTeam = {
+  event: "",
+  uma1: null,
+  uma2: null,
+  uma3: null,
 };
 
 function cacheData<T>(key: string, data: T): void {
@@ -21,20 +32,90 @@ function getCachedData<T>(key: string): T | null {
     return null;
   }
 
-  return JSON.parse(cached) as T;
+  try {
+    return JSON.parse(cached) as T;
+  } catch (error) {
+    console.error(`Could not parse cached data for key "${key}"`, error);
+    return null;
+  }
 }
 
-const emptyUmas: SelectedUmas = {
-  uma1: "",
-  uma2: "",
-  uma3: "",
-};
+function createRaceRepository() {
+  return new IndexedDbRepository<RaceEntry>({
+    databaseName: "RaceDB",
+    version: 1,
+    storeName: "races",
+    keyPath: "eventTitle",
+    indexes: [
+      {
+        name: "eventTitle",
+        unique: true,
+      },
+    ],
+  });
+}
+
+function createTeamRepository() {
+  return new IndexedDbRepository<EventTeam>({
+    databaseName: "TeamDB",
+    version: 1,
+    storeName: "teams",
+    keyPath: "event",
+  });
+}
 
 export default function PvpPlanner() {
   const { selectedEvent } = useEvent();
 
+  const [raceEntry, setRaceEntry] = useState<RaceEntry>();
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
-  const [umas, setUmas] = useState<SelectedUmas>(emptyUmas);
+  const [umas, setUmas] = useState<EventTeam>(emptyUmas);
+
+  useEffect(() => {
+    if (!selectedEvent) {
+      setRaceEntry(undefined);
+      return;
+    }
+
+    let cancelled = false;
+
+    async function fetchRaceEntry() {
+      try {
+        const db = createRaceRepository();
+
+        const eventDetails = await db.getSingle(
+          "eventTitle",
+          selectedEvent
+        );
+
+        if (cancelled) {
+          return;
+        }
+
+        if (eventDetails === undefined) {
+          console.log(
+            `No race details found for ${selectedEvent} in IndexedDB`
+          );
+          setRaceEntry(undefined);
+          return;
+        }
+
+        setRaceEntry(eventDetails);
+
+        console.log(
+          `${selectedEvent} race details loaded from IndexedDB`
+        );
+      } catch (error) {
+        console.error("Error fetching race entry:", error);
+      }
+    }
+
+    void fetchRaceEntry();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -42,16 +123,48 @@ export default function PvpPlanner() {
       return;
     }
 
-    const cachedData = getCachedData<Partial<SelectedUmas>>(selectedEvent);
+    let cancelled = false;
 
-    const eventUmas: SelectedUmas = {
-      uma1: cachedData?.uma1 ?? "",
-      uma2: cachedData?.uma2 ?? "",
-      uma3: cachedData?.uma3 ?? "",
+    async function fetchTeam() {
+      try {
+        const db = createTeamRepository();
+
+        const storedTeam = await db.getByKey(selectedEvent);
+
+        if (cancelled) {
+          return;
+        }
+
+        if (storedTeam) {
+          setUmas(storedTeam);
+          console.log(`Loaded ${selectedEvent} team from IndexedDB`);
+          return;
+        }
+
+        const newTeam: EventTeam = {
+          event: selectedEvent,
+          uma1: null,
+          uma2: null,
+          uma3: null,
+        };
+
+        await db.put(newTeam);
+
+        if (!cancelled) {
+          setUmas(newTeam);
+        }
+
+        console.log(`Created empty team for ${selectedEvent}`);
+      } catch (error) {
+        console.error("Error fetching team:", error);
+      }
+    }
+
+    void fetchTeam();
+
+    return () => {
+      cancelled = true;
     };
-
-    setUmas(eventUmas);
-    cacheData(selectedEvent, eventUmas);
   }, [selectedEvent]);
 
   useEffect(() => {
@@ -62,71 +175,95 @@ export default function PvpPlanner() {
       return;
     }
 
-    fetch("http://localhost:5063/umas/variants")
-      .then((response) => {
+    async function fetchUmaList() {
+      try {
+        const response = await fetch(
+          "http://localhost:5063/umas/variants"
+        );
+
         if (!response.ok) {
-          throw new Error(`Request failed with status ${response.status}`);
+          throw new Error(
+            `Request failed with status ${response.status}`
+          );
         }
 
-        return response.json() as Promise<UmaEntry[]>;
-      })
-      .then((data) => {
+        const data = (await response.json()) as UmaEntry[];
+
         setUmaList(data);
         cacheData("umaList", data);
-      })
-      .catch((error) => {
+      } catch (error) {
         console.error("Error fetching UMA variants:", error);
-      });
+      }
+    }
+
+    void fetchUmaList();
   }, []);
 
-  function handleInputChange(
-    key: keyof SelectedUmas,
+  async function handleInputChange(
+    key: keyof Pick<EventTeam, "uma1" | "uma2" | "uma3">,
     selectedUma: UmaEntry | null
   ) {
     if (!selectedEvent) {
       return;
     }
 
-    setUmas((previousUmas) => {
-      const updatedUmas: SelectedUmas = {
-        ...previousUmas,
-        [key]: selectedUma?.name ?? "",
-      };
+    const updatedUmas: EventTeam = {
+      ...umas,
+      event: selectedEvent,
+      [key]: selectedUma?.id ?? null,
+    };
 
-      cacheData(selectedEvent, updatedUmas);
+    setUmas(updatedUmas);
 
-      return updatedUmas;
-    });
+    try {
+      const db = createTeamRepository();
+
+      await db.put(updatedUmas);
+    } catch (error) {
+      console.error("Error saving team:", error);
+    }
   }
 
-  function getSelectedUma(name: string) {
-    return umaList.find((uma) => uma.name === name) ?? null;
+  function getSelectedUma(id: number | null): UmaEntry | null {
+    if (id === null) {
+      return null;
+    }
+
+    return umaList.find((uma) => uma.id === id) ?? null;
   }
 
   return (
-    <>
-      <div className="planner">
-        <div className="uma-select">
-          <UmaSelect
-            teamNumber={1}
-            umaList={umaList}
-            value={getSelectedUma(umas.uma1)}
-            onChange={(selected) => handleInputChange("uma1", selected)}
-          />
-          <UmaSelect
-            teamNumber={2}
-            umaList={umaList}
-            value={getSelectedUma(umas.uma2)}
-            onChange={(selected) => handleInputChange("uma2", selected)}
-          />
-          <UmaSelect
-            teamNumber={3}
-            umaList={umaList}
-            value={getSelectedUma(umas.uma3)}
-            onChange={(selected) => handleInputChange("uma3", selected)}
-          />
-        </div>
+    <div className="planner">
+      <RaceDisplay raceEntry={raceEntry} />
+
+      <div className="uma-select">
+        <UmaSelect
+          teamNumber={1}
+          umaList={umaList}
+          value={getSelectedUma(umas.uma1)}
+          onChange={(selected) => {
+            void handleInputChange("uma1", selected);
+          }}
+        />
+
+        <UmaSelect
+          teamNumber={2}
+          umaList={umaList}
+          value={getSelectedUma(umas.uma2)}
+          onChange={(selected) => {
+            void handleInputChange("uma2", selected);
+          }}
+        />
+
+        <UmaSelect
+          teamNumber={3}
+          umaList={umaList}
+          value={getSelectedUma(umas.uma3)}
+          onChange={(selected) => {
+            void handleInputChange("uma3", selected);
+          }}
+        />
       </div>
-    </>
+    </div>
   );
 }

@@ -45,10 +45,11 @@ The content of this page should change based on the event selected in the navbar
     - [x] Implement cache as the initial method for saving
 
 ### v0.2.0 - Expand PvP Planner
-- [ ] Dynamic list of events in the navbar
+- [x] Dynamic list of events in the navbar
     - [x] All events until current JP server events
     - [x] Track conditions for each event
-    - [ ] Focus on Current event, if no current event, focus on next
+    - [x] Focus on Current event, if no current event, focus on next
+- [ ] Implement indexedDB for saving plans locally 
 
 ### v0.2.1 - Improve uma search
 - [ ] Implement images and a new search instead of dropdowns for uma selection

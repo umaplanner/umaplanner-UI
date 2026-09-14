@@ -1,0 +1,83 @@
+.race-card {
+  overflow: hidden;
+  color: #f3f3f3;
+  background: #1e1f23;
+  border: 1px solid #292a2f;
+  border-radius: 8px;
+}
+
+.race-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 1rem 1.25rem 1.5rem;
+  background: #191a1e;
+}
+
+.race-card__number {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #96969b;
+  font-size: 0.8rem;
+}
+
+.race-card__title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.race-card__tags {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.race-card__tags span {
+  padding: 0.5rem 0.75rem;
+  color: #d8d8da;
+  background: #202126;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.race-card__details {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  border-top: 1px solid #292a2f;
+}
+
+.race-card__details > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.race-card__label {
+  color: #85868b;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
+
+.race-card__details > div > span:last-child {
+  color: #dedee0;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 800px) {
+  .race-card__header,
+  .race-card__details {
+    flex-direction: column;
+  }
+
+  .race-card__tags {
+    flex-wrap: wrap;
+  }
+
+  .race-card__details {
+    align-items: stretch;
+  }
+}

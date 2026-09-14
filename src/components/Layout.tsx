@@ -2,24 +2,12 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { useEvent } from "../contexts/PvpEventContext";
+import type { RaceEntry } from "../types/UmaEntry";
+import { IndexedDbRepository } from "./indexedDbRepository";
 
 type LayoutProps = {
   children: ReactNode;
 };
-
-
-interface RaceEntry {
-  eventTitle: string;
-  name: string;
-  distanceType: string;
-  racecourse: string;
-  distance: number;
-  condition: string;
-  handed: string;
-  season: string;
-  releaseDate: string;
-  isConfirmed: boolean;
-}
 
 export default function Layout({children}: LayoutProps) {
   const { selectedEvent, setSelectedEvent } = useEvent();
@@ -28,11 +16,30 @@ export default function Layout({children}: LayoutProps) {
   useEffect(() => {
     const fetchRaceEntries = async () => {
       try {
-        const response = await fetch('http://localhost:5063/races'); 
+        const db = new IndexedDbRepository<RaceEntry>({
+            databaseName: "RaceDB",
+            version: 1,
+            storeName: "races",
+            keyPath: "eventTitle",
+          });
+
+
+        const storedEntries = await db.getAll("races");
+        if (storedEntries.length > 0) {
+          setRaceEntries(storedEntries as RaceEntry[]);
+          console.log("Loaded race entries from IndexedDB");
+          return;
+        }
+
+        const response = await fetch("http://localhost:5063/races");
         const data: RaceEntry[] = await response.json();
+
+        await db.addMany(data);
+        console.log("Fetched and stored race entries in IndexedDB");
+
         setRaceEntries(data);
       } catch (error) {
-        console.error('Error fetching race entries:', error);
+        console.error("Error fetching race entries:", error);
       }
     };
 

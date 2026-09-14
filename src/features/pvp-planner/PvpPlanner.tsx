@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import "../../styles/PvpPlanner.css";
 import { useEvent } from "../../contexts/PvpEventContext";
 import UmaSelect from "../../components/UmaSelect";
+import RaceDisplay from "../../components/RaceDisplay";
+import { IndexedDbRepository } from "../../components/indexedDbRepository";
 import type { UmaEntry } from "../../types/UmaEntry";
+import type { RaceEntry } from "../../types/RaceEntry";
 
 type SelectedUmas = {
   uma1: string;
@@ -32,9 +35,55 @@ const emptyUmas: SelectedUmas = {
 
 export default function PvpPlanner() {
   const { selectedEvent } = useEvent();
+  const [raceEntry, setRaceEntry] = useState<RaceEntry>();
 
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
   const [umas, setUmas] = useState<SelectedUmas>(emptyUmas);
+
+  useEffect(() => {
+    if (!selectedEvent) {
+      return;
+    }
+
+    const fetchRaceEntry = async () => {
+      try {
+        const repository = new IndexedDbRepository<RaceEntry>({
+          databaseName: "RaceDB",
+          version: 1,
+          storeName: "races",
+          keyPath: "eventTitle",
+          indexes: [
+            {
+              name: "eventTitle",
+              unique: true,
+            },
+          ],
+        });
+
+        const eventDetails = await repository.getSingle(
+          "eventTitle",
+          selectedEvent
+        );
+
+        if (eventDetails === undefined) {
+          console.log(
+            `No race details found for ${selectedEvent} in IndexedDB`
+          );
+          return;
+        }
+
+        setRaceEntry(eventDetails);
+
+        console.log(
+          `${selectedEvent} race details loaded from IndexedDB`
+        );
+      } catch (error) {
+        console.error("Error fetching race entry:", error);
+      }
+    };
+
+    fetchRaceEntry();
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -102,10 +151,10 @@ export default function PvpPlanner() {
   function getSelectedUma(name: string) {
     return umaList.find((uma) => uma.name === name) ?? null;
   }
-
   return (
     <>
       <div className="planner">
+        <RaceDisplay raceEntry={raceEntry} />
         <div className="uma-select">
           <UmaSelect
             teamNumber={1}

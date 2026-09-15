@@ -20,7 +20,7 @@ const umas: UmaEntry[] = [
 ];
 
 describe("UmaSelect", () => {
-  it("renders the team label and searchable options", async () => {
+  it("opens a searchable card popup", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
 
@@ -35,9 +35,16 @@ describe("UmaSelect", () => {
 
     expect(screen.getByText("Uma 2:")).toBeInTheDocument();
 
-    await user.click(screen.getByRole("combobox"));
-    expect(screen.getByText("Brave Special Week")).toBeInTheDocument();
-    expect(screen.getByText("Cute Silence Suzuka")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Select an Uma for team 2" }),
+    );
+    expect(screen.getByRole("dialog", { name: "Select Uma 2" })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search by outfit or character")).toBeInTheDocument();
+    expect(screen.getByText("Brave")).toBeInTheDocument();
+    expect(screen.getByText("Special Week")).toBeInTheDocument();
+    expect(screen.getByText("Cute")).toBeInTheDocument();
+    expect(screen.getByText("Silence Suzuka")).toBeInTheDocument();
+    expect(screen.getAllByRole("img")).toHaveLength(2);
   });
 
   it("reports the selected Uma", async () => {
@@ -53,9 +60,42 @@ describe("UmaSelect", () => {
       />,
     );
 
-    await user.click(screen.getByRole("combobox"));
-    await user.click(screen.getByText("Brave Special Week"));
+    await user.click(
+      screen.getByRole("button", { name: "Select an Uma for team 1" }),
+    );
+    await user.click(screen.getAllByRole("button", { name: /Brave/ })[0]);
 
     expect(onChange.mock.calls[0]?.[0]).toEqual(umas[0]);
+  });
+
+  it("clears the search when the popup is closed", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <UmaSelect
+        teamNumber={1}
+        umaList={umas}
+        value={null}
+        onChange={vi.fn()}
+      />,
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Select an Uma for team 1" }),
+    );
+
+    const searchInput = screen.getByPlaceholderText(
+      "Search by outfit or character",
+    );
+    await user.type(searchInput, "Brave");
+    await user.click(screen.getByRole("button", { name: "Close Uma selector" }));
+
+    await user.click(
+      screen.getByRole("button", { name: "Select an Uma for team 1" }),
+    );
+
+    expect(
+      screen.getByPlaceholderText("Search by outfit or character"),
+    ).toHaveValue("");
   });
 });

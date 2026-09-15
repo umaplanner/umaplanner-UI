@@ -1,55 +1,182 @@
-.uma-select__control {
-  min-height: 38px;
+.uma-select__trigger {
+  display: flex;
+  min-height: 52px;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.45rem 0.7rem;
   color: #e9edf5;
-  background-color: #1b2533;
+  background: #1b2533;
   border: 1px solid #273447;
   border-radius: 0.6rem;
-  box-shadow: none;
+  font: inherit;
+  text-align: left;
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.uma-select__control:hover,
-.uma-select__control--is-focused {
+.uma-select__trigger:hover,
+.uma-select__trigger:focus-visible {
   border-color: #69b7ff;
   box-shadow: 0 0 0 3px rgba(105, 183, 255, 0.12);
 }
 
+.uma-select__trigger img {
+  width: 2.25rem;
+  height: 2.25rem;
+  object-fit: cover;
+  border-radius: 0.35rem;
+}
+
+.uma-select__trigger span {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.uma-select__trigger small {
+  color: #aebdce;
+  font-size: 0.75rem;
+}
+
+.uma-select__trigger-placeholder {
+  color: #8291a5;
+}
+
+.uma-select__backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(5, 8, 13, 0.7);
+  backdrop-filter: blur(5px);
+}
+
+.uma-select__popup {
+  width: min(720px, 100%);
+  max-height: min(720px, 90vh);
+  overflow: auto;
+  padding: 1.25rem;
+  background: #151c27;
+  border: 1px solid #34465d;
+  border-radius: 0.9rem;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.uma-select__popup-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.uma-select__popup-header h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.25rem;
+}
+
+.uma-select__popup-kicker {
+  color: #69b7ff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.uma-select__close {
+  padding: 0.1rem 0.5rem;
+  color: #aebdce;
+  background: transparent;
+  border: 0;
+  font-size: 1.7rem;
+  line-height: 1;
+}
+
+.uma-select__search {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.8rem;
+  color: #e9edf5;
+  background: #1b2533;
+  border: 1px solid #273447;
+  border-radius: 0.5rem;
+  font: inherit;
+  outline: none;
+}
+
+.uma-select__search:focus {
+  border-color: #69b7ff;
+  box-shadow: 0 0 0 3px rgba(105, 183, 255, 0.12);
+}
+
+.uma-select__popup-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.6rem;
+}
+
 .uma-select__option {
+  display: flex;
+  min-height: 11rem;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.3rem;
+  padding: 0.7rem;
   color: #e9edf5;
   background: #1b2533;
   cursor: pointer;
+  text-align: center;
+  border: 1px solid transparent;
+  border-radius: 0.6rem;
 }
 
-.uma-select__option--is-selected {
-  color: #fff;
-  background: #3188d8;
-}
-
-.uma-select__option--is-focused {
-  background: rgba(105, 183, 255, 0.16);
+.uma-select__option:hover,
+.uma-select__option:focus-visible {
+  border-color: #69b7ff;
+  outline: none;
 }
 
 .uma-select__option:active {
   background: #3188d8;
 }
 
-.uma-select__single-value {
-  color: #e9edf5;
+.uma-select__option-image {
+  display: block;
+  width: 100%;
+  height: 7rem;
+  margin-bottom: 0.2rem;
+  object-fit: cover;
+  border-radius: 0.4rem;
 }
 
-.uma-select__placeholder {
-  color: #8291a5;
-}
-
-.uma-select__input {
-  color: #e9edf5;
-}
-
-.uma-select__menu {
-  z-index: 10;
+.uma-select__option-outfit,
+.uma-select__option-character {
   overflow: hidden;
-  background: #1b2533;
-  border: 1px solid #273447;
-  border-radius: 0.6rem;
-  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-select__option-outfit {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.uma-select__option-character {
+  color: #aebdce;
+  font-size: 0.72rem;
+}
+
+.uma-select__option--selected {
+  color: #fff;
+  background: #3188d8;
+}
+
+@media (max-width: 520px) {
+  .uma-select__popup-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }

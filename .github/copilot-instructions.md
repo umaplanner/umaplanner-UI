@@ -43,7 +43,7 @@ Routes map page wrappers in `src/pages` to feature components:
 - `/pvp-overview` renders the placeholder overview feature.
 - `/pvp-planner` renders `PvpPlannerPage`, which delegates to `features/pvp-planner/PvpPlanner.tsx`.
 
-The planner has two local-data flows. Race metadata is loaded from the backend endpoint `GET http://localhost:5063/races` when the `RaceDB` IndexedDB cache is empty. Uma variants are loaded from `GET http://localhost:5063/umas/variants` and cached in `localStorage` under `umaList`. Event-specific teams are stored in the `TeamDB` IndexedDB database, keyed by `event`.
+The planner has two local-data flows. Race metadata is loaded from the backend endpoint `GET http://localhost:5063/races` when the `RaceDB` IndexedDB cache is empty. Uma variants are loaded from `GET http://localhost:5063/umas/variants` and cached in `localStorage` under `umaList`. Event-specific teams are stored in the `TeamDB` IndexedDB database, keyed by `event`. The API base URL helper is present in `src/lib/config.ts`, but existing fetches still use the localhost URL directly; preserve current behavior when touching unrelated code and migrate API calls consistently if configuration work is undertaken.
 
 `src/components/indexedDbRepository.tsx` is the shared persistence abstraction for IndexedDB. Keep database names, object-store names, key paths, and indexes consistent with the records using the repository. `src/types/RaceEntry.tsx` and `src/types/UmaEntry.tsx` define the frontend data shapes used by API responses, persistence, and UI components.
 
@@ -59,3 +59,11 @@ The planner has two local-data flows. Race metadata is loaded from the backend e
 - API base URL configuration exists in `src/lib/config.ts` through `VITE_API_BASE_URL`; new API calls should use that configuration rather than adding another hardcoded backend URL.
 - Keep route paths centralized in `src/app/routes.tsx` when adding or changing routes, and keep the route wrapper/feature separation used by the existing pages.
 - Keep component-specific CSS in `src/styles` and import it from the component/feature that uses it; global styles are loaded by `src/main.tsx`.
+- Preserve the current visual structure when styling: the navbar, route layout, race card, and planner controls are existing UI surfaces; prefer CSS changes over introducing new wrappers or changing navigation behavior.
+- Use the existing design tokens in `src/styles/index.css` for colors, borders, surfaces, and responsive breakpoints. Race-specific presentation belongs in `RaceDisplay.css`, and planner/select presentation belongs in `PvpPlanner.css` or the existing `react-select` style configuration.
+- Keep the race date presentation borderless and lightweight; status, day, month, and year are styled as one date treatment rather than separate boxed badges.
+- Tests are intentionally kept outside `src`; when adding tests, place them in `tests/unit` and rely on the shared jsdom setup rather than adding per-file environment setup.
+
+## Browser tooling
+
+When browser-level inspection or end-to-end coverage is needed, use the repository Playwright MCP configuration in `.vscode/mcp.json`. Start the Vite app with `npm run dev` before using the browser tools, and use the existing routes and event-selection flow when checking the rendered UI.

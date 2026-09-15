@@ -1,0 +1,55 @@
+.uma-select__control {
+  min-height: 38px;
+  color: #e9edf5;
+  background-color: #1b2533;
+  border: 1px solid #273447;
+  border-radius: 0.6rem;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.uma-select__control:hover,
+.uma-select__control--is-focused {
+  border-color: #69b7ff;
+  box-shadow: 0 0 0 3px rgba(105, 183, 255, 0.12);
+}
+
+.uma-select__option {
+  color: #e9edf5;
+  background: #1b2533;
+  cursor: pointer;
+}
+
+.uma-select__option--is-selected {
+  color: #fff;
+  background: #3188d8;
+}
+
+.uma-select__option--is-focused {
+  background: rgba(105, 183, 255, 0.16);
+}
+
+.uma-select__option:active {
+  background: #3188d8;
+}
+
+.uma-select__single-value {
+  color: #e9edf5;
+}
+
+.uma-select__placeholder {
+  color: #8291a5;
+}
+
+.uma-select__input {
+  color: #e9edf5;
+}
+
+.uma-select__menu {
+  z-index: 10;
+  overflow: hidden;
+  background: #1b2533;
+  border: 1px solid #273447;
+  border-radius: 0.6rem;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+}

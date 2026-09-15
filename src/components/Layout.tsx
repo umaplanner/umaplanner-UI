@@ -50,6 +50,16 @@ export default function Layout({children}: LayoutProps) {
     setSelectedEvent(event.target.value);
   };
 
+  const sortedRaceEntries = raceEntries
+    .filter(
+      (entry): entry is RaceEntry & { releaseDate: string } =>
+        entry.releaseDate !== null,
+    )
+    .sort(
+      (a, b) =>
+        new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime(),
+    );
+
   return (
     <>
       <header className="site-header">
@@ -65,9 +75,11 @@ export default function Layout({children}: LayoutProps) {
             onChange={handleSelectChange}
           >
             <option value="" disabled>Select an Race</option>
-            {raceEntries.map((entry) => (
+            {sortedRaceEntries.map((entry) => (
               <option key={entry.eventTitle} value={entry.eventTitle}>
-                {entry.eventTitle} - {entry.name}
+                {entry.eventTitle === "Monthly Match"
+                  ? entry.name
+                  : `${entry.eventTitle} - ${entry.name}`}
               </option>
             ))}
           </select>

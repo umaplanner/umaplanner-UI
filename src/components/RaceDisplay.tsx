@@ -6,7 +6,7 @@ interface RaceDisplayProps {
 }
 
 export default function RaceDisplay({ raceEntry }: RaceDisplayProps) {
-  if (!raceEntry) {
+  if (!raceEntry || raceEntry.releaseDate === null) {
     return null;
   }
 

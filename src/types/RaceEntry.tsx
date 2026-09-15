@@ -10,6 +10,6 @@ export interface RaceEntry {
   direction: string;
   season: string;
   weather: string;
-  releaseDate: string;
+  releaseDate: string | null;
   isConfirmed: boolean;
 }

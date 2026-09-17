@@ -52,8 +52,8 @@ The content of this page should change based on the event selected in the navbar
 - [x] Implement indexedDB for saving plans locally 
 
 ### v0.2.1 - Improve uma search
-- [ ] Implement images and a new search instead of dropdowns for uma selection
-    - [ ] Use cloudflare r2 or similar object storage for images
+- [x] Implement images and a new search instead of dropdowns for uma selection
+    - [x] Use cloudflare r2 or similar object storage for images
 
 ### v0.3.0 - Auth
 - [ ] Auth using Discord

@@ -1,5 +1,6 @@
-import Select from "react-select";
+import { useEffect, useState } from "react";
 import type { UmaEntry } from "../types/UmaEntry";
+import UmaImage from "./UmaImage";
 import "../styles/UmaSelect.css";
 
 interface UmaSelectProps {
@@ -17,21 +18,134 @@ export default function UmaSelect({
   onChange,
   className,
 }: UmaSelectProps) {
-  return (
-    <label className={`uma-select-label ${className ?? ""}`.trim()}>
-      Uma {teamNumber}:
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState("");
 
-      <Select<UmaEntry, false>
-        name={`uma${teamNumber}`}
-        options={umaList}
-        getOptionLabel={(uma) => `${uma.outfitTitle} ${uma.baseCharacterName}`}
-        getOptionValue={(uma) => String(uma.id)}
-        value={value}
-        onChange={onChange}
-        placeholder="Select an Uma"
-        isSearchable
-        classNamePrefix="uma-select"
-      />
-    </label>
+  function closePopup() {
+    setSearch("");
+    setIsOpen(false);
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closePopup();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredUmas = umaList.filter((uma) =>
+    `${uma.outfitTitle} ${uma.baseCharacterName}`
+      .toLowerCase()
+      .includes(normalizedSearch),
+  );
+
+  function handleSelect(uma: UmaEntry) {
+    onChange(uma);
+    closePopup();
+  }
+
+  return (
+    <>
+      <label className={`uma-select-label ${className ?? ""}`.trim()}>
+        Uma {teamNumber}:
+
+        <button
+          className="uma-select__trigger"
+          type="button"
+          aria-label={`Select an Uma for team ${teamNumber}`}
+          aria-haspopup="dialog"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen(true)}
+        >
+          {value ? (
+            <>
+              <UmaImage uma={value} alt="" />
+              <span>
+                <strong>{value.outfitTitle}</strong>
+                <small>{value.baseCharacterName}</small>
+              </span>
+            </>
+          ) : (
+            <span className="uma-select__trigger-placeholder">
+              Select an Uma
+            </span>
+          )}
+        </button>
+      </label>
+
+      {isOpen && (
+        <div
+          className="uma-select__backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) {
+              closePopup();
+            }
+          }}
+        >
+          <section
+            className="uma-select__popup"
+            role="dialog"
+            aria-label={`Select Uma ${teamNumber}`}
+          >
+            <header className="uma-select__popup-header">
+              <div>
+                <h2>Select an Uma</h2>
+              </div>
+              <button
+                className="uma-select__close"
+                type="button"
+                aria-label="Close Uma selector"
+                onClick={closePopup}
+              >
+                ×
+              </button>
+            </header>
+
+            <input
+              className="uma-select__search"
+              type="search"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search by outfit or character"
+              autoFocus
+            />
+
+            <div className="uma-select__popup-grid">
+              {filteredUmas.map((uma) => (
+                <button
+                  className="uma-select__option"
+                  type="button"
+                  key={uma.id}
+                  onClick={() => handleSelect(uma)}
+                >
+                  <UmaImage
+                    uma={uma}
+                    className="uma-select__option-image"
+                    alt={`${uma.baseCharacterName} placeholder`}
+                    lazy
+                  />
+                  <span className="uma-select__option-outfit">
+                    {uma.outfitTitle}
+                  </span>
+                  <span className="uma-select__option-character">
+                    {uma.baseCharacterName}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </section>
+        </div>
+      )}
+    </>
   );
 }

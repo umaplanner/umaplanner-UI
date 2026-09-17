@@ -85,6 +85,15 @@ export class IndexedDbRepository<T extends object> {
     ) as Promise<IDBValidKey>;
   }
 
+  async deleteByKey(key: T[keyof T]): Promise<void> {
+    const database = await this.databasePromise;
+
+    await database.delete(
+      this.config.storeName,
+      key as IDBValidKey,
+    );
+  }
+
   async addMany(entries: T[]): Promise<void> {
     const database = await this.databasePromise;
 

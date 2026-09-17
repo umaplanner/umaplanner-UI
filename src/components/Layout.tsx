@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { useEvent } from "../contexts/PvpEventContext";
+import { ensureDataLoaded } from "../lib/data";
 import type { RaceEntry } from "../types/RaceEntry";
 import { IndexedDbRepository } from "./indexedDbRepository";
 
@@ -14,6 +15,8 @@ export default function Layout({children}: LayoutProps) {
   const [raceEntries, setRaceEntries] = useState<RaceEntry[]>([]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchRaceEntries = async () => {
       try {
         const db = new IndexedDbRepository<RaceEntry>({
@@ -23,8 +26,12 @@ export default function Layout({children}: LayoutProps) {
             keyPath: "eventTitle",
           });
 
-
         const storedEntries = await db.getAll();
+
+        if (cancelled) {
+          return;
+        }
+
         if (storedEntries.length > 0) {
           setRaceEntries(storedEntries as RaceEntry[]);
           console.log("Loaded race entries from IndexedDB");
@@ -35,15 +42,31 @@ export default function Layout({children}: LayoutProps) {
         const data: RaceEntry[] = await response.json();
 
         await db.addMany(data);
-        console.log("Fetched and stored race entries in IndexedDB");
 
-        setRaceEntries(data);
+        if (!cancelled) {
+          setRaceEntries(data);
+        }
+
+        console.log("Fetched and stored race entries in IndexedDB");
       } catch (error) {
         console.error("Error fetching race entries:", error);
       }
     };
 
-    fetchRaceEntries();
+    const fetchR2Data = async () => {
+      try {
+        await ensureDataLoaded();
+      } catch (error) {
+        console.error("Error fetching R2 data:", error);
+      }
+    };
+
+    void fetchRaceEntries();
+    void fetchR2Data();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {

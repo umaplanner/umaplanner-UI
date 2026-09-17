@@ -4,6 +4,7 @@ import { useEvent } from "../../contexts/PvpEventContext";
 import UmaSelect from "../../components/UmaSelect";
 import RaceDisplay from "../../components/RaceDisplay";
 import { IndexedDbRepository } from "../../components/indexedDbRepository";
+import { ensureDataLoaded } from "../../lib/data";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type { RaceEntry } from "../../types/RaceEntry";
 
@@ -20,25 +21,6 @@ const emptyUmas: EventTeam = {
   uma2: null,
   uma3: null,
 };
-
-function cacheData<T>(key: string, data: T): void {
-  localStorage.setItem(key, JSON.stringify(data));
-}
-
-function getCachedData<T>(key: string): T | null {
-  const cached = localStorage.getItem(key);
-
-  if (!cached) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(cached) as T;
-  } catch (error) {
-    console.error(`Could not parse cached data for key "${key}"`, error);
-    return null;
-  }
-}
 
 function createRaceRepository() {
   return new IndexedDbRepository<RaceEntry>({
@@ -137,7 +119,6 @@ export default function PvpPlanner() {
 
         if (storedTeam) {
           setUmas(storedTeam);
-          console.log(`Loaded ${selectedEvent} team from IndexedDB`);
           return;
         }
 
@@ -153,8 +134,6 @@ export default function PvpPlanner() {
         if (!cancelled) {
           setUmas(newTeam);
         }
-
-        console.log(`Created empty team for ${selectedEvent}`);
       } catch (error) {
         console.error("Error fetching team:", error);
       }
@@ -168,35 +147,26 @@ export default function PvpPlanner() {
   }, [selectedEvent]);
 
   useEffect(() => {
-    const cachedUmaList = getCachedData<UmaEntry[]>("umaList");
+    let cancelled = false;
 
-    if (cachedUmaList) {
-      setUmaList(cachedUmaList);
-      return;
-    }
-
-    async function fetchUmaList() {
+    async function loadUmaList() {
       try {
-        const response = await fetch(
-          "http://localhost:5063/umas/variants"
-        );
+        const loadedData = await ensureDataLoaded();
+        const data = (loadedData.outfits as UmaEntry[] | undefined) ?? [];
 
-        if (!response.ok) {
-          throw new Error(
-            `Request failed with status ${response.status}`
-          );
+        if (!cancelled) {
+          setUmaList(data);
         }
-
-        const data = (await response.json()) as UmaEntry[];
-
-        setUmaList(data);
-        cacheData("umaList", data);
       } catch (error) {
         console.error("Error fetching UMA variants:", error);
       }
     }
 
-    void fetchUmaList();
+    void loadUmaList();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleInputChange(

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { UmaEntry } from "../types/UmaEntry";
+import UmaImage from "./UmaImage";
 import "../styles/UmaSelect.css";
 
 interface UmaSelectProps {
@@ -67,7 +68,7 @@ export default function UmaSelect({
         >
           {value ? (
             <>
-              <img src="/kita.webp" alt="" />
+              <UmaImage uma={value} alt="" />
               <span>
                 <strong>{value.outfitTitle}</strong>
                 <small>{value.baseCharacterName}</small>
@@ -98,7 +99,6 @@ export default function UmaSelect({
           >
             <header className="uma-select__popup-header">
               <div>
-                <span className="uma-select__popup-kicker">Team {teamNumber}</span>
                 <h2>Select an Uma</h2>
               </div>
               <button
@@ -128,10 +128,11 @@ export default function UmaSelect({
                   key={uma.id}
                   onClick={() => handleSelect(uma)}
                 >
-                  <img
+                  <UmaImage
+                    uma={uma}
                     className="uma-select__option-image"
-                    src="/kita.webp"
                     alt={`${uma.baseCharacterName} placeholder`}
+                    lazy
                   />
                   <span className="uma-select__option-outfit">
                     {uma.outfitTitle}

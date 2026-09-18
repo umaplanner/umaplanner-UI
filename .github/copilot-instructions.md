@@ -31,6 +31,8 @@ npx vitest run tests/unit/PvpEventContext.test.tsx -t "persists a newly selected
 
 The GitHub Actions workflow at `.github/workflows/tests.yml` installs with `npm ci` and uses `npm test` as the unit-test merge check.
 
+Production deployment is handled by `.github/workflows/deploy.yml`. It runs only for tags matching `vX.Y.Z`, where each component contains one or more digits, and requires the `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, and `VERCEL_TOKEN` repository secrets. Disable automatic Git deployments in the Vercel project settings so branch pushes do not deploy outside this workflow.
+
 ## Architecture
 
 The browser entry point is `index.html`, which loads `src/main.tsx`. `main.tsx` mounts the React tree, installs `BrowserRouter`, and imports global styles. `src/app/App.tsx` composes the application by placing `EventProvider` around the shared `Layout` and route tree.

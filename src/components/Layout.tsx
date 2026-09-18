@@ -5,6 +5,7 @@ import { useEvent } from "../contexts/PvpEventContext";
 import { config } from "../lib/config";
 import { ensureDataLoaded } from "../lib/data";
 import type { RaceEntry } from "../types/RaceEntry";
+import { routes } from "../app/routes";
 import { IndexedDbRepository } from "./indexedDbRepository";
 
 type LayoutProps = {
@@ -95,8 +96,8 @@ export default function Layout({children}: LayoutProps) {
       <header className="site-header">
         <nav aria-label="Main navigation">
           <NavLink to="/">Home</NavLink>
-          <NavLink to="/pvp-overview">PvP Overview</NavLink>
-          <NavLink to="/pvp-planner">PvP Planner</NavLink>
+          <NavLink to={routes.overview}>PvP Overview</NavLink>
+          <NavLink to={routes.planner}>PvP Planner</NavLink>
 
 
           <select

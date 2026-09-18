@@ -4,6 +4,7 @@ import HomePage from "../pages/HomePage";
 import PvpOverviewPage from "../pages/PvpOverviewPage";
 import PvpPlannerPage from "../pages/PvpPlannerPage";
 import { EventProvider } from "../contexts/PvpEventContext";
+import { routes } from "./routes";
 
 export default function App() {
   return (
@@ -11,8 +12,8 @@ export default function App() {
       <Layout>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/pvp-overview" element={<PvpOverviewPage />} />
-          <Route path="/pvp-planner" element={<PvpPlannerPage />} />
+          <Route path={routes.overview} element={<PvpOverviewPage />} />
+          <Route path={routes.planner} element={<PvpPlannerPage />} />
         </Routes>
       </Layout>
     </EventProvider>

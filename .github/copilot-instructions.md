@@ -40,8 +40,8 @@ The browser entry point is `index.html`, which loads `src/main.tsx`. `main.tsx` 
 Routes map page wrappers in `src/pages` to feature components:
 
 - `/` renders the current placeholder `HomePage`.
-- `/pvp-overview` renders the placeholder overview feature.
-- `/pvp-planner` renders `PvpPlannerPage`, which delegates to `features/pvp-planner/PvpPlanner.tsx`.
+- `/overview` renders the placeholder overview feature.
+- `/planner` renders `PvpPlannerPage`, which delegates to `features/pvp-planner/PvpPlanner.tsx`.
 
 The planner has two local-data flows. Race metadata is loaded from the backend endpoint `GET ${VITE_API_BASE_URL}/races` when the `RaceDB` IndexedDB cache is empty. R2 datasets are loaded from `VITE_R2_BASE_URL` and cached in IndexedDB. Event-specific teams are stored in the `TeamDB` IndexedDB database, keyed by `event`. API base URL configuration is centralized in `src/lib/config.ts`; use it for backend requests.
 

@@ -1,5 +1,5 @@
 export const routes = {
   home: "/",
-  pvpOverview: "/pvp-overview",
-  pvpPlanner: "/pvp-planner",
+  overview: "/overview",
+  planner: "/planner",
 } as const;

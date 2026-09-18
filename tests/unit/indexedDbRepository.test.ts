@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { openDB } from "idb";
 import { IndexedDbRepository } from "../../src/components/indexedDbRepository";
 
 type Team = {
@@ -41,5 +42,29 @@ describe("IndexedDbRepository", () => {
       { event: "CM 41", uma1: null },
       { event: "CM 42", uma1: 103 },
     ]);
+  });
+
+  it("adds missing indexes when an existing database is upgraded", async () => {
+    const databaseName = "TeamDB-upgrade";
+    const initialDatabase = await openDB(databaseName, 1, {
+      upgrade(database) {
+        database.createObjectStore("teams", { keyPath: "event" });
+      },
+    });
+    await initialDatabase.put("teams", { event: "CM 42", uma1: 101 });
+    initialDatabase.close();
+
+    const upgradedRepository = new IndexedDbRepository<Team>({
+      databaseName,
+      version: 2,
+      storeName: "teams",
+      keyPath: "event",
+      indexes: [{ name: "event", unique: true }],
+    });
+
+    await expect(upgradedRepository.getSingle("event", "CM 42")).resolves.toEqual({
+      event: "CM 42",
+      uma1: 101,
+    });
   });
 });

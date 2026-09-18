@@ -25,7 +25,7 @@ const emptyUmas: EventTeam = {
 function createRaceRepository() {
   return new IndexedDbRepository<RaceEntry>({
     databaseName: "RaceDB",
-    version: 1,
+    version: 2,
     storeName: "races",
     keyPath: "eventTitle",
     indexes: [

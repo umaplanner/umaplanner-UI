@@ -22,9 +22,15 @@ export default function Layout({children}: LayoutProps) {
       try {
         const db = new IndexedDbRepository<RaceEntry>({
             databaseName: "RaceDB",
-            version: 1,
+            version: 2,
             storeName: "races",
             keyPath: "eventTitle",
+            indexes: [
+              {
+                name: "eventTitle",
+                unique: true,
+              },
+            ],
           });
 
         const storedEntries = await db.getAll();

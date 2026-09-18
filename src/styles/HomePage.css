@@ -1,0 +1,117 @@
+.home-page {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.85fr);
+  gap: clamp(2rem, 7vw, 7rem);
+  align-items: start;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: clamp(2rem, 8vh, 5rem) 0;
+}
+
+.home-intro {
+  padding-top: 1rem;
+}
+
+.home-eyebrow {
+  margin: 0 0 1rem;
+  color: var(--accent-color);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+.home-page h1 {
+  max-width: 12ch;
+  font-size: clamp(2.8rem, 7vw, 5.25rem);
+  line-height: 0.98;
+}
+
+.home-description {
+  max-width: 40rem;
+  margin: 1.75rem 0 0;
+  color: var(--text-color);
+  font-size: 1.1rem;
+  line-height: 1.7;
+}
+
+.home-note {
+  max-width: 36rem;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+}
+
+.home-roadmap {
+  padding: 1.75rem;
+  background: linear-gradient(
+    145deg,
+    rgba(27, 37, 51, 0.92),
+    rgba(21, 28, 39, 0.92)
+  );
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.16);
+}
+
+.home-roadmap h2 {
+  margin: 0 0 1.5rem;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  letter-spacing: -0.025em;
+}
+
+.feature-list {
+  display: grid;
+  gap: 1.25rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.feature-list li {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.feature-icon {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  color: var(--accent-color);
+  background: rgba(105, 183, 255, 0.1);
+  border-radius: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.feature-list strong,
+.feature-list li > span:last-child > span {
+  display: block;
+}
+
+.feature-list strong {
+  margin-bottom: 0.25rem;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.feature-list li > span:last-child > span {
+  color: var(--muted-text-color);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 760px) {
+  .home-page {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    padding-top: 1rem;
+  }
+
+  .home-intro {
+    padding-top: 0;
+  }
+}

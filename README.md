@@ -32,7 +32,6 @@ A page dedicated to the general plans the community has for whichever pvp event 
 **PvP Planner Page**
 A page where you can plan and organize your umas, support cards, and lineages. 
 The content of this page should change based on the event selected in the navbar.
-- [ ] Should have public stats for uma/card usage for each event
 - [ ] Should allow users to private their plans if they wish
 - [ ] Should allow users to share their plans as an anonymous user if they wish
 

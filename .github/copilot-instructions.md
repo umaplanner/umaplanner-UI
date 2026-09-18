@@ -43,7 +43,7 @@ Routes map page wrappers in `src/pages` to feature components:
 - `/pvp-overview` renders the placeholder overview feature.
 - `/pvp-planner` renders `PvpPlannerPage`, which delegates to `features/pvp-planner/PvpPlanner.tsx`.
 
-The planner has two local-data flows. Race metadata is loaded from the backend endpoint `GET http://localhost:5063/races` when the `RaceDB` IndexedDB cache is empty. Uma variants are loaded from `GET http://localhost:5063/umas/variants` and cached in `localStorage` under `umaList`. Event-specific teams are stored in the `TeamDB` IndexedDB database, keyed by `event`. The API base URL helper is present in `src/lib/config.ts`, but existing fetches still use the localhost URL directly; preserve current behavior when touching unrelated code and migrate API calls consistently if configuration work is undertaken.
+The planner has two local-data flows. Race metadata is loaded from the backend endpoint `GET ${VITE_API_BASE_URL}/races` when the `RaceDB` IndexedDB cache is empty. R2 datasets are loaded from `VITE_R2_BASE_URL` and cached in IndexedDB. Event-specific teams are stored in the `TeamDB` IndexedDB database, keyed by `event`. API base URL configuration is centralized in `src/lib/config.ts`; use it for backend requests.
 
 `src/components/indexedDbRepository.tsx` is the shared persistence abstraction for IndexedDB. Keep database names, object-store names, key paths, and indexes consistent with the records using the repository. `src/types/RaceEntry.tsx` and `src/types/UmaEntry.tsx` define the frontend data shapes used by API responses, persistence, and UI components.
 

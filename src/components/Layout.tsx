@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
 import { useEvent } from "../contexts/PvpEventContext";
+import { config } from "../lib/config";
 import { ensureDataLoaded } from "../lib/data";
 import type { RaceEntry } from "../types/RaceEntry";
 import { IndexedDbRepository } from "./indexedDbRepository";
@@ -38,7 +39,7 @@ export default function Layout({children}: LayoutProps) {
           return;
         }
 
-        const response = await fetch("http://localhost:5063/races");
+        const response = await fetch(`${config.apiBaseUrl}/races`);
         const data: RaceEntry[] = await response.json();
 
         await db.addMany(data);

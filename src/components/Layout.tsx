@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
@@ -118,6 +119,7 @@ export default function Layout({children}: LayoutProps) {
       </header>
 
       <main className="site-main">{children}</main>
+      <Analytics />
     </>
   );
 }

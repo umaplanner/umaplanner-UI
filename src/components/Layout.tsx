@@ -6,6 +6,11 @@ import { NavLink } from "react-router";
 import { useEvent } from "../contexts/PvpEventContext";
 import { config } from "../lib/config";
 import { ensureDataLoaded } from "../lib/data";
+import {
+  getAdjacentEvent,
+  getRecentRaceEntries,
+  sortRaceEntries,
+} from "../lib/eventNavigation";
 import type { RaceEntry } from "../types/RaceEntry";
 import { routes } from "../app/routes";
 import { IndexedDbRepository } from "./indexedDbRepository";
@@ -83,15 +88,22 @@ export default function Layout({children}: LayoutProps) {
     setSelectedEvent(event.target.value);
   };
 
-  const sortedRaceEntries = raceEntries
-    .filter(
-      (entry): entry is RaceEntry & { releaseDate: string } =>
-        entry.releaseDate !== null,
+  const sortedRaceEntries = sortRaceEntries(raceEntries);
+  const recentRaceEntries = getRecentRaceEntries(sortedRaceEntries);
+  const selectedRaceEntry = sortedRaceEntries.find(
+    (entry) => entry.eventTitle === selectedEvent,
+  );
+  const selectableRaceEntries = selectedRaceEntry &&
+    !recentRaceEntries.some(
+      (entry) => entry.eventTitle === selectedRaceEntry.eventTitle,
     )
-    .sort(
-      (a, b) =>
-        new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime(),
-    );
+    ? [selectedRaceEntry, ...recentRaceEntries]
+    : recentRaceEntries;
+  const selectedIndex = sortedRaceEntries.findIndex(
+    (entry) => entry.eventTitle === selectedEvent,
+  );
+  const previousEvent = getAdjacentEvent(sortedRaceEntries, selectedEvent, -1);
+  const nextEvent = getAdjacentEvent(sortedRaceEntries, selectedEvent, 1);
 
   return (
     <>
@@ -102,20 +114,52 @@ export default function Layout({children}: LayoutProps) {
           <NavLink to={routes.planner}>PvP Planner</NavLink>
 
 
-          <select
-            id="event-select"
-            value={selectedEvent}
-            onChange={handleSelectChange}
-          >
-            <option value="" disabled>Select an Race</option>
-            {sortedRaceEntries.map((entry) => (
-              <option key={entry.eventTitle} value={entry.eventTitle}>
-                {entry.eventTitle === "Monthly Match"
-                  ? entry.name
-                  : `${entry.eventTitle} - ${entry.name}`}
-              </option>
-            ))}
-          </select>
+          <div className="event-selector">
+            <button
+              type="button"
+              className="event-navigation-button"
+              aria-label="Previous event"
+              title="Previous event"
+              disabled={selectedIndex <= 0}
+              onClick={() => {
+                if (previousEvent) {
+                  setSelectedEvent(previousEvent);
+                }
+              }}
+            >
+              ←
+            </button>
+            <select
+              id="event-select"
+              value={selectedEvent}
+              onChange={handleSelectChange}
+            >
+              <option value="" disabled>Select an Race</option>
+              {selectableRaceEntries.map((entry) => (
+                <option key={entry.eventTitle} value={entry.eventTitle}>
+                  {entry.eventTitle === "Monthly Match"
+                    ? entry.name
+                    : `${entry.eventTitle} - ${entry.name}`}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              className="event-navigation-button"
+              aria-label="Next event"
+              title="Next event"
+              disabled={
+                selectedIndex === -1 || selectedIndex >= sortedRaceEntries.length - 1
+              }
+              onClick={() => {
+                if (nextEvent) {
+                  setSelectedEvent(nextEvent);
+                }
+              }}
+            >
+              →
+            </button>
+          </div>
         </nav>
       </header>
 

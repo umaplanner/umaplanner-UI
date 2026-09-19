@@ -55,17 +55,11 @@ The content of this page should change based on the event selected in the navbar
     - [x] Use cloudflare r2 or similar object storage for images
 
 ### v0.3.0 - Auth
-- [ ] Auth using Discord
+- [x] Auth using Discord
 - [ ] Save and retrieve based on auth
 - [ ] Design and implement database
 
-### v0.3.1 - Admin Page
-- [ ] Implement admin page to allow admins to:
-    - [ ] Add new events
-    - [ ] Add new uma and cards 
-        - Also upload images to object storage to them
-
-### v0.3.2 - Settings
+### v0.3.1 - Settings
 - [ ] Implement settings for:
     - [ ] Private/Anonymous plans
     - [ ] Past events toggle

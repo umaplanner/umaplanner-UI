@@ -1,4 +1,5 @@
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router";
@@ -120,6 +121,7 @@ export default function Layout({children}: LayoutProps) {
 
       <main className="site-main">{children}</main>
       <Analytics />
+      <SpeedInsights />
     </>
   );
 }

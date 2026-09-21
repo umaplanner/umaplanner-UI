@@ -59,14 +59,13 @@ The content of this page should change based on the event selected in the navbar
 - [ ] Save and retrieve based on auth
 - [ ] Design and implement database
 
-### v0.3.1 - Settings
-- [ ] Implement settings for:
-    - [ ] Private/Anonymous plans
-    - [ ] Past events toggle
-    - [ ] How far into the future the event selector should look
-    - More to come
+### v0.3.1 - Introduce skills 
+- [ ] Implement skill and stat selection for each uma 
+    - should work kind of like the simulators
+- [ ] include skill images in "public" section 
 
-### v0.4.0 - Implement failsafes
+
+### v0.4.0 - Implement failsafes/logic
 - [ ] Implement failsafes for users to not lose their plans if they accidentally close the page or refresh
 - [ ] Ensure it is not possible to select several of the same uma in a team
 - More to come
@@ -77,8 +76,12 @@ The content of this page should change based on the event selected in the navbar
     - Show PvP events their most common uma and most common uma
     - Past PvP events should have the "most common" locked even if users change their plans
 
-### v3.0.0 - Team sharing, Privacy, and Discord bot
+### v1.1.0 - Team sharing, Privacy, and Discord bot
 - Implement discord bot (as a separate repository) for easier access/sharing of plans
-- Allow users to private their plans or become anonymous if they wish
 
-
+### v1.2.0 - Settings
+- [ ] Implement settings for:
+    - [ ] Private/Anonymous plans
+    - [ ] Past events toggle
+    - [ ] How far into the future the event selector should look
+    - More to come

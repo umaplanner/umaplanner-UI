@@ -1,68 +1,19 @@
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { NavLink } from "react-router";
-import { useEvent } from "../contexts/PvpEventContext";
-import { config } from "../lib/config";
 import { ensureDataLoaded } from "../lib/data";
-import type { RaceEntry } from "../types/RaceEntry";
 import { routes } from "../app/routes";
-import { IndexedDbRepository } from "./indexedDbRepository";
+import EventSelector from "./EventSelector";
+import UserMenu from "./UserMenu";
 
 type LayoutProps = {
   children: ReactNode;
 };
 
 export default function Layout({children}: LayoutProps) {
-  const { selectedEvent, setSelectedEvent } = useEvent();
-  const [raceEntries, setRaceEntries] = useState<RaceEntry[]>([]);
-
   useEffect(() => {
-    let cancelled = false;
-
-    const fetchRaceEntries = async () => {
-      try {
-        const db = new IndexedDbRepository<RaceEntry>({
-            databaseName: "RaceDB",
-            version: 2,
-            storeName: "races",
-            keyPath: "eventTitle",
-            indexes: [
-              {
-                name: "eventTitle",
-                unique: true,
-              },
-            ],
-          });
-
-        const storedEntries = await db.getAll();
-
-        if (cancelled) {
-          return;
-        }
-
-        if (storedEntries.length > 0) {
-          setRaceEntries(storedEntries as RaceEntry[]);
-          console.log("Loaded race entries from IndexedDB");
-          return;
-        }
-
-        const response = await fetch(`${config.apiBaseUrl}/races`);
-        const data: RaceEntry[] = await response.json();
-
-        await db.addMany(data);
-
-        if (!cancelled) {
-          setRaceEntries(data);
-        }
-
-        console.log("Fetched and stored race entries in IndexedDB");
-      } catch (error) {
-        console.error("Error fetching race entries:", error);
-      }
-    };
-
     const fetchR2Data = async () => {
       try {
         await ensureDataLoaded();
@@ -71,27 +22,8 @@ export default function Layout({children}: LayoutProps) {
       }
     };
 
-    void fetchRaceEntries();
     void fetchR2Data();
-
-    return () => {
-      cancelled = true;
-    };
   }, []);
-
-  const handleSelectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedEvent(event.target.value);
-  };
-
-  const sortedRaceEntries = raceEntries
-    .filter(
-      (entry): entry is RaceEntry & { releaseDate: string } =>
-        entry.releaseDate !== null,
-    )
-    .sort(
-      (a, b) =>
-        new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime(),
-    );
 
   return (
     <>
@@ -102,20 +34,8 @@ export default function Layout({children}: LayoutProps) {
           <NavLink to={routes.planner}>PvP Planner</NavLink>
 
 
-          <select
-            id="event-select"
-            value={selectedEvent}
-            onChange={handleSelectChange}
-          >
-            <option value="" disabled>Select an Race</option>
-            {sortedRaceEntries.map((entry) => (
-              <option key={entry.eventTitle} value={entry.eventTitle}>
-                {entry.eventTitle === "Monthly Match"
-                  ? entry.name
-                  : `${entry.eventTitle} - ${entry.name}`}
-              </option>
-            ))}
-          </select>
+          <EventSelector />
+          <UserMenu />
         </nav>
       </header>
 

@@ -60,7 +60,7 @@ The content of this page should change based on the event selected in the navbar
 - [ ] Design and implement database
 
 ### v0.3.1 - Introduce skills 
-- [ ] Implement skill and stat selection for each uma 
+- [x] Implement skill and stat selection for each uma 
     - should work kind of like the simulators
 - [ ] include skill images in "public" section 
 

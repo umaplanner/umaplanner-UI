@@ -4,6 +4,7 @@
   align-items: center;
   gap: 0.7rem;
   width: 100%;
+  min-width: 0;
   padding: 0.45rem 0.7rem;
   color: #e9edf5;
   background: #1b2533;
@@ -40,6 +41,21 @@
 
 .uma-select__trigger-placeholder {
   color: #8291a5;
+}
+
+.uma-select__change {
+  align-self: center;
+  margin-top: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  color: var(--muted-text-color);
+  background: transparent;
+  border-color: transparent;
+  font-size: 0.75rem;
+}
+
+.uma-select__change:hover {
+  color: var(--text-color);
+  border-color: var(--border-color);
 }
 
 .uma-select__backdrop {

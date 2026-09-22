@@ -1,0 +1,688 @@
+.uma-build {
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+  column-gap: 1rem;
+  row-gap: 1rem;
+  gap: 1rem;
+  padding: 0.5rem;
+  background: #10141c;
+  border: 0;
+  border-radius: 0.8rem;
+}
+
+.uma-build__aptitude-current img {
+  width: 2.18rem;
+  height: 2.18rem;
+  object-fit: contain;
+}
+
+.uma-build__choice-current img,
+.uma-build__choice-options img {
+  width: 1.8rem;
+  height: 1.8rem;
+}
+
+.uma-build__choice-selector {
+  display: flex;
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  align-items: center;
+  flex-direction: column;
+}
+
+.uma-build__choice-current {
+  display: grid;
+  width: max-content;
+  min-height: 0;
+  place-items: center;
+  padding: 0;
+  color: var(--text-color);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.uma-build__choice-current:hover,
+.uma-build__choice-current:focus-visible {
+  filter: brightness(1.2);
+  outline: none;
+}
+
+.uma-build__choice-current img,
+.uma-build__choice-options img {
+  width: 2.18rem;
+  height: 2.18rem;
+  object-fit: contain;
+}
+
+.uma-build__choice-options {
+  display: flex;
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 0.25rem);
+  left: 50%;
+  gap: 0.1rem;
+  width: max-content;
+  max-width: none;
+  padding: 0.15rem;
+  background: #171d28;
+  border: 1px solid #303b4d;
+  border-radius: 0.35rem;
+  transform: translateX(-50%);
+}
+
+.uma-build__choice-options button {
+  display: grid;
+  flex: 0 0 auto;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  padding: 0;
+  color: var(--text-color);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.uma-build__choice-options button:hover,
+.uma-build__choice-options button:focus-visible {
+  filter: brightness(1.2);
+  outline: none;
+}
+
+.uma-build__selector {
+  grid-column: 1;
+  grid-row: 1;
+  width: 9rem;
+  align-self: stretch;
+}
+
+.uma-build__selector .uma-select-label {
+  height: 100%;
+  gap: 0;
+}
+
+.uma-build__selector .uma-select__trigger {
+  flex: 1;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.6rem;
+  text-align: center;
+}
+
+.uma-build__selector .uma-select__trigger img {
+  width: 4.4rem;
+  height: 4.4rem;
+  border-radius: 0.55rem;
+}
+
+.uma-build__selector .uma-select__trigger span {
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+}
+
+.uma-build__selector .uma-select__trigger strong {
+  overflow: hidden;
+  width: 100%;
+  font-size: clamp(0.58rem, 1.1vw, 0.75rem);
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build__selector .uma-select__trigger small {
+  width: 100%;
+  overflow: hidden;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build__uma-select {
+  gap: 0;
+}
+
+.uma-build__uma-select .uma-select__trigger {
+  min-height: 6.5rem;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.85rem;
+  padding: 0.65rem;
+  text-align: left;
+}
+
+.uma-build__uma-select .uma-select__trigger img {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 0.55rem;
+}
+
+.uma-build__uma-select .uma-select__trigger span {
+  align-items: flex-start;
+  max-width: calc(100% - 6.5rem);
+}
+
+.uma-build__uma-select .uma-select__trigger strong,
+.uma-build__uma-select .uma-select__trigger small {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build__panel {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow: hidden;
+  background: #10141c;
+  border: 1px solid #27303e;
+  border-radius: 0.65rem;
+}
+
+.uma-build__panel h4 {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  color: #e9edf5;
+  background: #171d28;
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.uma-build__stats,
+.uma-build__aptitudes {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.85rem;
+}
+
+.uma-build__stats {
+  grid-template-columns: repeat(5, minmax(9ch, 1fr));
+  min-width: 0;
+}
+
+.uma-build__panel[aria-labelledby^="stats-heading"] {
+  grid-column: 2 / -1;
+  grid-row: 1;
+  overflow: visible;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+}
+
+.uma-build__stats-section,
+.uma-build__aptitudes-section {
+  min-width: 0;
+}
+
+.uma-build__aptitudes-section {
+  min-width: max-content;
+  border-left: 1px solid #27303e;
+}
+
+.uma-build__aptitudes-section .uma-build__section-heading {
+  justify-content: flex-start;
+}
+
+.uma-build__aptitudes {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.3rem;
+  min-height: 4.2rem;
+  align-items: start;
+  padding: 0.85rem 0.75rem;
+}
+
+.uma-build__aptitudes > label {
+  min-width: 0;
+  align-items: center;
+  text-align: center;
+}
+
+.uma-build__aptitude-options {
+  display: grid;
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 0.25rem);
+  left: 50%;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 0.1rem;
+  width: max-content;
+  padding: 0.15rem;
+  background: #171d28;
+  border: 1px solid #303b4d;
+  border-radius: 0.35rem;
+  transform: translateX(-50%);
+}
+
+.uma-build__aptitude-selector {
+  display: flex;
+  position: relative;
+  width: 100%;
+  min-height: 0;
+  align-items: center;
+  flex-direction: column;
+}
+
+.uma-build__aptitude-current {
+  display: grid;
+  width: max-content;
+  min-height: 0;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.uma-build__aptitude-current:hover,
+.uma-build__aptitude-current:focus-visible {
+  filter: brightness(1.2);
+  outline: none;
+}
+
+.uma-build__aptitude-options button {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.uma-build__aptitude-options button:hover,
+.uma-build__aptitude-options button:focus-visible,
+.uma-build__aptitude-options button.uma-build__aptitude-option--selected {
+  filter: brightness(1.2);
+  outline: none;
+}
+
+.uma-build__aptitude-options img {
+  width: 2.18rem;
+  height: 2.18rem;
+  object-fit: contain;
+}
+
+.uma-build label {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: #8f9aaa;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.uma-build__stat-control {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.uma-build__stat-control img {
+  width: 1.25rem;
+  height: 1.25rem;
+  object-fit: contain;
+}
+
+.uma-build__stat-control input {
+  box-sizing: border-box;
+  flex: 0 0 5rem;
+  width: 5rem;
+  min-width: 5rem;
+  max-width: 5rem;
+}
+
+.uma-build__mood-selector .uma-build__choice-current img {
+  width: 4.2rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.uma-build__mood-selector .uma-build__choice-options img {
+  width: 3.6rem;
+  height: auto;
+  object-fit: contain;
+}
+
+.uma-build__mood-selector {
+  min-height: 0;
+}
+
+.uma-build__mood-selector .uma-build__choice-current {
+  min-height: 2rem;
+}
+
+.uma-build input,
+.uma-build select {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.5rem;
+  color: var(--text-color);
+  background: #1d2432;
+  border: 1px solid #303b4d;
+  border-radius: 0.35rem;
+  font: inherit;
+}
+
+.uma-build input:focus,
+.uma-build select:focus {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__strategy {
+  display: flex !important;
+  min-width: 0 !important;
+  flex-direction: column;
+  gap: 0.3rem !important;
+  padding: 0 !important;
+}
+
+.uma-build__skills {
+  min-height: 13rem;
+}
+
+.uma-build__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.2rem;
+  padding: 0.7rem 0.9rem;
+  background: #171d28;
+}
+
+.uma-build__section-heading > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+}
+
+.uma-build__section-heading h4 {
+  padding: 0;
+}
+
+.uma-build__section-heading span {
+  color: #7f8a9b;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.uma-build__section-heading button {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.78rem;
+}
+
+.uma-build__empty {
+  display: grid;
+  min-height: 7rem;
+  width: calc(100% - 1.7rem);
+  place-items: center;
+  margin: 0;
+  margin-inline: 0.85rem;
+  padding: 1rem;
+  color: #727d8f;
+  background: transparent;
+  border: 1px dashed #3a4658;
+  border-radius: 0.45rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  cursor: pointer;
+}
+
+.uma-build__empty:hover,
+.uma-build__empty:focus-visible {
+  color: var(--text-color);
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__empty strong,
+.uma-build__empty span {
+  display: block;
+}
+
+.uma-build__empty span {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  font-style: normal;
+}
+
+.uma-build__skill-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 2.25rem;
+  gap: 0.5rem;
+  padding: 0.5rem 0.85rem 0;
+}
+
+.uma-build__skill-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.55rem;
+  padding: 0.85rem;
+}
+
+.uma-build__skill-row {
+  padding: 0;
+}
+
+.uma-build__skill-value {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  overflow: hidden;
+  padding: 0.65rem 0.75rem;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build__skill-value img,
+.uma-build__skill-options img {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.uma-build__skill-value--special,
+.uma-build__skill-option--special {
+  border-color: #b85c68;
+}
+
+.uma-build__skill-options button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.uma-build__skill-backdrop {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(5, 8, 13, 0.7);
+  backdrop-filter: blur(5px);
+}
+
+.uma-build__skill-dialog {
+  width: min(44rem, 100%);
+  max-height: min(42rem, 90vh);
+  overflow: auto;
+  padding: 1.25rem;
+  background: #151c27;
+  border: 1px solid #34465d;
+  border-radius: 0.9rem;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+}
+
+.uma-build__skill-dialog header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.uma-build__skill-dialog h3 {
+  margin: 0;
+}
+
+.uma-build__skill-dialog header button {
+  padding: 0.1rem 0.5rem;
+  background: transparent;
+  border: 0;
+  font-size: 1.7rem;
+}
+
+.uma-build__skill-dialog > input {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.uma-build__skill-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.uma-build__skill-options button {
+  min-height: 2.75rem;
+  padding: 0.55rem 0.7rem;
+  text-align: left;
+}
+
+.uma-build__skill-options button:hover,
+.uma-build__skill-options button:focus-visible {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__skill-options button:disabled {
+  color: #667184;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.uma-build__skill-picker {
+  position: relative;
+  min-width: 0;
+}
+
+.uma-build__skill-picker input {
+  width: 100%;
+  min-height: 2.5rem;
+  padding-left: 0.75rem;
+  background: #1a2230;
+  border-color: #38465b;
+}
+
+.uma-build__skill-picker input::placeholder {
+  color: #778397;
+}
+
+.uma-build__skill-suggestions {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 0.2rem);
+  right: 0;
+  left: 0;
+  display: flex;
+  max-height: 10rem;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0.25rem;
+  background: #1d2432;
+  border: 1px solid #303b4d;
+  border-radius: 0.35rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25);
+}
+
+.uma-build__skill-suggestions button {
+  width: 100%;
+  padding: 0.45rem 0.5rem;
+  color: var(--text-color);
+  background: transparent;
+  border: 0;
+  border-radius: 0.25rem;
+  text-align: left;
+  font-size: 0.8rem;
+}
+
+.uma-build__skill-suggestions button:hover,
+.uma-build__skill-suggestions button:focus-visible {
+  background: rgba(105, 183, 255, 0.14);
+  outline: none;
+}
+
+.uma-build__remove-skill {
+  display: grid;
+  width: 2.25rem;
+  height: 2.5rem;
+  padding: 0;
+  place-items: center;
+  color: #9aa6b8;
+  background: #1a2230;
+  border-color: #38465b;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.uma-build__remove-skill:hover,
+.uma-build__remove-skill:focus-visible {
+  color: #ff9d9d;
+  border-color: #d66b75;
+  outline: none;
+}
+
+@media (max-width: 760px) {
+  .uma-build {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .uma-build__selector {
+    width: 100%;
+  }
+
+  .uma-build__stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .uma-build__aptitudes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .uma-build__stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .uma-build__skill-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .uma-build__remove-skill {
+    grid-column: auto;
+    justify-self: stretch;
+  }
+
+  .uma-build__skill-options {
+    grid-template-columns: 1fr;
+  }
+}

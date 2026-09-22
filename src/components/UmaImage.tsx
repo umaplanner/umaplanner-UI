@@ -18,12 +18,12 @@ export default function UmaImage({
   return (
     <img
       className={className}
-      src={`${imagePath}.webp`}
+      src={`${imagePath}.png`}
       alt={alt}
       loading={lazy ? "lazy" : "eager"}
       onError={(event) => {
         event.currentTarget.onerror = null;
-        event.currentTarget.src = `${imagePath}.png`;
+        event.currentTarget.src = `${imagePath}.webp`;
       }}
     />
   );

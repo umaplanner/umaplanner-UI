@@ -79,8 +79,6 @@ describe("UmaSelect", () => {
       />,
     );
 
-    expect(screen.getByText("Uma 2:")).toBeInTheDocument();
-
     await user.click(
       screen.getByRole("button", { name: "Select an Uma for team 2" }),
     );

@@ -1,28 +1,42 @@
 .race-card {
+  position: relative;
   overflow: hidden;
   color: #e9edf5;
-  background: #151c27;
-  border: 1px solid #273447;
-  border-radius: 0.8rem;
-  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.16);
+  background:
+    linear-gradient(135deg, rgba(105, 183, 255, 0.08), transparent 34%),
+    #151c27;
+  border: 1px solid rgba(105, 183, 255, 0.2);
+  border-radius: 1rem;
+  box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.2);
 }
 
 .race-card__header {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 2rem;
-  padding: 1.4rem 1.5rem 1.6rem;
-  background: linear-gradient(135deg, #1b2a3a, #151c27 70%);
+  padding: 1.35rem 1.4rem 1.25rem;
+  background: linear-gradient(135deg, #1d3044, #151c27 72%);
+}
+
+.race-card__header::after {
+  position: absolute;
+  right: 1.4rem;
+  bottom: 0;
+  left: 1.4rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(105, 183, 255, 0.45), transparent);
+  content: "";
 }
 
 .race-card__number {
   display: block;
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.5rem;
   color: #69b7ff;
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -39,17 +53,21 @@
 }
 
 .race-card__date {
-  min-width: 7.5rem;
+  min-width: 8.25rem;
+  padding: 0.65rem 0.8rem;
+  background: rgba(13, 17, 23, 0.28);
+  border: 1px solid rgba(105, 183, 255, 0.16);
+  border-radius: 0.7rem;
   text-align: right;
 }
 
 .race-card__date-status {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.45rem;
   color: #69b7ff;
   font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -86,36 +104,52 @@
 }
 
 .race-card__details {
-  display: flex;
-  align-items: flex-end;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1.25rem;
-  padding: 1.25rem;
-  border-top: 1px solid #273447;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.9rem 1.4rem 1.1rem;
 }
 
 .race-card__details > div {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  min-width: 0;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.35rem;
+  text-align: center;
 }
 
 .race-card__label {
   color: #8291a5;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .race-card__details > div > span:last-child {
+  min-width: 0;
+  overflow: hidden;
   color: #d7e0eb;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 800px) {
-  .race-card__header,
-  .race-card__details {
+  .race-card__header {
     flex-direction: column;
+  }
+
+  .race-card__date {
+    text-align: left;
+  }
+
+  .race-card__date-value {
+    justify-content: flex-start;
   }
 
   .race-card__tags {
@@ -123,12 +157,23 @@
   }
 
   .race-card__details {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     align-items: stretch;
   }
 }
 
 @media (max-width: 520px) {
+  .race-card__header,
+  .race-card__details {
+    padding-right: 1rem;
+    padding-left: 1rem;
+  }
+
+  .race-card__header::after {
+    right: 1rem;
+    left: 1rem;
+  }
+
   .race-card__details {
     grid-template-columns: 1fr;
   }

@@ -24,6 +24,7 @@ export interface UmaEntry {
   charaId: number;
   baseCharacterName: string;
   outfitTitle: string;
+  uniqueSkillId?: number;
   "stat-boosts"?: UmaStatBoosts;
   runningStyle?: number;
   distance?: UmaDistance;

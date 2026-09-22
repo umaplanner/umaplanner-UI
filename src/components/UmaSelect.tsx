@@ -8,6 +8,8 @@ interface UmaSelectProps {
   umaList: UmaEntry[];
   value: UmaEntry | null;
   onChange: (selected: UmaEntry | null) => void;
+  onActivate?: () => void;
+  openOnClick?: boolean;
   className?: string;
 }
 
@@ -16,6 +18,8 @@ export default function UmaSelect({
   umaList,
   value,
   onChange,
+  onActivate,
+  openOnClick = true,
   className,
 }: UmaSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,18 +57,26 @@ export default function UmaSelect({
     closePopup();
   }
 
+  function openSelector() {
+    onActivate?.();
+    setIsOpen(true);
+  }
+
   return (
     <>
-      <label className={`uma-select-label ${className ?? ""}`.trim()}>
-        Uma {teamNumber}:
-
+      <div className={`uma-select-label ${className ?? ""}`.trim()}>
         <button
           className="uma-select__trigger"
           type="button"
           aria-label={`Select an Uma for team ${teamNumber}`}
           aria-haspopup="dialog"
           aria-expanded={isOpen}
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            onActivate?.();
+            if (openOnClick) {
+              setIsOpen(true);
+            }
+          }}
         >
           {value ? (
             <>
@@ -80,7 +92,16 @@ export default function UmaSelect({
             </span>
           )}
         </button>
-      </label>
+        {value && !openOnClick && (
+          <button
+            className="uma-select__change"
+            type="button"
+            onClick={openSelector}
+          >
+            Change Uma
+          </button>
+        )}
+      </div>
 
       {isOpen && (
         <div

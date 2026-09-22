@@ -86,7 +86,10 @@ export default function UserMenu() {
 
   if (!authenticatedUser) {
     return (
-      <a className="login-button" href={`${config.apiBaseUrl}/auth/discord/`}>
+      <a
+        className="login-button"
+        href={`${config.apiBaseUrl}/auth/discord?returnUrl=${encodeURIComponent(window.location.href)}`}
+      >
         Log in with Discord
       </a>
     );
@@ -113,7 +116,7 @@ export default function UserMenu() {
           <button type="button" role="menuitem" disabled>
             Settings
           </button>
-          <a href={`${config.apiBaseUrl}/auth/logout/`} role="menuitem">
+          <a href={`${config.apiBaseUrl}/auth/logout/?returnUrl=${encodeURIComponent(window.location.href)}`} role="menuitem">
             Log out
           </a>
         </div>

@@ -15,3 +15,9 @@ export interface UmaBuild {
   skills: string[];
   forcedSkillPositions: Record<string, number>;
 }
+
+export interface StoredUmaBuild extends UmaBuild {
+  id: string;
+  event: string;
+  name: string;
+}

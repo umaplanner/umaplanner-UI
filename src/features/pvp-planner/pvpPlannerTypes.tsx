@@ -6,12 +6,18 @@ export type BuildKey = "uma1Build" | "uma2Build" | "uma3Build";
 
 export type EventTeam = {
   event: string;
-  uma1: number | null;
-  uma2: number | null;
-  uma3: number | null;
+  uma1: string | null;
+  uma2: string | null;
+  uma3: string | null;
+};
+
+export type PvpTeamState = EventTeam & {
   uma1Build: UmaBuildData;
   uma2Build: UmaBuildData;
   uma3Build: UmaBuildData;
+  uma1BuildName: string;
+  uma2BuildName: string;
+  uma3BuildName: string;
 };
 
 export function createDefaultBuild(outfitId = ""): UmaBuildData {
@@ -40,8 +46,5 @@ export function createEmptyTeam(event = ""): EventTeam {
     uma1: null,
     uma2: null,
     uma3: null,
-    uma1Build: createDefaultBuild(),
-    uma2Build: createDefaultBuild(),
-    uma3Build: createDefaultBuild(),
   };
 }

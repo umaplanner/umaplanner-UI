@@ -1,9 +1,9 @@
 import UmaImage from "../../components/UmaImage";
 import type { UmaEntry } from "../../types/UmaEntry";
-import type { EventTeam, UmaSlot } from "./pvpPlannerTypes";
+import type { PvpTeamState, UmaSlot } from "./pvpPlannerTypes";
 
 interface PvpTeamTabsProps {
-  umas: EventTeam;
+  umas: PvpTeamState;
   umaList: UmaEntry[];
   activeBuild: UmaSlot;
   onSelect: (teamNumber: UmaSlot) => void;
@@ -18,10 +18,12 @@ export default function PvpTeamTabs({
   return (
     <nav className="uma-selection" aria-label="Uma selections">
       {([1, 2, 3] as const).map((teamNumber) => {
-        const selectedUmaId = umas[`uma${teamNumber}`];
-        const selectedUma = selectedUmaId === null
+        const selectedBuildId = umas[`uma${teamNumber}`];
+        const selectedUma = selectedBuildId === null
           ? null
-          : umaList.find((uma) => uma.id === selectedUmaId) ?? null;
+          : umaList.find((uma) =>
+              String(uma.id) === umas[`uma${teamNumber}Build`].outfitId
+            ) ?? null;
 
         return (
           <button

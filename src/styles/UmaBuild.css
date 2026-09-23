@@ -1,6 +1,6 @@
 .uma-build {
   display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: 9rem minmax(0, 1fr);
   align-items: stretch;
   column-gap: 1rem;
   row-gap: 1rem;
@@ -9,6 +9,165 @@
   background: #10141c;
   border: 0;
   border-radius: 0.8rem;
+}
+
+.uma-build--display {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 11rem minmax(11rem, auto) minmax(13rem, auto);
+  gap: 0.5rem;
+  padding: 0.35rem;
+}
+
+.uma-build--display-empty {
+  grid-template-rows: auto;
+}
+
+.uma-build--display-empty .uma-build__uma-display {
+  min-height: 8rem;
+}
+
+.uma-build--display .uma-build__uma-display {
+  min-height: 10.5rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  text-align: center;
+}
+
+.uma-build--display .uma-build__uma-display img {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.uma-build--display .uma-build__uma-display span {
+  align-items: center;
+  width: 100%;
+}
+
+.uma-build--display .uma-build__swap-button {
+  margin: 0.25rem 0 0;
+  padding: 0.35rem 0.55rem;
+  font-size: 0.72rem;
+}
+
+.uma-build--display .uma-build__panel,
+.uma-build--display .uma-build__panel[aria-labelledby^="stats-heading"] {
+  grid-column: 1;
+  grid-row: auto;
+}
+
+.uma-build--display .uma-build__panel[aria-labelledby^="stats-heading"] {
+  display: block;
+  min-height: 11rem;
+}
+
+.uma-build--display .uma-build__section-heading {
+  min-height: 2.3rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.uma-build--display .uma-build__stats,
+.uma-build--display .uma-build__aptitudes {
+  gap: 0.25rem;
+  padding: 0.45rem;
+}
+
+.uma-build--display .uma-build__stats {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.uma-build--display .uma-build__stats > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: #8f9aaa;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.uma-build--display .uma-build__stats > div > span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build--display .uma-build__aptitudes-section {
+  border-top: 1px solid #27303e;
+  border-left: 0;
+}
+
+.uma-build--display .uma-build__aptitudes {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.uma-build--display .uma-build__aptitudes > div {
+  font-size: 0.58rem;
+}
+
+.uma-build--display .uma-build__aptitudes > div img {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
+.uma-build--display .uma-build__stat-control {
+  flex-direction: row;
+  gap: 0.25rem;
+}
+
+.uma-build--display .uma-build__stat-control img {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.uma-build--display .uma-build__skills {
+  min-height: 13rem;
+}
+
+.uma-build--display .uma-build__skill-list {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.25rem;
+  padding: 0.45rem;
+}
+
+.uma-build--display .uma-build__skill-row {
+  display: flex;
+  grid-template-columns: none;
+  align-items: center;
+  min-width: 0;
+  min-height: 2rem;
+  gap: 0.35rem;
+  padding: 0.35rem;
+  background: #171d28;
+  border: 1px solid #303b4d;
+  border-radius: 0.4rem;
+}
+
+.uma-build--display .uma-build__skill-row > img {
+  width: 1.8rem;
+  height: 1.8rem;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.uma-build--display .uma-build__skill-row > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build--display .uma-build__skill-row--special {
+  border-color: #b85c68;
+}
+
+.uma-build--display .uma-build__skill-row--special > span {
+  color: #ffb1b8;
+  font-weight: 700;
 }
 
 .uma-build__aptitude-current img {
@@ -92,84 +251,311 @@
   outline: none;
 }
 
-.uma-build__selector {
-  grid-column: 1;
+.uma-build__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
   grid-row: 1;
-  width: 9rem;
+  grid-column: 1 / -1;
+  padding: 0.65rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.65rem;
+  box-shadow: 0 0.35rem 1rem rgba(0, 0, 0, 0.16);
+}
+
+.uma-build__toolbar input,
+.uma-build__toolbar select {
+  min-height: 2.35rem;
+  padding: 0.45rem 0.65rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.45rem;
+  font: inherit;
+}
+
+.uma-build__toolbar input {
+  flex: 1 1 14rem;
+  min-width: 8rem;
+}
+
+.uma-build__toolbar select {
+  flex: 1 1 13rem;
+  min-width: 10rem;
+}
+
+.uma-build__toolbar button {
+  min-height: 2.35rem;
+  padding: 0.45rem 0.7rem;
+  color: var(--text-color);
+  background: rgba(105, 183, 255, 0.08);
+  border: 1px solid rgba(105, 183, 255, 0.22);
+  border-radius: 0.45rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.uma-build__toolbar button:hover,
+.uma-build__toolbar button:focus-visible {
+  background: rgba(105, 183, 255, 0.16);
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__toolbar button:disabled {
+  color: var(--muted-text-color);
+  background: transparent;
+  border-color: var(--border-color);
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.uma-build__uma-select {
+  grid-area: 2 / 1;
+  gap: 0;
   align-self: stretch;
 }
 
-.uma-build__selector .uma-select-label {
-  height: 100%;
-  gap: 0;
+.uma-build__uma-display {
+  display: flex;
+  position: relative;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 6.5rem;
+  padding: 0.65rem;
+  background: #171d28;
+  border: 1px solid #27303e;
+  border-radius: 0.65rem;
 }
 
-.uma-build__selector .uma-select__trigger {
+.uma-build__uma-display img {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 0.55rem;
+  object-fit: cover;
+}
+
+.uma-build__uma-display span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.uma-build__uma-display strong,
+.uma-build__uma-display small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build__uma-display small {
+  color: #aebdce;
+}
+
+.uma-build__uma-placeholder {
+  color: var(--muted-text-color);
+}
+
+.uma-build__swap-button {
+  margin-left: auto;
+  padding: 0.55rem 0.8rem;
+  color: var(--text-color);
+  background: rgba(105, 183, 255, 0.1);
+  border: 1px solid rgba(105, 183, 255, 0.3);
+  border-radius: 0.45rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.uma-build__swap-button:hover,
+.uma-build__swap-button:focus-visible {
+  background: rgba(105, 183, 255, 0.2);
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__no-saved-builds {
+  color: var(--muted-text-color);
+  font-size: 0.72rem;
+}
+
+.uma-build__display-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 0.25rem;
+}
+
+.uma-build__display-actions button {
+  padding: 0.35rem 0.55rem;
+  color: var(--text-color);
+  background: rgba(105, 183, 255, 0.1);
+  border: 1px solid rgba(105, 183, 255, 0.3);
+  border-radius: 0.45rem;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.uma-build__display-actions button:hover,
+.uma-build__display-actions button:focus-visible {
+  background: rgba(105, 183, 255, 0.2);
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__save-control {
+  position: relative;
+  display: inline-flex;
+}
+
+.uma-build__save-menu {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  display: flex;
+  min-width: 20rem;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  background: var(--surface-color);
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 18%);
+}
+
+.uma-build__save-menu input {
+  width: 24rem;
+  min-width: 24rem;
+}
+
+.uma-build__saved-builds-backdrop {
+  display: grid;
+  position: fixed;
+  z-index: 10;
+  inset: 0;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(4, 7, 12, 0.72);
+}
+
+.uma-build__saved-builds {
+  width: min(34rem, 100%);
+  padding: 1rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.35);
+}
+
+.uma-build__saved-builds header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.uma-build__saved-builds h4 {
+  margin: 0;
+  color: #e9edf5;
+  font-size: 0.8rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.uma-build__saved-builds header button {
+  padding: 0.2rem 0.5rem;
+  color: var(--muted-text-color);
+  background: transparent;
+  border: 0;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.uma-build__saved-builds > div {
+  display: grid;
+  gap: 0.5rem;
+  max-height: min(24rem, 60vh);
+  overflow-y: auto;
+}
+
+.uma-build__saved-builds > div > button {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.5rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.uma-build__saved-builds > div > button:hover,
+.uma-build__saved-builds > div > button:focus-visible {
+  background: rgba(105, 183, 255, 0.12);
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__saved-builds > div img {
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 0.35rem;
+  object-fit: cover;
+}
+
+.uma-build__saved-builds > div span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.uma-build__saved-builds > div small {
+  color: var(--muted-text-color);
+}
+
+.uma-build__uma-select .uma-select__trigger {
   flex: 1;
-  height: 100%;
-  min-height: 0;
+  min-height: 6.5rem;
   flex-direction: column;
   justify-content: center;
   gap: 0.4rem;
-  padding: 0.6rem;
+  padding: 0.65rem;
   text-align: center;
 }
 
-.uma-build__selector .uma-select__trigger img {
-  width: 4.4rem;
-  height: 4.4rem;
+.uma-build__uma-select .uma-select__trigger img {
+  width: 4.75rem;
+  height: 4.75rem;
   border-radius: 0.55rem;
 }
 
-.uma-build__selector .uma-select__trigger span {
+.uma-build__uma-select .uma-select__trigger span {
   align-items: center;
   width: 100%;
   max-width: 100%;
 }
 
-.uma-build__selector .uma-select__trigger strong {
-  overflow: hidden;
-  width: 100%;
-  font-size: clamp(0.58rem, 1.1vw, 0.75rem);
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.uma-build__selector .uma-select__trigger small {
-  width: 100%;
-  overflow: hidden;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.uma-build__uma-select {
-  gap: 0;
-}
-
-.uma-build__uma-select .uma-select__trigger {
-  min-height: 6.5rem;
-  flex-direction: row;
-  justify-content: flex-start;
-  gap: 0.85rem;
-  padding: 0.65rem;
-  text-align: left;
-}
-
-.uma-build__uma-select .uma-select__trigger img {
-  width: 5.5rem;
-  height: 5.5rem;
-  border-radius: 0.55rem;
-}
-
-.uma-build__uma-select .uma-select__trigger span {
-  align-items: flex-start;
-  max-width: calc(100% - 6.5rem);
-}
-
 .uma-build__uma-select .uma-select__trigger strong,
 .uma-build__uma-select .uma-select__trigger small {
+  width: 100%;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -177,7 +563,7 @@
 }
 
 .uma-build__panel {
-  grid-column: 1 / -1;
+  grid-column: 2;
   min-width: 0;
   overflow: hidden;
   background: #10141c;
@@ -202,14 +588,32 @@
   padding: 0.85rem;
 }
 
+.uma-build__aptitudes > div {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  color: #8f9aaa;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.uma-build__aptitudes > div img {
+  width: 2.18rem;
+  height: 2.18rem;
+  object-fit: contain;
+}
+
 .uma-build__stats {
   grid-template-columns: repeat(5, minmax(9ch, 1fr));
   min-width: 0;
 }
 
 .uma-build__panel[aria-labelledby^="stats-heading"] {
-  grid-column: 2 / -1;
-  grid-row: 1;
+  grid-column: 2;
   overflow: visible;
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
@@ -390,6 +794,7 @@
 }
 
 .uma-build__skills {
+  grid-column: 1 / -1;
   min-height: 13rem;
 }
 
@@ -461,15 +866,12 @@
 }
 
 .uma-build__skill-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 2.25rem;
-  gap: 0.5rem;
-  padding: 0.5rem 0.85rem 0;
+  position: relative;
 }
 
-.uma-build__skill-list {
+.uma-build:not(.uma-build--display) .uma-build__skill-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.55rem;
   padding: 0.85rem;
 }
@@ -484,7 +886,7 @@
   gap: 0.5rem;
   width: 100%;
   overflow: hidden;
-  padding: 0.65rem 0.75rem;
+  padding: 0.65rem 2.75rem 0.65rem 0.75rem;
   text-align: left;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -630,9 +1032,13 @@
 }
 
 .uma-build__remove-skill {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  transform: translateY(-50%);
   display: grid;
-  width: 2.25rem;
-  height: 2.5rem;
+  width: 1.8rem;
+  height: 1.8rem;
   padding: 0;
   place-items: center;
   color: #9aa6b8;
@@ -655,8 +1061,22 @@
     flex-direction: column;
   }
 
-  .uma-build__selector {
-    width: 100%;
+  .uma-build__toolbar {
+    flex-wrap: wrap;
+  }
+
+  .uma-build:not(.uma-build--display) .uma-build__skill-list {
+    grid-template-columns: 1fr;
+  }
+
+  .uma-build__toolbar input,
+  .uma-build__toolbar select {
+    flex: 1 1 calc(50% - 0.25rem);
+    min-width: min(100%, 12rem);
+  }
+
+  .uma-build__toolbar button {
+    flex: 1 1 auto;
   }
 
   .uma-build__stats {

@@ -4,7 +4,7 @@ export interface IndexedDbStoreConfig<T> {
   databaseName: string;
   version: number;
   storeName: string;
-  keyPath: keyof T & string;
+  keyPath: (keyof T & string) | Array<keyof T & string>;
   indexes?: Array<{
     name: keyof T & string;
     unique?: boolean;
@@ -48,7 +48,7 @@ export class IndexedDbRepository<T extends object> {
     );
   }
 
-  async getByKey(key: T[keyof T]): Promise<T | undefined> {
+  async getByKey(key: IDBValidKey | IDBValidKey[]): Promise<T | undefined> {
     const database = await this.databasePromise;
 
     return database.get(

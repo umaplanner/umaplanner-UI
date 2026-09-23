@@ -206,36 +206,44 @@ export default function useUmaBuildEditor({
     }
   }
 
-  async function loadBuildJson() {
-    try {
-      const rawBuild = JSON.parse(await navigator.clipboard.readText()) as Record<string, unknown>;
-      const numberFields = ["starCount", "uniqueLv", "speed", "stamina", "power", "guts", "wisdom", "mood"];
-      const stringFields = ["outfitId", "strategy", "distanceAptitude", "surfaceAptitude", "strategyAptitude"];
+async function loadBuildJson() {
+  try {
+    const rawBuild = JSON.parse(await navigator.clipboard.readText()) as Record<string, unknown>;
+    const numberFields = ["starCount", "uniqueLv", "speed", "stamina", "power", "guts", "wisdom", "mood"];
+    const stringFields = ["outfitId", "strategy", "distanceAptitude", "surfaceAptitude", "strategyAptitude"];
 
-      const numberFieldsValid = numberFields.every((field) => typeof rawBuild[field] === "number" && Number.isFinite(rawBuild[field]));
-      const stringFieldsValid = stringFields.every((field) => typeof rawBuild[field] === "string");
-      const moodValid = (rawBuild.mood as number) >= -2 && (rawBuild.mood as number) <= 2;
-      const skillsValid = Array.isArray(rawBuild.skills) && rawBuild.skills.every((skill) => typeof skill === "string");
-      const forcedSkillPositionsValid = rawBuild.forcedSkillPositions && typeof rawBuild.forcedSkillPositions === "object" &&
-        !Array.isArray(rawBuild.forcedSkillPositions) &&
-        Object.values(rawBuild.forcedSkillPositions).every((position) => typeof position === "number" && Number.isFinite(position));
+    const numberFieldsValid = numberFields.every((field) => 
+      rawBuild[field] === undefined || (typeof rawBuild[field] === "number" && Number.isFinite(rawBuild[field]))
+    );
+    const stringFieldsValid = stringFields.every((field) => typeof rawBuild[field] === "string");
+    const moodValid = (rawBuild.mood as number) >= -2 && (rawBuild.mood as number) <= 2;
+    const skillsValid = Array.isArray(rawBuild.skills) && rawBuild.skills.every((skill) => typeof skill === "string");
+    const forcedSkillPositionsValid = rawBuild.forcedSkillPositions && typeof rawBuild.forcedSkillPositions === "object" &&
+      !Array.isArray(rawBuild.forcedSkillPositions) &&
+      (Object.keys(rawBuild.forcedSkillPositions).length === 0 || 
+       Object.values(rawBuild.forcedSkillPositions).every((position) => typeof position === "number" && Number.isFinite(position)));
 
-      const valid = rawBuild && typeof rawBuild === "object" &&
-        numberFieldsValid &&
-        stringFieldsValid &&
-        moodValid &&
-        skillsValid &&
-        forcedSkillPositionsValid;
+    const valid = rawBuild && typeof rawBuild === "object" &&
+      numberFieldsValid &&
+      stringFieldsValid &&
+      moodValid &&
+      skillsValid &&
+      forcedSkillPositionsValid;
 
+    if (!valid) throw new Error("Uma build JSON has an invalid format");
 
-      if (!valid) throw new Error("Uma build JSON has an invalid format");
-      onChange(rawBuild as unknown as UmaBuildData);
-      setIsBuildLoaded(true);
-      window.setTimeout(() => setIsBuildLoaded(false), 2000);
-    } catch (error) {
-      console.error("Error loading Uma build:", error);
+    // Set default value for starCount if it doesn't exist
+    if (rawBuild.starCount === undefined) {
+      rawBuild.starCount = 3;
     }
+
+    onChange(rawBuild as unknown as UmaBuildData);
+    setIsBuildLoaded(true);
+    window.setTimeout(() => setIsBuildLoaded(false), 2000);
+  } catch (error) {
+    console.error("Error loading Uma build:", error);
   }
+}
 
   return {
     uniqueSkill,

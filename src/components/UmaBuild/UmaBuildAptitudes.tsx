@@ -61,7 +61,8 @@ export default function UmaBuildAptitudes({ value, openAptitude = null, openChoi
       ))}
       {editable ? (
         <label className="uma-build__strategy">
-          <span>Strategy</span><span className="uma-build__choice-selector">
+          <span>Strategy</span>
+          <span className="uma-build__choice-selector">
             <button 
               className="uma-build__choice-current" 
               type="button" 

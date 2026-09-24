@@ -116,6 +116,10 @@ export default function UmaBuild({
         skillPickerIndex={editor.skillPickerIndex}
         isSkillPickerOpen={editor.isSkillPickerOpen}
         skillSearch={editor.skillSearch}
+        skillSort={editor.skillSort}
+        setSkillSort={editor.setSkillSort}
+        skillSortAscending={editor.skillSortAscending}
+        setSkillSortAscending={editor.setSkillSortAscending}
         filteredSkills={editor.filteredSkills}
         getSkillId={editor.getSkillId}
         isForcedSkill={editor.isForcedSkill}

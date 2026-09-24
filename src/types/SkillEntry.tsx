@@ -4,4 +4,6 @@ export interface SkillEntry {
   groupId: string | null;
   iconId: number;
   isGeneralSkill: boolean;
+  displayOrder: number;
+  rarity: number;
 }

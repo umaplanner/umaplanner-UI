@@ -2,7 +2,7 @@ import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import UmaBuildAptitudes from "./UmaBuildAptitudes";
 import UmaBuildStats from "./UmaBuildStats";
-import { findSkill } from "./umaBuildUtils";
+import { findSkill, sortSkillsByDisplayOrder } from "./umaBuildUtils";
 
 interface Props {
   build: UmaBuildData;
@@ -37,13 +37,15 @@ export default function UmaBuildDisplaySections({ build, uniqueSkill, skillList,
             <h4 id={`skills-heading-${teamNumber}`}>Skills</h4>
           </div>
         </div>
-        {build.skills.length === 0 ? <p>No skills added yet</p> : <div className="uma-build__skill-list">
-          {build.skills.map((skill, index) => {
+        {build.skills.length === 0 ? <p className="uma-build__skills-placeholder">No skills added yet</p> : <div className="uma-build__skill-list">
+          {sortSkillsByDisplayOrder(build.skills, skillList).map((skill, index) => {
             const entry = findSkill(skillList, skill);
             const isUnique = entry?.id === uniqueSkill?.id;
             return <div className={`uma-build__skill-row${isUnique ? " uma-build__skill-row--special" : ""}`} key={`${skill}-${index}`}>
               {entry ? <img src={`/icons/skills/${entry.iconId || 0}.png`} alt="" /> : null}
-              <span className={isUnique ? "uma-build__skill-value--special" : undefined}>{entry?.name ?? skill}</span>
+              <span className={isUnique ? "uma-build__skill-value--special" : undefined}>
+                {entry?.name ?? skill}
+              </span>
             </div>;
           })}
         </div>}

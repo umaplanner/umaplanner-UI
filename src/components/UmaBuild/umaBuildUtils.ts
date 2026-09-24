@@ -26,6 +26,24 @@ export function findSkill(skillList: SkillEntry[], skillId: string) {
     skillList.find((skill) => skill.name === skillId);
 }
 
+export function sortSkillsByDisplayOrder(
+  skills: string[],
+  skillList: SkillEntry[],
+) {
+  return skills
+    .map((skill, index) => ({
+      skill,
+      index,
+      entry: findSkill(skillList, skill),
+    }))
+    .sort((left, right) =>
+      (left.entry?.displayOrder ?? Number.MAX_SAFE_INTEGER) -
+        (right.entry?.displayOrder ?? Number.MAX_SAFE_INTEGER) ||
+      left.index - right.index
+    )
+    .map(({ skill }) => skill);
+}
+
 export function getUmaUniqueSkillId(uma: UmaEntry | null | undefined) {
   if (!uma) return undefined;
   const charaId = String(uma.charaId);

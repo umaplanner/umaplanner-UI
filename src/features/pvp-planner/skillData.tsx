@@ -37,9 +37,11 @@ export function normalizeSkillData(data: unknown): SkillEntry[] {
         groupId: getSkillGroupId(record),
         iconId: getSkillIconId(record),
         isGeneralSkill: getSkillGeneralFlag(record),
+        displayOrder: getSkillDisplayOrder(record, index),
+        rarity: getSkillRarity(record),
       },
     ];
-  });
+  }).sort((left, right) => left.displayOrder - right.displayOrder);
 }
 
 function getRawSkillRecord(record: Record<string, unknown>) {
@@ -66,39 +68,35 @@ function getSkillIconId(record: Record<string, unknown>): number {
 }
 
 function getSkillGeneralFlag(record: Record<string, unknown>): boolean {
-  const generalFlag = findSkillField(record, "isgeneralskill");
+  const raw = getRawSkillRecord(record);
+  const generalFlag =
+    raw?.is_general_skill ??
+    raw?.isGeneralSkill ??
+    record["raw/is_general_skill"] ??
+    record.is_general_skill ??
+    record.isGeneralSkill;
   return generalFlag === 1 || generalFlag === "1" || generalFlag === true;
 }
 
-function findSkillField(value: unknown, fieldName: string, depth = 0): unknown {
-  if (depth > 4 || !value || typeof value !== "object") {
-    return undefined;
-  }
+function getSkillDisplayOrder(record: Record<string, unknown>, fallback: number): number {
+  const raw = getRawSkillRecord(record);
+  const displayOrder =
+    raw?.disp_order ??
+    raw?.dispOrder ??
+    record["raw/disp_order"] ??
+    record.disp_order ??
+    record.dispOrder;
+  const numericOrder = Number(displayOrder);
 
-  if (Array.isArray(value)) {
-    for (const entry of value) {
-      const result = findSkillField(entry, fieldName, depth + 1);
-      if (result !== undefined) {
-        return result;
-      }
-    }
-    return undefined;
-  }
+  return Number.isFinite(numericOrder) ? numericOrder : fallback;
+}
 
-  for (const [key, entry] of Object.entries(value)) {
-    const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
-    if (normalizedKey === fieldName) {
-      return entry;
-    }
+function getSkillRarity(record: Record<string, unknown>): number {
+  const raw = getRawSkillRecord(record);
+  const rarity = raw?.rarity ?? record["raw/rarity"] ?? record.rarity;
+  const numericRarity = Number(rarity);
 
-    const nestedValue = typeof entry === "string" ? parseRawSkill(entry) : entry;
-    const result = findSkillField(nestedValue, fieldName, depth + 1);
-    if (result !== undefined) {
-      return result;
-    }
-  }
-
-  return undefined;
+  return Number.isFinite(numericRarity) ? numericRarity : 0;
 }
 
 function findSkillIconId(value: unknown, depth = 0): unknown {

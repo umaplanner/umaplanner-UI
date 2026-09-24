@@ -13,7 +13,10 @@
 
 .uma-build--display {
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: 11rem minmax(11rem, auto) minmax(13rem, auto);
+  grid-template-rows: 11rem auto minmax(13rem, 1fr);
+  height: 100%;
+  min-height: 0;
+  align-content: stretch;
   gap: 0.5rem;
   padding: 0.35rem;
 }
@@ -59,7 +62,9 @@
 
 .uma-build--display .uma-build__panel[aria-labelledby^="stats-heading"] {
   display: block;
-  min-height: 11rem;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
 }
 
 .uma-build--display .uma-build__section-heading {
@@ -96,6 +101,8 @@
 }
 
 .uma-build--display .uma-build__aptitudes-section {
+  height: auto;
+  min-height: 0;
   border-top: 1px solid #27303e;
   border-left: 0;
 }
@@ -124,12 +131,18 @@
 }
 
 .uma-build--display .uma-build__skills {
-  min-height: 13rem;
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
 }
 
 .uma-build--display .uma-build__skill-list {
+  flex: 1;
   display: grid;
   width: 100%;
+  min-height: 0;
+  align-content: start;
+  align-items: start;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.25rem;
   padding: 0.45rem;
@@ -619,6 +632,7 @@
   grid-template-columns: minmax(0, 1fr) max-content;
 }
 
+
 .uma-build__stats-section,
 .uma-build__aptitudes-section {
   min-width: 0;
@@ -796,6 +810,11 @@
 .uma-build__skills {
   grid-column: 1 / -1;
   min-height: 13rem;
+  height: 100%;
+}
+
+.uma-build__skills .uma-build__skills-placeholder {
+  padding-left: 0.75rem;
 }
 
 .uma-build__section-heading {
@@ -951,9 +970,46 @@
   font-size: 1.7rem;
 }
 
-.uma-build__skill-dialog > input {
-  width: 100%;
+.uma-build__skill-picker-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   margin-bottom: 1rem;
+}
+
+.uma-build__skill-picker-controls input {
+  flex: 1;
+  min-width: 0;
+}
+
+.uma-build__skill-picker-controls select {
+  width: 10rem;
+}
+
+.uma-build__skill-picker-controls button,
+.uma-build__skill-picker-controls select {
+  min-height: 2.35rem;
+}
+
+.uma-build__skill-sort-direction {
+  width: 2.35rem;
+  padding: 0.2rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.45rem;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.uma-build__skill-sort-direction:hover,
+.uma-build__skill-sort-direction:focus-visible {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__skill-picker-controls input {
+  width: 100%;
 }
 
 .uma-build__skill-options {

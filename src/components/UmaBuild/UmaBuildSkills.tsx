@@ -1,5 +1,7 @@
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
+import { sortSkillsByDisplayOrder } from "./umaBuildUtils";
+import type { SkillSort } from "../Preferences";
 
 interface Props {
   value: UmaBuildData;
@@ -7,6 +9,10 @@ interface Props {
   skillPickerIndex: number | null;
   isSkillPickerOpen: boolean;
   skillSearch: string;
+  skillSort: SkillSort;
+  setSkillSort: (value: SkillSort) => void;
+  skillSortAscending: boolean;
+  setSkillSortAscending: (value: boolean) => void;
   filteredSkills: SkillEntry[];
   getSkillId: (skill: string) => string;
   isForcedSkill: (skill: string) => boolean;
@@ -20,7 +26,8 @@ interface Props {
 
 export default function UmaBuildSkills({ 
   value, skillList, skillPickerIndex, isSkillPickerOpen, 
-  skillSearch, filteredSkills, getSkillId, isForcedSkill, 
+  skillSearch, filteredSkills, getSkillId, isForcedSkill, skillSort,
+  setSkillSort, skillSortAscending, setSkillSortAscending,
   isUnavailableSkill, setSkillSearch, openSkillPicker, 
   closeSkillPicker, selectSkill, removeSkill 
 }: Props) {
@@ -37,8 +44,16 @@ export default function UmaBuildSkills({
       <button className="uma-build__add-skill" type="button" onClick={() => openSkillPicker()}>+ Add skill</button>
     </div>
 
-    {value.skills.length === 0 ? <button className="uma-build__empty" type="button" onClick={() => openSkillPicker()}><strong>No skills added yet</strong><span>Click to search and add a skill</span></button> :
-      <div className="uma-build__skill-list">{value.skills.map((skill, index) => {
+    {value.skills.length === 0 ? 
+      <button 
+        className="uma-build__empty" 
+        type="button" 
+        onClick={() => openSkillPicker()}
+      >
+        <strong>No skills added yet</strong>
+        <span>Click to search and add a skill</span>
+      </button> :
+      <div className="uma-build__skill-list">{sortSkillsByDisplayOrder(value.skills, skillList).map((skill, index) => {
         const entry = getEntry(skill);
         const special = entry ? !entry.isGeneralSkill && entry.id.startsWith("1") : false;
         return <div className="uma-build__skill-row" key={`${skill}-${index}`}>
@@ -72,15 +87,34 @@ export default function UmaBuildSkills({
             onClick={closeSkillPicker}
           >×</button>
         </header>
-        <input 
-          autoFocus 
-          type="search" 
-          value={skillSearch} 
-          placeholder="Search skills" 
-          onChange={(event) => setSkillSearch(event.target.value)} 
-        />
+        <div className="uma-build__skill-picker-controls">
+          <input
+            autoFocus
+            type="search"
+            value={skillSearch}
+            placeholder="Search skills"
+            onChange={(event) => setSkillSearch(event.target.value)}
+          />
+          <button
+            type="button"
+            className="uma-build__skill-sort-direction"
+            aria-label={skillSortAscending ? "Sort ascending" : "Sort descending"}
+            onClick={() => setSkillSortAscending(!skillSortAscending)}
+          >
+            {skillSortAscending ? "↑" : "↓"}
+          </button>
+          <select
+            aria-label="Sort skills by"
+            value={skillSort}
+            onChange={(event) => setSkillSort(event.target.value as SkillSort)}
+          >
+            <option value="rarity">Rarity</option>
+            <option value="game">Game order</option>
+            <option value="alphabetical">Alphabetical</option>
+          </select>
+        </div>
         <div className="uma-build__skill-options">
-          {filteredSkills.slice(0, 50).map((skill) => 
+          {(skillSearch.trim() ? filteredSkills.slice(0, 50) : filteredSkills).map((skill) =>
               <button 
                 type="button" 
                 key={skill.id} 

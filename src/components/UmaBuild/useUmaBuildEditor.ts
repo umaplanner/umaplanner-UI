@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import { findSkill } from "./umaBuildUtils";
+import { useSkillPickerPreferences } from "../Preferences";
 
 interface Options {
   value: UmaBuildData;
@@ -45,6 +46,12 @@ export default function useUmaBuildEditor({
   const [skillPickerIndex, setSkillPickerIndex] = useState<number | null>(null);
   const [isSkillPickerOpen, setIsSkillPickerOpen] = useState(false);
   const [skillSearch, setSkillSearch] = useState("");
+  const {
+    sort: skillSort,
+    setSort: setSkillSort,
+    ascending: skillSortAscending,
+    setAscending: setSkillSortAscending,
+  } = useSkillPickerPreferences();
   const [isBuildCopied, setIsBuildCopied] = useState(false);
   const [isBuildLoaded, setIsBuildLoaded] = useState(false);
   const [openAptitude, setOpenAptitude] = useState<string | null>(null);
@@ -121,8 +128,18 @@ export default function useUmaBuildEditor({
   }
 
   function isUnavailableSkill(skill: SkillEntry) {
-    return !skill.isGeneralSkill && skill.id.startsWith("1") &&
-      skill.id !== uniqueSkill?.id;
+    return !skill.isGeneralSkill && skill.id.startsWith("1");
+  }
+
+  function sortPickerSkills(skills: SkillEntry[]) {
+    return [...skills].sort((left, right) => {
+      const comparison = skillSort === "alphabetical"
+        ? left.name.localeCompare(right.name)
+        : skillSort === "rarity"
+          ? left.rarity - right.rarity
+          : left.displayOrder - right.displayOrder;
+      return skillSortAscending ? comparison : -comparison;
+    });
   }
 
   function selectSkill(skillId: string) {
@@ -251,6 +268,10 @@ async function loadBuildJson() {
     isSkillPickerOpen,
     skillSearch,
     setSkillSearch,
+    skillSort,
+    setSkillSort,
+    skillSortAscending,
+    setSkillSortAscending,
     isBuildCopied,
     isBuildLoaded,
     openAptitude,
@@ -272,8 +293,8 @@ async function loadBuildJson() {
     closeSkillPicker,
     copyBuildJson,
     loadBuildJson,
-    filteredSkills: skillList.filter((skill) =>
+    filteredSkills: sortPickerSkills(skillList.filter((skill) =>
       !isUnavailableSkill(skill) && skill.name.toLowerCase().includes(skillSearch.trim().toLowerCase()),
-    ),
+    )),
   };
 }

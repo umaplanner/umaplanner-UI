@@ -13,6 +13,7 @@ interface Options {
   buildId: string | null;
   savedBuilds: { id: string; name: string }[];
   onNewBuild?: () => void;
+  onBuildLoaded?: (build: UmaBuildData) => void;
 }
 
 const emptyBuild: UmaBuildData = {
@@ -42,6 +43,7 @@ export default function useUmaBuildEditor({
   buildId,
   savedBuilds,
   onNewBuild,
+  onBuildLoaded,
 }: Options) {
   const [skillPickerIndex, setSkillPickerIndex] = useState<number | null>(null);
   const [isSkillPickerOpen, setIsSkillPickerOpen] = useState(false);
@@ -254,7 +256,12 @@ async function loadBuildJson() {
       rawBuild.starCount = 3;
     }
 
-    onChange(rawBuild as unknown as UmaBuildData);
+    const loadedBuild = rawBuild as unknown as UmaBuildData;
+    if (onBuildLoaded) {
+      onBuildLoaded(loadedBuild);
+    } else {
+      onChange(loadedBuild);
+    }
     setIsBuildLoaded(true);
     window.setTimeout(() => setIsBuildLoaded(false), 2000);
   } catch (error) {

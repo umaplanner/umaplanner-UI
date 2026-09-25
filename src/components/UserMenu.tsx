@@ -1,56 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { config } from "../lib/config";
-
-type AuthenticatedUser = {
-  username: string;
-  avatarUrl: string;
-};
+import { useAuth } from "../contexts/AuthContext";
 
 export default function UserMenu() {
-  const [authenticatedUser, setAuthenticatedUser] = useState<
-    AuthenticatedUser | null | undefined
-  >(undefined);
+  const { user: authenticatedUser, isLoading } = useAuth();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchAuthenticatedUser = async () => {
-      try {
-        const response = await fetch(`${config.apiBaseUrl}/users/me`, {
-          credentials: "include",
-        });
-
-        if (cancelled) {
-          return;
-        }
-
-        if (response.status === 401 || response.status === 403) {
-          setAuthenticatedUser(null);
-          return;
-        }
-
-        if (!response.ok) {
-          throw new Error(`User request failed with status ${response.status}`);
-        }
-
-        const user: AuthenticatedUser = await response.json();
-        setAuthenticatedUser(user);
-      } catch (error) {
-        if (!cancelled) {
-          console.error("Error fetching authenticated user:", error);
-          setAuthenticatedUser(null);
-        }
-      }
-    };
-
-    void fetchAuthenticatedUser();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     if (!isUserMenuOpen) {
@@ -80,7 +35,7 @@ export default function UserMenu() {
     };
   }, [isUserMenuOpen]);
 
-  if (authenticatedUser === undefined) {
+  if (isLoading) {
     return null;
   }
 

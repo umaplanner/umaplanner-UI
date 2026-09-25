@@ -104,6 +104,14 @@ export default function PvpPlanner() {
         id: null,
       });
     },
+    onBuildLoaded: (build: UmaBuildData) => {
+      setEditingBuildDraft({
+        slot: editingBuild,
+        build,
+        name: "",
+        id: crypto.randomUUID(),
+      });
+    },
     savedBuilds: allBuilds,
     onSelectSavedBuild: (buildId: string) => {
       const savedBuild = allBuilds.find((build) => build.id === buildId);

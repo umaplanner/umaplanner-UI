@@ -25,12 +25,14 @@ interface UmaBuildProps {
   onSelectSavedBuild?: (buildId: string) => void | Promise<void>;
   onSaveBuild?: (build: UmaBuildData, name: string) => void | Promise<void>;
   onNewBuild?: () => void;
+  onBuildLoaded?: (build: UmaBuildData) => void;
 }
 
 export default function UmaBuild({
   teamNumber, buildId = null, value, onChange, umaList, selectedUma, onSelectUma,
   skillList, uniqueSkillId, savedBuilds = [], buildName = "", onSelectSavedBuild,
   onSaveBuild, onNewBuild,
+  onBuildLoaded,
 }: UmaBuildProps) {
   const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
   const saveMenuRef = useRef<HTMLSpanElement | null>(null);
@@ -44,6 +46,7 @@ export default function UmaBuild({
     buildId,
     savedBuilds,
     onNewBuild,
+    onBuildLoaded,
   });
 
   useEffect(() => {

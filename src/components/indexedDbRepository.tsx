@@ -48,6 +48,10 @@ export class IndexedDbRepository<T extends object> {
     );
   }
 
+  async ready(): Promise<void> {
+    await this.databasePromise;
+  }
+
   async getByKey(key: IDBValidKey | IDBValidKey[]): Promise<T | undefined> {
     const database = await this.databasePromise;
 

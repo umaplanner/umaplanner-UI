@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type {
   StoredUmaBuild,
   UmaBuild as UmaBuildData,
@@ -13,8 +13,15 @@ import {
   createDefaultBuild,
   type PvpTeamState,
 } from "./pvpPlannerTypes";
+import { fetchBuilds, postBuild } from "./buildApi";
+import { useAuth } from "../../contexts/AuthContext";
 
 export function usePvpTeam(selectedEvent: string | null) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userRef = useRef(user);
+  const syncTimersRef = useRef(new Map<string, number>());
+  const hasLoadedRemoteBuildsRef = useRef(false);
+  const [buildRepository] = useState(() => createBuildRepository());
   const [umas, setUmas] = useState<PvpTeamState>({
     ...createEmptyTeam(),
     uma1Build: createDefaultBuild(),
@@ -26,14 +33,45 @@ export function usePvpTeam(selectedEvent: string | null) {
   });
   const [allBuilds, setAllBuilds] = useState<StoredUmaBuild[]>([]);
 
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  function scheduleBuildSync(build: StoredUmaBuild) {
+    if (!userRef.current) return;
+    const existingTimer = syncTimersRef.current.get(build.id);
+    if (existingTimer !== undefined) window.clearTimeout(existingTimer);
+    const timer = window.setTimeout(() => {
+      syncTimersRef.current.delete(build.id);
+      if (userRef.current) {
+        void postBuild(build).catch((error) => {
+          console.error("Error syncing build to backend:", error);
+        });
+      }
+    }, 10_000);
+    syncTimersRef.current.set(build.id, timer);
+  }
+
+  useEffect(() => () => {
+    for (const timer of syncTimersRef.current.values()) window.clearTimeout(timer);
+    syncTimersRef.current.clear();
+  }, []);
+
+  useEffect(() => {
+    void buildRepository.ready().catch((error) => {
+      console.error("Error initializing build database:", error);
+    });
+  }, [buildRepository]);
+
   async function refreshBuilds(event: string) {
-    const builds = await createBuildRepository().getAll();
+    const builds = await buildRepository.getAll();
     setAllBuilds(
       builds.filter((build) => build.event === event && build.outfitId !== ""),
     );
   }
 
   useEffect(() => {
+    if (isAuthLoading) return;
     if (!selectedEvent) {
       setUmas({
         ...createEmptyTeam(),
@@ -53,6 +91,36 @@ export function usePvpTeam(selectedEvent: string | null) {
 
     async function fetchTeam() {
       try {
+        await buildRepository.ready();
+        let remoteBuilds: StoredUmaBuild[] = [];
+        if (user && !hasLoadedRemoteBuildsRef.current) {
+          hasLoadedRemoteBuildsRef.current = true;
+          try {
+            remoteBuilds = await fetchBuilds(event);
+          } catch (error) {
+            console.error("Error fetching builds from backend:", error);
+          }
+        }
+        if (remoteBuilds.length > 0) {
+          await buildRepository.addMany(remoteBuilds);
+        }
+        const localBuilds = (await buildRepository.getAll()).filter(
+          (build) => build.event === event && build.outfitId !== "",
+        );
+        const remoteBuildIds = new Set(remoteBuilds.map((build) => build.id));
+        await Promise.all(
+          localBuilds
+            .filter((build) => !remoteBuildIds.has(build.id))
+            .map(async (build) => {
+              if (user) {
+                try {
+                  scheduleBuildSync(build);
+                } catch (error) {
+                  console.error("Error syncing build to backend:", error);
+                }
+              }
+            }),
+        );
         const repository = createTeamRepository();
         const storedTeam = await repository.getByKey(event);
         if (cancelled) {
@@ -61,7 +129,6 @@ export function usePvpTeam(selectedEvent: string | null) {
 
         if (storedTeam) {
           const normalizedTeam = normalizeStoredTeam(storedTeam, event);
-          const buildRepository = createBuildRepository();
           const storedBuilds = await buildRepository.getAll();
           await Promise.all(
             storedBuilds
@@ -134,7 +201,7 @@ export function usePvpTeam(selectedEvent: string | null) {
     return () => {
       cancelled = true;
     };
-  }, [selectedEvent]);
+  }, [selectedEvent, user, isAuthLoading]);
 
   /*
   async function selectUma(key: UmaKey, selectedUma: UmaEntry | null) {
@@ -410,12 +477,16 @@ export function usePvpTeam(selectedEvent: string | null) {
     const event = selectedEvent;
     const id = buildId ?? crypto.randomUUID();
     try {
-      await createBuildRepository().put({
+      const storedBuild: StoredUmaBuild = {
         ...build,
         event,
         id,
         name: name.trim(),
-      });
+      };
+      await buildRepository.put(storedBuild);
+      if (user) {
+        scheduleBuildSync(storedBuild);
+      }
       await refreshBuilds(event);
       return id;
     } catch (error) {

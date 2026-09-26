@@ -97,6 +97,40 @@
   padding: 0.85rem;
 }
 
+.uma-build-display-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.uma-build-mode {
+  display: flex;
+  justify-content: center;
+  gap: 0.3rem;
+  width: fit-content;
+  margin: 0 auto;
+  padding: 0.3rem;
+  background: rgba(21, 28, 39, 0.78);
+  border: 1px solid rgba(105, 183, 255, 0.16);
+  border-radius: 0.75rem;
+  box-shadow: 0 0.45rem 1rem rgba(0, 0, 0, 0.12);
+}
+
+.uma-build-mode button {
+  min-width: 7rem;
+  padding: 0.65rem 1.25rem;
+  border-color: transparent;
+  border-radius: 0.5rem;
+  font-weight: 700;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.uma-build-mode button[aria-pressed="true"] {
+  color: var(--text-color);
+  background: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
 .uma-select-label {
   display: flex;
   flex-direction: column;
@@ -109,6 +143,10 @@
 }
 
 @media (max-width: 760px) {
+  .uma-build-display-grid {
+    grid-template-columns: 1fr;
+  }
+
   .uma-selection {
     padding: 0.6rem;
   }

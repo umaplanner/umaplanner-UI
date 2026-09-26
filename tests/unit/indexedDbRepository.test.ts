@@ -18,6 +18,17 @@ function createRepository(databaseName: string) {
 }
 
 describe("IndexedDbRepository", () => {
+  it("creates the database and store when becoming ready", async () => {
+    const databaseName = "TeamDB-ready";
+    const repository = createRepository(databaseName);
+
+    await repository.ready();
+
+    const database = await openDB(databaseName);
+    expect(database.objectStoreNames.contains("teams")).toBe(true);
+    database.close();
+  });
+
   it("stores and retrieves records by key and index", async () => {
     const repository = createRepository("TeamDB-by-key");
     const team = { event: "CM 42", uma1: 101 };

@@ -28,6 +28,7 @@ function toStoredBuild(response: BuildResponse): StoredUmaBuild | null {
     ...data,
     skills: data.skills,
     forcedSkillPositions: data.forcedSkillPositions as Record<string, number>,
+    lastUpdate: typeof data.lastUpdate === "number" ? data.lastUpdate : 0,
     event: response.event,
     id: response.id,
   } as StoredUmaBuild;
@@ -52,6 +53,7 @@ export async function fetchBuilds(event: string): Promise<StoredUmaBuild[]> {
   }
   const payload: unknown = await response.json();
   const records = Array.isArray(payload) ? payload : [payload];
+
   return records.flatMap((record) => {
     if (!record || typeof record !== "object") return [];
     const build = toStoredBuild(record as BuildResponse);
@@ -59,15 +61,18 @@ export async function fetchBuilds(event: string): Promise<StoredUmaBuild[]> {
   });
 }
 
-export async function postBuild(build: StoredUmaBuild): Promise<void> {
+export async function postBuilds(builds: StoredUmaBuild[]): Promise<void> {
+  if (builds.length === 0) return;
   if (!config.apiBaseUrl) return;
+
   const url = `${config.apiBaseUrl}/builds`;
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
-    body: JSON.stringify([toBuildResponse(build)]),
+    body: JSON.stringify(builds.map(toBuildResponse)),
   });
+
   if (!response.ok) {
     throw new Error(
       `Failed to save build (${response.status}) at ${url}: ${await response.text()}`,

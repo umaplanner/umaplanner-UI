@@ -20,4 +20,5 @@ export interface StoredUmaBuild extends UmaBuild {
   id: string;
   event: string;
   name: string;
+  lastUpdate: number;
 }

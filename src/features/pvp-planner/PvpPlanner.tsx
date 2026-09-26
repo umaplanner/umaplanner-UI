@@ -34,18 +34,8 @@ export default function PvpPlanner() {
     swapTeamBuild,
   } = usePvpTeam(selectedEvent);
   useEffect(() => {
-    setDisplayBuildIds((currentIds) => {
-      const validIds = currentIds.map((id) =>
-        id !== null && allBuilds.some((build) => build.id === id) ? id : null
-      );
-      if (validIds.some((id) => id !== null)) {
-        return validIds;
-      }
-      return Array.from({ length: 3 }, (_, index) =>
-        allBuilds[index]?.id ?? null
-      );
-    });
-  }, [allBuilds]);
+    setDisplayBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
+  }, [umas]);
   const displayBuilds = displayBuildIds.map((buildId, index) => ({
     teamNumber: (index + 1) as UmaSlot,
     build: allBuilds.find((entry) => entry.id === buildId) ?? null,

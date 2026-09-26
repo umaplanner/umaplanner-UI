@@ -9,7 +9,7 @@ Possible future improvements is listed in **bold**, and features in *italics* ar
     - [ ] **During uma selection, it should show the proc time of their unique on the track**
 - [ ] Have public stats for uma/card usage for each event
 - [ ] Create a discord bot for easier acces/sharing of plans
-- [ ] Auth using Discord
+- [x] Auth using Discord
 - [ ] ***Simulation of most impactful skills for each CM***
 
 ## Design and Setup of the Project
@@ -56,8 +56,8 @@ The content of this page should change based on the event selected in the navbar
 
 ### v0.3.0 - Auth
 - [x] Auth using Discord
-- [ ] Save and retrieve based on auth
-- [ ] Design and implement database
+- [x] Save and retrieve based on auth
+- [x] Design and implement database
 
 ### v0.3.1 - Introduce skills 
 - [x] Implement skill and stat selection for each uma 

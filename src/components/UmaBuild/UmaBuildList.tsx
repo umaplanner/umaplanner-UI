@@ -1,16 +1,57 @@
 import { useEffect, useState } from "react";
 import { useEvent } from "../../contexts/PvpEventContext";
+import { useAuth } from "../../contexts/AuthContext";
 import UmaImage from "../../components/UmaImage";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import { ensureDataLoaded } from "../../lib/data";
-import { createBuildRepository } from "../../features/pvp-planner/pvpPlannerRepository";
+import {
+  createBuildRepository,
+  createTeamRepository,
+  normalizeStoredTeam,
+} from "../../features/pvp-planner/pvpPlannerRepository";
+import { deleteBuild } from "../../features/pvp-planner/buildApi";
 import "../../styles/Builds.css";
+import { sortBuildsNewestFirst } from "./umaBuildUtils";
 
 export default function Builds() {
   const { selectedEvent } = useEvent();
+  const { user } = useAuth();
   const [builds, setBuilds] = useState<StoredUmaBuild[]>([]);
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
+
+  async function handleDelete(build: StoredUmaBuild) {
+    if (!selectedEvent) return;
+    if (!window.confirm(`Delete "${build.name || "Unnamed build"}"?`)) return;
+
+    try {
+      if (user) {
+        await deleteBuild(build.event, build.id);
+      }
+      const teamRepository = createTeamRepository();
+      const storedTeam = await teamRepository.getByKey(selectedEvent);
+      if (storedTeam) {
+        const team = normalizeStoredTeam(storedTeam, selectedEvent);
+        const updatedTeam = {
+          ...team,
+          uma1: team.uma1 === build.id ? null : team.uma1,
+          uma2: team.uma2 === build.id ? null : team.uma2,
+          uma3: team.uma3 === build.id ? null : team.uma3,
+        };
+        if (
+          updatedTeam.uma1 !== team.uma1 ||
+          updatedTeam.uma2 !== team.uma2 ||
+          updatedTeam.uma3 !== team.uma3
+        ) {
+          await teamRepository.put(updatedTeam);
+        }
+      }
+      await createBuildRepository().deleteByKey([build.event, build.id]);
+      setBuilds((current) => current.filter((entry) => entry.id !== build.id));
+    } catch (error) {
+      console.error("Error deleting saved build:", error);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -30,9 +71,9 @@ export default function Builds() {
           return;
         }
 
-        setBuilds(storedBuilds.filter(
+        setBuilds(sortBuildsNewestFirst(storedBuilds.filter(
           (build) => build.event === selectedEvent && build.outfitId !== "",
-        ));
+        )));
         setUmaList((data.outfits as UmaEntry[] | undefined) ?? []);
       } catch (error) {
         console.error("Error loading saved builds:", error);
@@ -65,6 +106,14 @@ export default function Builds() {
             );
             return (
               <article className="build-card" key={build.id}>
+                <button
+                  className="build-card__delete"
+                  type="button"
+                  aria-label={`Delete ${build.name || "Unnamed build"}`}
+                  onClick={() => void handleDelete(build)}
+                >
+                  🗑
+                </button>
                 <div className="build-card__main">
                   {uma ? <UmaImage uma={uma} alt="" /> : null}
                   <div>

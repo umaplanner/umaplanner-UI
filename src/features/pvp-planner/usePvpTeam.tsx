@@ -17,10 +17,12 @@ import {
 import { fetchBuilds, postBuilds } from "./buildApi";
 import { fetchTeams, postTeams } from "./teamApi";
 import { useAuth } from "../../contexts/AuthContext";
+import { sortBuildsNewestFirst } from "../../components/UmaBuild/umaBuildUtils";
 
 export function usePvpTeam(selectedEvent: string | null) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userRef = useRef(user);
+  const umasRef = useRef<PvpTeamState | null>(null);
   const syncTimerRef = useRef<number | undefined>(undefined);
   const pendingBuildsRef = useRef(new Map<string, StoredUmaBuild>());
   const teamSyncTimerRef = useRef<number | undefined>(undefined);
@@ -36,6 +38,10 @@ export function usePvpTeam(selectedEvent: string | null) {
     uma3BuildName: "",
   });
   const [allBuilds, setAllBuilds] = useState<StoredUmaBuild[]>([]);
+
+  useEffect(() => {
+    umasRef.current = umas;
+  }, [umas]);
 
   useEffect(() => {
     userRef.current = user;
@@ -100,26 +106,30 @@ export function usePvpTeam(selectedEvent: string | null) {
   const refreshBuilds = useCallback(async (event: string) => {
     const builds = await buildRepository.getAll();
     setAllBuilds(
-      builds.filter((build) => build.event === event && build.outfitId !== ""),
+      sortBuildsNewestFirst(builds.filter(
+        (build) => build.event === event && build.outfitId !== "",
+      )),
     );
   }, [buildRepository]);
 
-  const syncRemoteBuilds = useCallback(async (event: string) => {
-    if (!userRef.current) return;
+  const syncRemoteBuilds = useCallback(async (event: string): Promise<boolean> => {
+    if (!userRef.current) return true;
 
     try {
-      const remoteBuilds = await fetchBuilds(event);
+      const { builds: remoteBuilds, deletedIds } = await fetchBuilds(event);
+      for (const deletedId of deletedIds) {
+        await buildRepository.deleteByKey([event, deletedId]);
+      }
       const localBuilds = (await buildRepository.getAll())
         .filter((build) => build.event === event && build.outfitId !== "")
-        .map((build) => {
-          if (typeof build.lastUpdate === "number") {
-            return build;
-          }
-          const normalizedBuild = { ...build, lastUpdate: 0 };
-          void buildRepository.put(normalizedBuild);
-          return normalizedBuild;
-        });
+        .map((build) => ({
+          ...build,
+          lastUpdate: Number.isFinite(build.lastUpdate) ? build.lastUpdate : 0,
+        }));
       const localById = new Map(localBuilds.map((build) => [build.id, build]));
+      for (const deletedId of deletedIds) {
+        localById.delete(deletedId);
+      }
       const buildsToSync: StoredUmaBuild[] = [];
 
       for (const remoteBuild of remoteBuilds) {
@@ -138,25 +148,73 @@ export function usePvpTeam(selectedEvent: string | null) {
         scheduleBuildSync(build);
       }
       await refreshBuilds(event);
+      const currentTeam = umasRef.current;
+      if (currentTeam?.event === event) {
+        const displayedBuilds = await Promise.all(
+          ([1, 2, 3] as const).map(async (slot) => {
+            const buildId = currentTeam[`uma${slot}`];
+            return buildId === null
+              ? undefined
+              : buildRepository.getByKey([event, buildId]);
+          }),
+        );
+        setUmas((current) => ({
+          ...current,
+          uma1Build: displayedBuilds[0] ?? createDefaultBuild(),
+          uma2Build: displayedBuilds[1] ?? createDefaultBuild(),
+          uma3Build: displayedBuilds[2] ?? createDefaultBuild(),
+          uma1BuildName: displayedBuilds[0]?.name ?? "",
+          uma2BuildName: displayedBuilds[1]?.name ?? "",
+          uma3BuildName: displayedBuilds[2]?.name ?? "",
+        }));
+      }
+      return true;
     } catch (error) {
       console.error("Error fetching builds from backend:", error);
+      return false;
     }
   }, [buildRepository, refreshBuilds]);
 
-  const syncRemoteTeam = useCallback(async (event: string) => {
-    if (!userRef.current) return;
+  const syncRemoteTeam = useCallback(async (
+    event: string,
+  ): Promise<EventTeam | null> => {
+    if (!userRef.current) return null;
     const repository = createTeamRepository();
     const localTeam = await repository.getByKey(event);
     const remoteTeam = (await fetchTeams(event))[0];
 
     if (remoteTeam && (!localTeam || remoteTeam.lastUpdate > normalizeStoredTeam(localTeam, event).lastUpdate)) {
       await repository.put(remoteTeam);
-      return;
+      const currentTeam = umasRef.current;
+      if (currentTeam?.event === event) {
+        const displayedBuilds = await Promise.all(
+          ([1, 2, 3] as const).map(async (slot) => {
+            const buildId = remoteTeam[`uma${slot}`];
+            return buildId === null
+              ? undefined
+              : buildRepository.getByKey([event, buildId]);
+          }),
+        );
+        setUmas({
+          ...currentTeam,
+          ...remoteTeam,
+          uma1Build: displayedBuilds[0] ?? createDefaultBuild(),
+          uma2Build: displayedBuilds[1] ?? createDefaultBuild(),
+          uma3Build: displayedBuilds[2] ?? createDefaultBuild(),
+          uma1BuildName: displayedBuilds[0]?.name ?? "",
+          uma2BuildName: displayedBuilds[1]?.name ?? "",
+          uma3BuildName: displayedBuilds[2]?.name ?? "",
+        });
+      }
+      return remoteTeam;
     }
     if (localTeam && (!remoteTeam || normalizeStoredTeam(localTeam, event).lastUpdate > remoteTeam.lastUpdate)) {
-      scheduleTeamSync(normalizeStoredTeam(localTeam, event));
+      const normalizedLocalTeam = normalizeStoredTeam(localTeam, event);
+      scheduleTeamSync(normalizedLocalTeam);
+      return normalizedLocalTeam;
     }
-  }, []);
+    return remoteTeam ?? null;
+  }, [buildRepository]);
 
   useEffect(() => {
     if (isAuthLoading || !user || !selectedEvent) return;
@@ -193,11 +251,16 @@ export function usePvpTeam(selectedEvent: string | null) {
       try {
         await buildRepository.ready();
         if (user) {
-          await syncRemoteBuilds(event);
-          await syncRemoteTeam(event);
+          const [buildsFetched] = await Promise.all([
+            syncRemoteBuilds(event),
+            syncRemoteTeam(event),
+          ]);
+          if (!buildsFetched) {
+            return;
+          }
         }
         const repository = createTeamRepository();
-        let storedTeam = await repository.getByKey(event);
+        const storedTeam = await repository.getByKey(event);
         if (cancelled) {
           return;
         }
@@ -240,7 +303,6 @@ export function usePvpTeam(selectedEvent: string | null) {
 
         const newTeam: PvpTeamState = {
           ...createEmptyTeam(event),
-          lastUpdate: Date.now(),
           uma1Build: createDefaultBuild(),
           uma2Build: createDefaultBuild(),
           uma3Build: createDefaultBuild(),

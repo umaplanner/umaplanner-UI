@@ -5,7 +5,13 @@ interface BuildResponse {
   event: string;
   id: string;
   data: Record<string, unknown>;
+  deletedAt?: string | null;
 }
+
+export type BuildFetchResult = {
+  builds: StoredUmaBuild[];
+  deletedIds: string[];
+};
 
 function toStoredBuild(response: BuildResponse): StoredUmaBuild | null {
   if (typeof response.event !== "string" || typeof response.id !== "string" ||
@@ -39,8 +45,8 @@ function toBuildResponse(build: StoredUmaBuild): BuildResponse {
   return { event, id, data };
 }
 
-export async function fetchBuilds(event: string): Promise<StoredUmaBuild[]> {
-  if (!config.apiBaseUrl) return [];
+export async function fetchBuilds(event: string): Promise<BuildFetchResult> {
+  if (!config.apiBaseUrl) return { builds: [], deletedIds: [] };
   const url = `${config.apiBaseUrl}/builds`;
   const response = await fetch(
     url,
@@ -54,11 +60,20 @@ export async function fetchBuilds(event: string): Promise<StoredUmaBuild[]> {
   const payload: unknown = await response.json();
   const records = Array.isArray(payload) ? payload : [payload];
 
-  return records.flatMap((record) => {
-    if (!record || typeof record !== "object") return [];
-    const build = toStoredBuild(record as BuildResponse);
-    return build && build.event === event ? [build] : [];
+  const builds: StoredUmaBuild[] = [];
+  const deletedIds: string[] = [];
+  records.forEach((record) => {
+    if (!record || typeof record !== "object") return;
+    const response = record as BuildResponse;
+    if (response.event !== event || typeof response.id !== "string") return;
+    if (response.deletedAt !== null && response.deletedAt !== undefined) {
+      deletedIds.push(response.id);
+      return;
+    }
+    const build = toStoredBuild(response);
+    if (build) builds.push(build);
   });
+  return { builds, deletedIds };
 }
 
 export async function postBuilds(builds: StoredUmaBuild[]): Promise<void> {
@@ -76,6 +91,22 @@ export async function postBuilds(builds: StoredUmaBuild[]): Promise<void> {
   if (!response.ok) {
     throw new Error(
       `Failed to save build (${response.status}) at ${url}: ${await response.text()}`,
+    );
+  }
+}
+
+export async function deleteBuild(event: string, id: string): Promise<void> {
+  if (!config.apiBaseUrl) return;
+  const url = `${config.apiBaseUrl}/builds/delete`;
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ event, id }),
+  });
+  if (!response.ok) {
+    throw new Error(
+      `Failed to delete build (${response.status}) at ${url}: ${await response.text()}`,
     );
   }
 }

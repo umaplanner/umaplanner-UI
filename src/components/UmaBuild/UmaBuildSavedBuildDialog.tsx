@@ -1,6 +1,7 @@
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import UmaImage from "../UmaImage";
+import { sortBuildsNewestFirst } from "./umaBuildUtils";
 
 interface Props {
   teamNumber: number;
@@ -32,10 +33,17 @@ export default function UmaBuildSavedBuildDialog({ teamNumber, builds, umaList, 
         </button>
       </header>
       <div>
-        {builds.map((build) => {
+        {sortBuildsNewestFirst(builds).map((build) => {
           const uma = umaList.find((entry) => String(entry.id) === build.outfitId);
           return uma ? <button type="button" key={build.id} onClick={() => { onSelect(build.id); onClose(); }}>
-          <UmaImage uma={uma} alt="" /><span><strong>{build.name || uma.outfitTitle}</strong><small>{uma.baseCharacterName}</small></span>
+          <UmaImage uma={uma} alt="" />
+          <span>
+            <strong>{build.name || "Unnamed build"}</strong>
+            <small>{uma.outfitTitle}</small>
+            <small>{uma.baseCharacterName}</small>
+            <small>Surface {build.surfaceAptitude} · Distance {build.distanceAptitude} · Style {build.strategyAptitude}</small>
+            <small>Speed {build.speed} · Stamina {build.stamina} · Power {build.power} · Guts {build.guts} · Wisdom {build.wisdom}</small>
+          </span>
           </button> : null;
           })
         }

@@ -1,5 +1,6 @@
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaEntry } from "../../types/UmaEntry";
+import type { StoredUmaBuild } from "../../types/UmaBuild";
 
 export const aptitudeOptions = ["S", "A", "B", "C", "D", "E", "F", "G"];
 export const aptitudeRankImages: Record<string, number> = {
@@ -52,4 +53,12 @@ export function getUmaUniqueSkillId(uma: UmaEntry | null | undefined) {
     return undefined;
   }
   return Number(`${charaId[0]}${outfitNumber - 1}${charaId.slice(1)}1`);
+}
+
+export function sortBuildsNewestFirst(builds: StoredUmaBuild[]) {
+  return [...builds].sort((left, right) =>
+    (Number.isFinite(right.lastUpdate) ? right.lastUpdate : 0) -
+      (Number.isFinite(left.lastUpdate) ? left.lastUpdate : 0) ||
+    right.id.localeCompare(left.id)
+  );
 }

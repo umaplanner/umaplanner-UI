@@ -31,6 +31,7 @@ export default function PvpPlanner() {
     umas,
     allBuilds,
     saveBuild,
+    swapTeamBuild,
   } = usePvpTeam(selectedEvent);
   useEffect(() => {
     setDisplayBuildIds((currentIds) => {
@@ -195,6 +196,9 @@ export default function PvpPlanner() {
                     const nextIds = [...currentIds];
                     nextIds[teamNumber - 1] = buildId;
                     return nextIds;
+                  });
+                  void swapTeamBuild(teamNumber, buildId).catch((error) => {
+                    console.error("Error swapping team build:", error);
                   });
                 }}
               />

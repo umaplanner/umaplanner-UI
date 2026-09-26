@@ -11,9 +11,11 @@ import {
 import {
   createEmptyTeam,
   createDefaultBuild,
+  type EventTeam,
   type PvpTeamState,
 } from "./pvpPlannerTypes";
 import { fetchBuilds, postBuilds } from "./buildApi";
+import { fetchTeams, postTeams } from "./teamApi";
 import { useAuth } from "../../contexts/AuthContext";
 
 export function usePvpTeam(selectedEvent: string | null) {
@@ -21,6 +23,8 @@ export function usePvpTeam(selectedEvent: string | null) {
   const userRef = useRef(user);
   const syncTimerRef = useRef<number | undefined>(undefined);
   const pendingBuildsRef = useRef(new Map<string, StoredUmaBuild>());
+  const teamSyncTimerRef = useRef<number | undefined>(undefined);
+  const pendingTeamsRef = useRef(new Map<string, EventTeam>());
   const [buildRepository] = useState(() => createBuildRepository());
   const [umas, setUmas] = useState<PvpTeamState>({
     ...createEmptyTeam(),
@@ -43,6 +47,7 @@ export function usePvpTeam(selectedEvent: string | null) {
     if (syncTimerRef.current !== undefined) {
       window.clearTimeout(syncTimerRef.current);
     }
+
     syncTimerRef.current = window.setTimeout(() => {
       syncTimerRef.current = undefined;
       const builds = Array.from(pendingBuildsRef.current.values());
@@ -55,12 +60,35 @@ export function usePvpTeam(selectedEvent: string | null) {
     }, 10_000);
   }
 
+  function scheduleTeamSync(team: EventTeam) {
+    if (!userRef.current) return;
+    pendingTeamsRef.current.set(team.event, team);
+    if (teamSyncTimerRef.current !== undefined) {
+      window.clearTimeout(teamSyncTimerRef.current);
+    }
+    teamSyncTimerRef.current = window.setTimeout(() => {
+      teamSyncTimerRef.current = undefined;
+      const teams = Array.from(pendingTeamsRef.current.values());
+      pendingTeamsRef.current.clear();
+      if (userRef.current) {
+        void postTeams(teams).catch((error) => {
+          console.error("Error syncing teams to backend:", error);
+        });
+      }
+    }, 10_000);
+  }
+
   useEffect(() => () => {
     if (syncTimerRef.current !== undefined) {
       window.clearTimeout(syncTimerRef.current);
     }
+    if (teamSyncTimerRef.current !== undefined) {
+      window.clearTimeout(teamSyncTimerRef.current);
+    }
     syncTimerRef.current = undefined;
+    teamSyncTimerRef.current = undefined;
     pendingBuildsRef.current.clear();
+    pendingTeamsRef.current.clear();
   }, []);
 
   useEffect(() => {
@@ -115,14 +143,32 @@ export function usePvpTeam(selectedEvent: string | null) {
     }
   }, [buildRepository, refreshBuilds]);
 
+  const syncRemoteTeam = useCallback(async (event: string) => {
+    if (!userRef.current) return;
+    const repository = createTeamRepository();
+    const localTeam = await repository.getByKey(event);
+    const remoteTeam = (await fetchTeams(event))[0];
+
+    if (remoteTeam && (!localTeam || remoteTeam.lastUpdate > normalizeStoredTeam(localTeam, event).lastUpdate)) {
+      await repository.put(remoteTeam);
+      return;
+    }
+    if (localTeam && (!remoteTeam || normalizeStoredTeam(localTeam, event).lastUpdate > remoteTeam.lastUpdate)) {
+      scheduleTeamSync(normalizeStoredTeam(localTeam, event));
+    }
+  }, []);
+
   useEffect(() => {
     if (isAuthLoading || !user || !selectedEvent) return;
     const event = selectedEvent;
     const interval = window.setInterval(() => {
       void syncRemoteBuilds(event);
+      void syncRemoteTeam(event).catch((error) => {
+        console.error("Error fetching teams from backend:", error);
+      });
     }, 60_000);
     return () => window.clearInterval(interval);
-  }, [isAuthLoading, selectedEvent, syncRemoteBuilds, user]);
+  }, [isAuthLoading, selectedEvent, syncRemoteBuilds, syncRemoteTeam, user]);
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -148,9 +194,10 @@ export function usePvpTeam(selectedEvent: string | null) {
         await buildRepository.ready();
         if (user) {
           await syncRemoteBuilds(event);
+          await syncRemoteTeam(event);
         }
         const repository = createTeamRepository();
-        const storedTeam = await repository.getByKey(event);
+        let storedTeam = await repository.getByKey(event);
         if (cancelled) {
           return;
         }
@@ -193,6 +240,7 @@ export function usePvpTeam(selectedEvent: string | null) {
 
         const newTeam: PvpTeamState = {
           ...createEmptyTeam(event),
+          lastUpdate: Date.now(),
           uma1Build: createDefaultBuild(),
           uma2Build: createDefaultBuild(),
           uma3Build: createDefaultBuild(),
@@ -216,6 +264,9 @@ export function usePvpTeam(selectedEvent: string | null) {
         void uma2BuildName;
         void uma3BuildName;
         await repository.put(teamRecord);
+        if (user) {
+          scheduleTeamSync(teamRecord);
+        }
         if (!cancelled) {
           setUmas(newTeam);
           await refreshBuilds(event);
@@ -236,6 +287,7 @@ export function usePvpTeam(selectedEvent: string | null) {
     buildRepository,
     refreshBuilds,
     syncRemoteBuilds,
+    syncRemoteTeam,
   ]);
 
 
@@ -270,9 +322,33 @@ export function usePvpTeam(selectedEvent: string | null) {
     }
   }
 
+  async function swapTeamBuild(slot: 1 | 2 | 3, buildId: string): Promise<void> {
+    if (!selectedEvent || !buildId) return;
+
+    const event = selectedEvent;
+    const repository = createTeamRepository();
+    const storedTeam = await repository.getByKey(event);
+    const team = normalizeStoredTeam(storedTeam ?? createEmptyTeam(event), event);
+    const updatedTeam = {
+      ...team,
+      [`uma${slot}`]: buildId,
+      lastUpdate: Date.now(),
+    } as typeof team;
+
+    await repository.put(updatedTeam);
+    if (user) {
+      scheduleTeamSync(updatedTeam);
+    }
+    setUmas((current) => ({
+      ...current,
+      ...updatedTeam,
+    }));
+  }
+
   return {
     umas,
     allBuilds,
     saveBuild,
+    swapTeamBuild,
   };
 }

@@ -9,6 +9,7 @@ export type EventTeam = {
   uma1: string | null;
   uma2: string | null;
   uma3: string | null;
+  lastUpdate: number;
 };
 
 export type PvpTeamState = EventTeam & {
@@ -46,5 +47,6 @@ export function createEmptyTeam(event = ""): EventTeam {
     uma1: null,
     uma2: null,
     uma3: null,
+    lastUpdate: 0,
   };
 }

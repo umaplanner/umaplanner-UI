@@ -17,7 +17,7 @@ export function createRaceRepository() {
 export function createTeamRepository() {
   return new IndexedDbRepository<EventTeam>({
     databaseName: "TeamDB",
-    version: 1,
+    version: 2,
     storeName: "teams",
     keyPath: "event",
   });
@@ -41,5 +41,8 @@ export function normalizeStoredTeam(
     ...createEmptyTeam(event),
     ...storedTeam,
     event,
+    lastUpdate: typeof storedTeam.lastUpdate === "number"
+      ? storedTeam.lastUpdate
+      : 0,
   };
 }

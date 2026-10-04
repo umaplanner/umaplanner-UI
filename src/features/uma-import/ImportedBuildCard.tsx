@@ -25,6 +25,19 @@ interface ImportedBuildCardProps {
   onRemoveBuild: (buildId: string) => Promise<boolean>;
 }
 
+function getCreateTime(build: StoredUmaBuild) {
+  if (build.create_time === undefined) {
+    return null;
+  }
+
+  const date = new Date(
+    typeof build.create_time === "number" && build.create_time < 1_000_000_000_000
+      ? build.create_time * 1000
+      : build.create_time,
+  );
+  return Number.isNaN(date.getTime()) ? null : date.getTime();
+}
+
 export default function ImportedBuildCard({
   build,
   uma,
@@ -74,6 +87,7 @@ export default function ImportedBuildCard({
     name: build.name ?? "",
     lastUpdate: 0,
     outfitId: String(build.card_id),
+    create_time: build.created_time ?? build.create_time,
     starCount: 0,
     uniqueLv: 0,
     speed: build.speed,
@@ -97,10 +111,14 @@ export default function ImportedBuildCard({
   const isAlreadySaved = Boolean(currentEvent) && (
     savedBuildId !== null ||
     savedBuilds.some((savedBuild) =>
-      savedBuild.event === currentEvent && savedBuild.outfitId === displayBuild.outfitId)
+      savedBuild.event === currentEvent &&
+      getCreateTime(savedBuild) !== null &&
+      getCreateTime(savedBuild) === getCreateTime(displayBuild))
   );
   const savedBuild = savedBuilds.find((entry) =>
-    entry.event === currentEvent && entry.outfitId === displayBuild.outfitId);
+    entry.event === currentEvent &&
+    getCreateTime(entry) !== null &&
+    getCreateTime(entry) === getCreateTime(displayBuild));
 
   async function handleSaveBuild() {
     const name = window.prompt("Enter a name for this build:", build.name ?? "")?.trim();

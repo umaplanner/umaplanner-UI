@@ -26,6 +26,9 @@ function toStoredBuild(response: BuildResponse): StoredUmaBuild | null {
     typeof data.distanceAptitude !== "string" ||
     typeof data.surfaceAptitude !== "string" ||
     typeof data.strategyAptitude !== "string" || typeof data.mood !== "number" ||
+    (data.create_time !== undefined &&
+      typeof data.create_time !== "number" &&
+      typeof data.create_time !== "string") ||
     !Array.isArray(data.skills) ||
     !data.skills.every((skill) => typeof skill === "string") ||
     !data.forcedSkillPositions || typeof data.forcedSkillPositions !== "object" ||

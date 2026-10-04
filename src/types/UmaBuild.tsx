@@ -1,5 +1,6 @@
 export interface UmaBuild {
   outfitId: string;
+  create_time?: number | string;
   starCount: number;
   uniqueLv: number;
   speed: number;

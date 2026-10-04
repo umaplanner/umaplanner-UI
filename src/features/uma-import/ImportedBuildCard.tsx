@@ -108,6 +108,11 @@ export default function ImportedBuildCard({
       limit_break_count: card.limit_break_count,
     })),
   };
+  const savedBuild = savedBuilds.find((entry) =>
+    entry.event === currentEvent &&
+    getCreateTime(entry) !== null &&
+    getCreateTime(entry) === getCreateTime(displayBuild));
+  const displayName = savedBuild?.name;
   const isAlreadySaved = Boolean(currentEvent) && (
     savedBuildId !== null ||
     savedBuilds.some((savedBuild) =>
@@ -115,10 +120,6 @@ export default function ImportedBuildCard({
       getCreateTime(savedBuild) !== null &&
       getCreateTime(savedBuild) === getCreateTime(displayBuild))
   );
-  const savedBuild = savedBuilds.find((entry) =>
-    entry.event === currentEvent &&
-    getCreateTime(entry) !== null &&
-    getCreateTime(entry) === getCreateTime(displayBuild));
 
   async function handleSaveBuild() {
     const name = window.prompt("Enter a name for this build:", build.name ?? "")?.trim();
@@ -159,8 +160,9 @@ export default function ImportedBuildCard({
       <div className="build-card__main">
         {uma ? <UmaImage uma={uma} alt="" /> : null}
         <div>
-          <h2>{uma?.outfitTitle ?? `Uma ${build.card_id}`}</h2>
-          {build.name ? <p>{build.name}</p> : null}
+          <h2>{displayName || uma?.outfitTitle || `Uma ${build.card_id}`}</h2>
+          {!displayName && build.name ? <p>{build.name}</p> : null}
+          {displayName ? <p>{uma?.outfitTitle}</p> : null}
           {uma ? <p>{uma.baseCharacterName}</p> : null}
         </div>
       </div>
@@ -200,7 +202,9 @@ export default function ImportedBuildCard({
           onClick={() => void (isAlreadySaved ? handleRemoveBuild() : handleSaveBuild())}
           className={isAlreadySaved ? "build-card__remove-button" : undefined}
         >
-          {isAlreadySaved ? "Remove build from current CM" : "Save build to current CM"}
+          {isAlreadySaved
+            ? `Remove ${displayName ?? build.name ?? "build"} from current event`
+            : "Save build to current event"}
         </button>
         {saveError ? <span className="build-card__save-error" role="alert">{saveError}</span> : null}
       </div>

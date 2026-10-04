@@ -30,11 +30,10 @@ export default function Layout({children}: LayoutProps) {
       <header className="site-header">
         <nav aria-label="Main navigation">
           <NavLink to="/">Home</NavLink>
-          <NavLink to={routes.overview}>PvP Overview</NavLink>
-          <NavLink to={routes.planner}>PvP Planner</NavLink>
-
-
+          <NavLink to={routes.overview}>Overview</NavLink>
+          <NavLink to={routes.planner}>Planner</NavLink>
           <EventSelector />
+          <NavLink to={routes.umaImport}>Imports</NavLink>
           <UserMenu />
         </nav>
       </header>

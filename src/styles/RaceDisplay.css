@@ -54,10 +54,7 @@
 
 .race-card__date {
   min-width: 8.25rem;
-  padding: 0.65rem 0.8rem;
-  background: rgba(13, 17, 23, 0.28);
-  border: 1px solid rgba(105, 183, 255, 0.16);
-  border-radius: 0.7rem;
+  padding: 0.2rem 0;
   text-align: right;
 }
 

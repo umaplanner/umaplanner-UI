@@ -7,28 +7,28 @@ import {
   createBuildRepository,
   createTeamRepository,
   normalizeStoredTeam,
-} from "./pvpPlannerRepository";
+} from "./plannerRepository";
 import {
   createEmptyTeam,
   createDefaultBuild,
   type EventTeam,
-  type PvpTeamState,
-} from "./pvpPlannerTypes";
-import { fetchBuilds, postBuilds } from "./buildApi";
+  type TeamState,
+} from "./plannerTypes";
+import { deleteBuild, fetchBuilds, postBuilds } from "./buildApi";
 import { fetchTeams, postTeams } from "./teamApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { sortBuildsNewestFirst } from "../../components/UmaBuild/umaBuildUtils";
 
-export function usePvpTeam(selectedEvent: string | null) {
+export function useTeam(selectedEvent: string | null) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userRef = useRef(user);
-  const umasRef = useRef<PvpTeamState | null>(null);
+  const umasRef = useRef<TeamState | null>(null);
   const syncTimerRef = useRef<number | undefined>(undefined);
   const pendingBuildsRef = useRef(new Map<string, StoredUmaBuild>());
   const teamSyncTimerRef = useRef<number | undefined>(undefined);
   const pendingTeamsRef = useRef(new Map<string, EventTeam>());
   const [buildRepository] = useState(() => createBuildRepository());
-  const [umas, setUmas] = useState<PvpTeamState>({
+  const [umas, setUmas] = useState<TeamState>({
     ...createEmptyTeam(),
     uma1Build: createDefaultBuild(),
     uma2Build: createDefaultBuild(),
@@ -287,7 +287,7 @@ export function usePvpTeam(selectedEvent: string | null) {
               return undefined;
             }),
           );
-          const loadedTeam: PvpTeamState = {
+          const loadedTeam: TeamState = {
             ...normalizedTeam,
             uma1Build: buildEntries[0]?.build ?? createDefaultBuild(),
             uma2Build: buildEntries[1]?.build ?? createDefaultBuild(),
@@ -301,7 +301,7 @@ export function usePvpTeam(selectedEvent: string | null) {
           return;
         }
 
-        const newTeam: PvpTeamState = {
+        const newTeam: TeamState = {
           ...createEmptyTeam(event),
           uma1Build: createDefaultBuild(),
           uma2Build: createDefaultBuild(),
@@ -384,6 +384,47 @@ export function usePvpTeam(selectedEvent: string | null) {
     }
   }
 
+  async function removeBuild(buildId: string): Promise<boolean> {
+    if (!selectedEvent || !buildId) return false;
+    const event = selectedEvent;
+    try {
+      await buildRepository.deleteByKey([event, buildId]);
+      const teamRepository = createTeamRepository();
+      const storedTeam = await teamRepository.getByKey(event);
+      if (storedTeam) {
+        const team = normalizeStoredTeam(storedTeam, event);
+        const updatedTeam = {
+          ...team,
+          uma1: team.uma1 === buildId ? null : team.uma1,
+          uma2: team.uma2 === buildId ? null : team.uma2,
+          uma3: team.uma3 === buildId ? null : team.uma3,
+          lastUpdate: Date.now(),
+        };
+        if (updatedTeam.uma1 !== team.uma1 || updatedTeam.uma2 !== team.uma2 || updatedTeam.uma3 !== team.uma3) {
+          await teamRepository.put(updatedTeam);
+          if (user) scheduleTeamSync(updatedTeam);
+          setUmas((current) => ({ ...current, ...updatedTeam }));
+        }
+      }
+      if (user) {
+        try {
+          await deleteBuild(event, buildId);
+        } catch (error) {
+          if (error instanceof Error && error.message.includes("(404)")) {
+            console.warn("Saved build was already absent from the remote service:", buildId);
+          } else {
+            throw error;
+          }
+        }
+      }
+      await refreshBuilds(event);
+      return true;
+    } catch (error) {
+      console.error("Error removing Uma build:", error);
+      return false;
+    }
+  }
+
   async function swapTeamBuild(slot: 1 | 2 | 3, buildId: string): Promise<void> {
     if (!selectedEvent || !buildId) return;
 
@@ -411,6 +452,7 @@ export function usePvpTeam(selectedEvent: string | null) {
     umas,
     allBuilds,
     saveBuild,
+    removeBuild,
     swapTeamBuild,
   };
 }

@@ -12,7 +12,7 @@ export type EventTeam = {
   lastUpdate: number;
 };
 
-export type PvpTeamState = EventTeam & {
+export type TeamState = EventTeam & {
   uma1Build: UmaBuildData;
   uma2Build: UmaBuildData;
   uma3Build: UmaBuildData;
@@ -38,6 +38,7 @@ export function createDefaultBuild(outfitId = ""): UmaBuildData {
     mood: 0,
     skills: [],
     forcedSkillPositions: {},
+    supportCards: [],
   };
 }
 

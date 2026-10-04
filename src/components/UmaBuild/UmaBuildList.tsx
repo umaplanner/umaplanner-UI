@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useEvent } from "../../contexts/PvpEventContext";
+import { useEvent } from "../../contexts/EventContext";
 import { useAuth } from "../../contexts/AuthContext";
 import UmaImage from "../../components/UmaImage";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
@@ -9,8 +9,8 @@ import {
   createBuildRepository,
   createTeamRepository,
   normalizeStoredTeam,
-} from "../../features/pvp-planner/pvpPlannerRepository";
-import { deleteBuild } from "../../features/pvp-planner/buildApi";
+} from "../../features/planner/plannerRepository";
+import { deleteBuild } from "../../features/planner/buildApi";
 import "../../styles/Builds.css";
 import { sortBuildsNewestFirst } from "./umaBuildUtils";
 

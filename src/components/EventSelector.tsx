@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useEvent } from "../contexts/PvpEventContext";
+import { useEvent } from "../contexts/EventContext";
 import { config } from "../lib/config";
 import {
   getAdjacentEvent,

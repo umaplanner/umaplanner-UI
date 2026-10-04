@@ -169,8 +169,8 @@ export default function ImportedBuildCard({
         <span>Distance <img src={getRankImage(distanceRank)} alt={`Rank ${getAptitudeRank(distanceRank)}`} /></span>
         <span>
           Style
-          {strategyIcon ? <img src={`/icons/style/${strategyIcon}.webp`} alt={strategyName} /> : null}
           <img src={getRankImage(styleRank)} alt={`Rank ${getAptitudeRank(styleRank)}`} />
+          {strategyIcon ? <img src={`/icons/style/${strategyIcon}.webp`} alt={strategyName} /> : null}
           <button className="build-card__details-button" type="button" onClick={() => setIsDetailsOpen(true)}>
             Details
           </button>

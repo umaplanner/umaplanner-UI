@@ -34,6 +34,7 @@ export default function UmaImport() {
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
   const [skillList, setSkillList] = useState<SkillEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -79,6 +80,13 @@ export default function UmaImport() {
   }
 
   const sortedBuilds = [...builds].sort((left, right) => getBuildDate(right) - getBuildDate(left));
+  const normalizedSearch = search.trim().toLowerCase();
+  const filteredBuilds = sortedBuilds.filter((build) => {
+    const uma = umaList.find((entry) => entry.id === build.card_id);
+    return `${build.name ?? ""} ${uma?.outfitTitle ?? ""} ${uma?.baseCharacterName ?? ""}`
+      .toLowerCase()
+      .includes(normalizedSearch);
+  });
 
   return (
     <section className="builds-page">
@@ -91,11 +99,23 @@ export default function UmaImport() {
         </label>
         {error ? <p role="alert">{error}</p> : null}
       </header>
+      {builds.length > 0 ? (
+        <input
+          className="builds-page__search"
+          type="search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search by build, outfit, or character"
+          aria-label="Search imported builds"
+        />
+      ) : null}
       {builds.length === 0 ? (
         <p className="builds-page__empty">No builds imported.</p>
+      ) : filteredBuilds.length === 0 ? (
+        <p className="builds-page__empty">No imported builds match your search.</p>
       ) : (
         <div className="builds-grid">
-          {sortedBuilds.map((build, index) => (
+          {filteredBuilds.map((build, index) => (
             <ImportedBuildCard
               key={`${build.card_id}-${index}`}
               build={build}

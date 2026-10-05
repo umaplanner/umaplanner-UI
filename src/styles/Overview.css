@@ -1,0 +1,145 @@
+.overview-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.overview-page > h1 {
+  margin: 0;
+}
+
+.overview-page > h2 {
+  margin: 0;
+}
+
+.overview-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.overview-panel {
+  min-width: 0;
+  padding: 0.8rem;
+  background: rgba(21, 28, 39, 0.78);
+  border: 1px solid rgba(105, 183, 255, 0.16);
+  border-radius: 0.85rem;
+}
+
+.overview-panel h3 {
+  margin: 0 0 0.65rem;
+}
+
+.overview-outfit-list,
+.overview-team-list {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.overview-outfit,
+.overview-team {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 0.45rem;
+  background: rgba(27, 37, 51, 0.72);
+  border: 1px solid var(--border-color);
+  border-radius: 0.65rem;
+}
+
+.overview-outfit__image,
+.overview-outfit__placeholder {
+  width: 3rem;
+  height: 3rem;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 0.45rem;
+}
+
+.overview-outfit__placeholder,
+.overview-team__placeholder {
+  background: var(--surface-color);
+}
+
+.overview-outfit__details,
+.overview-team__member > span:last-child {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.overview-outfit__details strong,
+.overview-outfit__details small,
+.overview-team__member strong,
+.overview-team__member small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overview-outfit__details small,
+.overview-team__member small {
+  color: var(--muted-text-color);
+  font-size: 0.75rem;
+}
+
+.overview-count {
+  flex: 0 0 auto;
+  color: var(--accent-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.overview-team {
+  align-items: center;
+}
+
+.overview-team__members {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  gap: 0.35rem;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.overview-team__member {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.overview-team__member img,
+.overview-team__placeholder {
+  width: 2.1rem;
+  height: 2.1rem;
+  flex: 0 0 auto;
+  object-fit: cover;
+  border-radius: 0.4rem;
+}
+
+.overview-team__member img[title] {
+  object-fit: contain;
+  padding: 0.15rem;
+}
+
+.overview-team__placeholder {
+  display: block;
+}
+
+@media (max-width: 800px) {
+  .overview-columns {
+    grid-template-columns: 1fr;
+  }
+}

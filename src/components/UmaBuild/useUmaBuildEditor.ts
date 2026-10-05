@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { findSkill } from "./umaBuildUtils";
+import { findSkill, hasRunawaySkill, runawayStrategy } from "./umaBuildUtils";
 import { useSkillPickerPreferences } from "../Preferences";
 
 interface Options {
@@ -112,6 +112,13 @@ export default function useUmaBuildEditor({
     onChange({ ...value, [field]: nextValue });
   }
 
+  useEffect(() => {
+    if (!hasRunawaySkill(skillList, value.skills) || value.strategy === runawayStrategy) {
+      return;
+    }
+    onChange({ ...value, strategy: runawayStrategy });
+  }, [onChange, skillList, value]);
+
   function startNewBuild() {
     setDraftBuildName("");
     if (onNewBuild) {
@@ -176,7 +183,12 @@ export default function useUmaBuildEditor({
       ),
     );
 
-    onChange({ ...value, skills, forcedSkillPositions });
+    onChange({
+      ...value,
+      skills,
+      forcedSkillPositions,
+      strategy: hasRunawaySkill(skillList, skills) ? runawayStrategy : value.strategy,
+    });
   }
 
   function removeSkill(index: number) {

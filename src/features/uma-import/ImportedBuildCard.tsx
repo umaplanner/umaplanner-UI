@@ -9,6 +9,8 @@ import {
   getAptitudeRank,
   getAptitudeRankImage,
   getStatRank,
+  hasRunawaySkill,
+  runawayStrategy,
   runningStyleNames,
   strategyIcons,
 } from "../../components/UmaBuild/umaBuildUtils";
@@ -54,7 +56,6 @@ export default function ImportedBuildCard({
   const [savedBuildId, setSavedBuildId] = useState<string | null>(null);
   const detailsDialogRef = useRef<HTMLDialogElement | null>(null);
   const strategyName = runningStyleNames[build.running_style];
-  const strategyIcon = strategyName ? strategyIcons[strategyName] : undefined;
   const ground = groundType?.toLowerCase() === "dirt" ? "dirt" : "turf";
   const distance = {
     sprint: "short",
@@ -81,6 +82,10 @@ export default function ImportedBuildCard({
         : rawCreatedTime,
     );
   const importedSkillIds = getImportedSkillIds(build.skill_array);
+  const strategy = hasRunawaySkill(skillList, importedSkillIds)
+    ? runawayStrategy
+    : strategyName ?? "";
+  const strategyIcon = strategyIcons[strategy];
   const displayBuild: StoredUmaBuild = {
     id: `imported-${build.card_id}`,
     event: "imported",
@@ -95,7 +100,7 @@ export default function ImportedBuildCard({
     power: build.power,
     guts: build.guts,
     wisdom: build.wiz,
-    strategy: strategyName ?? "",
+    strategy,
     distanceAptitude: getAptitudeRank(distanceRank),
     surfaceAptitude: getAptitudeRank(groundRank),
     strategyAptitude: getAptitudeRank(styleRank),

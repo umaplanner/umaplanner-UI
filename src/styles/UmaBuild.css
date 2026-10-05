@@ -179,6 +179,11 @@
   height: 1.65rem;
 }
 
+.uma-build--display img[src$="/runaway.webp"] {
+  width: 2.28rem;
+  height: 2.28rem;
+}
+
 .uma-build--display .uma-build__stat-control {
   justify-content: center;
   flex-direction: row;

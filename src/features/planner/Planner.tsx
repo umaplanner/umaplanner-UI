@@ -9,7 +9,7 @@ import "../../styles/Planner.css";
 import { usePlannerData } from "./usePlannerData";
 import { useTeam } from "./useTeam";
 import { createDefaultBuild, type UmaSlot } from "./plannerTypes";
-import { getUmaUniqueSkillId } from "../../components/UmaBuild/umaBuildUtils";
+import { getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../components/UmaBuild/umaBuildUtils";
 
 export default function Planner() {
   const [buildMode, setBuildMode] = useState<"display" | "edit" | "builds">("display");
@@ -64,7 +64,11 @@ export default function Planner() {
     onSelectUma: (uma: typeof selectedUma) => {
       setEditingBuildDraft({
         slot: editingBuild,
-        build: { ...editorBuild, outfitId: uma ? String(uma.id) : "" },
+        build: {
+          ...editorBuild,
+          outfitId: uma ? String(uma.id) : "",
+          strategy: umaHasRunawaySkill(uma, skillList) ? runawayStrategy : editorBuild.strategy,
+        },
         name: editingBuildDraft?.slot === editingBuild
           ? editingBuildDraft.name
           : umas[`uma${editingBuild}BuildName`],

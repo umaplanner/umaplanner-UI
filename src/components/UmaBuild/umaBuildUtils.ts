@@ -6,9 +6,10 @@ export const aptitudeOptions = ["S", "A", "B", "C", "D", "E", "F", "G"];
 export const aptitudeRankImages: Record<string, number> = {
   S: 14, A: 12, B: 10, C: 8, D: 6, E: 4, F: 2, G: 0,
 };
-export const strategyOptions = ["Nige", "Senkou", "Sashi", "Oikomi", "Oonige"];
+export const strategyOptions = ["Nige", "Senkou", "Sashi", "Oikomi", "Runaway"];
 export const strategyIcons: Record<string, string> = {
   Nige: "front", Senkou: "pace", Sashi: "late", Oikomi: "end",
+  Runaway: "runaway", Oonige: "runaway",
 };
 export const runningStyleNames: Record<number, string> = {
   1: "Nige", 2: "Senkou", 3: "Sashi", 4: "Oikomi",
@@ -36,6 +37,25 @@ export function getStatRank(stat: number) {
 export function findSkill(skillList: SkillEntry[], skillId: string) {
   return skillList.find((skill) => skill.id === skillId) ??
     skillList.find((skill) => skill.name === skillId);
+}
+
+export function hasRunawaySkill(skillList: SkillEntry[], skillIds: string[]) {
+  return skillIds.some((skillId) => {
+    const skill = findSkill(skillList, skillId);
+    return skillId === "202051" || skill?.id === "202051" ||
+      skill?.name.trim().toLowerCase() === "runaway";
+  });
+}
+
+export const runawayStrategy = "Runaway";
+
+export function umaHasRunawaySkill(
+  uma: UmaEntry | null | undefined,
+  skillList: SkillEntry[],
+) {
+  if (!uma) return false;
+  const uniqueSkillId = uma.uniqueSkillId ?? getUmaUniqueSkillId(uma);
+  return hasRunawaySkill(skillList, uniqueSkillId === undefined ? [] : [String(uniqueSkillId)]);
 }
 
 export function sortSkillsByDisplayOrder(

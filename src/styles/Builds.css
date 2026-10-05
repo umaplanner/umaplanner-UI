@@ -154,6 +154,11 @@
   object-fit: contain;
 }
 
+.build-card__aptitudes img[src$="/runaway.webp"] {
+  width: 2.28rem;
+  height: 2.28rem;
+}
+
 .build-card__details-button {
   margin-left: auto;
   padding: 0.2rem 0.45rem;

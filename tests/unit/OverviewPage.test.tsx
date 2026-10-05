@@ -61,9 +61,9 @@ describe("OverviewPage", () => {
     expect(await screen.findAllByText("Classic")).not.toHaveLength(0);
     expect(screen.getByText("Outfits")).toBeInTheDocument();
     expect(screen.getByText("Team setups")).toBeInTheDocument();
-    expect(screen.getByText("30%")).toBeInTheDocument();
-    expect(screen.getByText("20%")).toBeInTheDocument();
-    expect(screen.getAllByText("10%")).toHaveLength(2);
+    expect(screen.getByText("3")).toBeInTheDocument();
+    expect(screen.getByText("2")).toBeInTheDocument();
+    expect(screen.getAllByText("1")).toHaveLength(2);
     expect(screen.queryByText("Running style")).not.toBeInTheDocument();
     expect(screen.getAllByAltText("Nige")).toHaveLength(3);
     expect(await getCachedOverview("CM 42/Final")).toEqual({

@@ -136,9 +136,8 @@ function getOverviewRows(data: unknown): {
   };
 }
 
-function formatPercentage(count: number, denominator: number): string {
-  const percentage = denominator > 0 ? (count / denominator) * 100 : 0;
-  return `${Number(percentage.toFixed(1))}%`;
+function formatCount(count: number): string {
+  return count.toLocaleString();
 }
 
 export default function Overview({
@@ -150,11 +149,6 @@ export default function Overview({
 }: OverviewProps) {
   const { outfits, teams } = getOverviewRows(data);
   const dataRecord = asRecord(data);
-  const userCount = dataRecord?.userCount;
-  const participantCount = typeof userCount === "number" &&
-      Number.isFinite(userCount) && userCount > 0
-    ? userCount
-    : undefined;
   const hasSupportedData = Array.isArray(dataRecord?.outfits) ||
     asRecord(dataRecord?.outfits) !== undefined ||
     Array.isArray(dataRecord?.teams) ||
@@ -167,10 +161,6 @@ export default function Overview({
     const bUma = umaList.find((uma) => String(uma.id) === b.id);
     return (aUma?.outfitTitle ?? a.id).localeCompare(bUma?.outfitTitle ?? b.id);
   });
-  const outfitDenominator = participantCount ??
-    sortedOutfits.reduce((total, outfit) => total + outfit.count, 0);
-  const teamDenominator = participantCount ??
-    teams.reduce((total, team) => total + team.count, 0);
 
   return (
     <section className="overview-page">
@@ -208,8 +198,12 @@ export default function Overview({
                           <strong>{uma?.outfitTitle ?? `Outfit ${id}`}</strong>
                           <small>{uma?.baseCharacterName ?? "Unknown character"}</small>
                         </span>
-                        <span className="overview-count">
-                          {formatPercentage(count, outfitDenominator)}
+                        <span
+                          className="overview-count"
+                          aria-label={`${formatCount(count)} uses`}
+                          title={`${formatCount(count)} uses`}
+                        >
+                          {formatCount(count)}
                         </span>
                       </li>
                     );
@@ -260,8 +254,12 @@ export default function Overview({
                           );
                         })}
                       </div>
-                      <span className="overview-count">
-                        {formatPercentage(count, teamDenominator)}
+                      <span
+                        className="overview-count"
+                        aria-label={`${formatCount(count)} uses`}
+                        title={`${formatCount(count)} uses`}
+                      >
+                        {formatCount(count)}
                       </span>
                     </li>
                   ))}

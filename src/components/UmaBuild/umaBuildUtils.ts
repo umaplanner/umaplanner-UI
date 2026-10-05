@@ -6,10 +6,10 @@ export const aptitudeOptions = ["S", "A", "B", "C", "D", "E", "F", "G"];
 export const aptitudeRankImages: Record<string, number> = {
   S: 14, A: 12, B: 10, C: 8, D: 6, E: 4, F: 2, G: 0,
 };
-export const strategyOptions = ["Nige", "Senkou", "Sashi", "Oikomi", "Runaway"];
+export const strategyOptions = ["Nige", "Senkou", "Sashi", "Oikomi", "Oonige"];
 export const strategyIcons: Record<string, string> = {
   Nige: "front", Senkou: "pace", Sashi: "late", Oikomi: "end",
-  Runaway: "runaway", Oonige: "runaway",
+  Oonige: "runaway",
 };
 export const runningStyleNames: Record<number, string> = {
   1: "Nige", 2: "Senkou", 3: "Sashi", 4: "Oikomi",
@@ -47,7 +47,7 @@ export function hasRunawaySkill(skillList: SkillEntry[], skillIds: string[]) {
   });
 }
 
-export const runawayStrategy = "Runaway";
+export const runawayStrategy = "Oonige";
 
 export function umaHasRunawaySkill(
   uma: UmaEntry | null | undefined,

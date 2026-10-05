@@ -14,6 +14,7 @@ export const strategyIcons: Record<string, string> = {
 export const runningStyleNames: Record<number, string> = {
   1: "Nige", 2: "Senkou", 3: "Sashi", 4: "Oikomi",
 };
+export const runawaySkillId = "202051";
 export const statFields = ["speed", "stamina", "power", "guts", "wisdom"] as const;
 
 export function getAptitudeRank(value: number) {
@@ -39,12 +40,14 @@ export function findSkill(skillList: SkillEntry[], skillId: string) {
     skillList.find((skill) => skill.name === skillId);
 }
 
+export function isRunawaySkill(skillList: SkillEntry[], skillId: string) {
+  const skill = findSkill(skillList, skillId);
+  return skillId === runawaySkillId || skill?.id === runawaySkillId ||
+    skill?.name.trim().toLowerCase() === "runaway";
+}
+
 export function hasRunawaySkill(skillList: SkillEntry[], skillIds: string[]) {
-  return skillIds.some((skillId) => {
-    const skill = findSkill(skillList, skillId);
-    return skillId === "202051" || skill?.id === "202051" ||
-      skill?.name.trim().toLowerCase() === "runaway";
-  });
+  return skillIds.some((skillId) => isRunawaySkill(skillList, skillId));
 }
 
 export const runawayStrategy = "Oonige";
@@ -62,6 +65,14 @@ export function sortSkillsByDisplayOrder(
   skills: string[],
   skillList: SkillEntry[],
 ) {
+  return sortSkillsByDisplayOrderWithIndex(skills, skillList)
+    .map(({ skill }) => skill);
+}
+
+export function sortSkillsByDisplayOrderWithIndex(
+  skills: string[],
+  skillList: SkillEntry[],
+) {
   return skills
     .map((skill, index) => ({
       skill,
@@ -72,8 +83,7 @@ export function sortSkillsByDisplayOrder(
       (left.entry?.displayOrder ?? Number.MAX_SAFE_INTEGER) -
         (right.entry?.displayOrder ?? Number.MAX_SAFE_INTEGER) ||
       left.index - right.index
-    )
-    .map(({ skill }) => skill);
+    );
 }
 
 export function getUmaUniqueSkillId(uma: UmaEntry | null | undefined) {

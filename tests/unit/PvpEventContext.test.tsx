@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   EventProvider,
   useEvent,
-} from "../../src/contexts/PvpEventContext";
+} from "../../src/contexts/EventContext";
 
 function EventConsumer() {
   const { selectedEvent, setSelectedEvent } = useEvent();

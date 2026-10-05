@@ -1,18 +1,19 @@
 import { useEffect, useState } from "react";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { useEvent } from "../../contexts/PvpEventContext";
+import { useEvent } from "../../contexts/EventContext";
 import UmaBuild from "../../components/UmaBuild/UmaBuild";
 import UmaBuildDisplay from "../../components/UmaBuild/UmaBuildDisplay";
 import UmaBuildList from "../../components/UmaBuild/UmaBuildList";
 import RaceDisplay from "../../components/RaceDisplay";
-import "../../styles/PvpPlanner.css";
-import { usePvpPlannerData } from "./usePvpPlannerData";
-import { usePvpTeam } from "./usePvpTeam";
-import { createDefaultBuild, type UmaSlot } from "./pvpPlannerTypes";
+import "../../styles/Planner.css";
+import { usePlannerData } from "./usePlannerData";
+import { useTeam } from "./useTeam";
+import { createDefaultBuild, type UmaSlot } from "./plannerTypes";
 import { getUmaUniqueSkillId } from "../../components/UmaBuild/umaBuildUtils";
 
-export default function PvpPlanner() {
+export default function Planner() {
   const [buildMode, setBuildMode] = useState<"display" | "edit" | "builds">("display");
+  const [showSupportCards, setShowSupportCards] = useState(true);
   const [editingBuild] = useState<UmaSlot>(1);
   const [editingBuildDraft, setEditingBuildDraft] = useState<{
     slot: UmaSlot;
@@ -26,13 +27,13 @@ export default function PvpPlanner() {
     null,
   ]);
   const { selectedEvent } = useEvent();
-  const { raceEntry, umaList, skillList } = usePvpPlannerData(selectedEvent);
+  const { raceEntry, umaList, skillList } = usePlannerData(selectedEvent);
   const {
     umas,
     allBuilds,
     saveBuild,
     swapTeamBuild,
-  } = usePvpTeam(selectedEvent);
+  } = useTeam(selectedEvent);
   useEffect(() => {
     setDisplayBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
   }, [umas]);
@@ -172,27 +173,39 @@ export default function PvpPlanner() {
         {buildMode === "builds" ? (
           <UmaBuildList />
         ) : buildMode === "display" ? (
-          <div className="uma-build-display-grid">
-            {displayBuilds.map(({ teamNumber, build }) => (
-              <UmaBuildDisplay
-                key={teamNumber}
-                teamNumber={teamNumber}
-                build={build}
-                availableBuilds={allBuilds}
-                umaList={umaList}
-                skillList={skillList}
-                onSelectBuild={(buildId) => {
-                  setDisplayBuildIds((currentIds) => {
-                    const nextIds = [...currentIds];
-                    nextIds[teamNumber - 1] = buildId;
-                    return nextIds;
-                  });
-                  void swapTeamBuild(teamNumber, buildId).catch((error) => {
-                    console.error("Error swapping team build:", error);
-                  });
-                }}
+          <div className="uma-build-display">
+            <label className="uma-build-display__support-toggle">
+              <input
+                type="checkbox"
+                checked={showSupportCards}
+                onChange={(event) => setShowSupportCards(event.target.checked)}
               />
-            ))}
+              Show support cards
+            </label>
+            <div className="uma-build-display-grid">
+              {displayBuilds.map(({ teamNumber, build }) => (
+                <UmaBuildDisplay
+                  key={teamNumber}
+                  teamNumber={teamNumber}
+                  build={build}
+                  availableBuilds={allBuilds}
+                  umaList={umaList}
+                  skillList={skillList}
+                  showSupportCards={showSupportCards}
+                  compactText
+                  onSelectBuild={(buildId) => {
+                    setDisplayBuildIds((currentIds) => {
+                      const nextIds = [...currentIds];
+                      nextIds[teamNumber - 1] = buildId;
+                      return nextIds;
+                    });
+                    void swapTeamBuild(teamNumber, buildId).catch((error) => {
+                      console.error("Error swapping team build:", error);
+                    });
+                  }}
+                />
+              ))}
+            </div>
           </div>
         ) : <UmaBuild {...editProps} teamNumber={editingBuild} />}
       </section>

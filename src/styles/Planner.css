@@ -97,6 +97,18 @@
   padding: 0.85rem;
 }
 
+.uma-build-mode {
+  align-self: center;
+  margin: 0;
+  padding: 0.2rem;
+}
+
+.uma-build-mode button {
+  min-width: auto;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+}
+
 .uma-build-display-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

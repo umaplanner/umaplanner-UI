@@ -1,8 +1,8 @@
 import { IndexedDbRepository } from "../../components/indexedDbRepository";
 import type { RaceEntry } from "../../types/RaceEntry";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
-import type { EventTeam } from "./pvpPlannerTypes";
-import { createEmptyTeam } from "./pvpPlannerTypes";
+import type { EventTeam } from "./plannerTypes";
+import { createEmptyTeam } from "./plannerTypes";
 
 export function createRaceRepository() {
   return new IndexedDbRepository<RaceEntry>({

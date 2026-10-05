@@ -10,7 +10,18 @@ export const strategyOptions = ["Nige", "Senkou", "Sashi", "Oikomi", "Oonige"];
 export const strategyIcons: Record<string, string> = {
   Nige: "front", Senkou: "pace", Sashi: "late", Oikomi: "end",
 };
+export const runningStyleNames: Record<number, string> = {
+  1: "Nige", 2: "Senkou", 3: "Sashi", 4: "Oikomi",
+};
 export const statFields = ["speed", "stamina", "power", "guts", "wisdom"] as const;
+
+export function getAptitudeRank(value: number) {
+  return ["G", "F", "E", "D", "C", "B", "A", "S"][value - 1] ?? "Unknown";
+}
+
+export function getAptitudeRankImage(value: number) {
+  return aptitudeRankImages[getAptitudeRank(value)] ?? 0;
+}
 
 export function getStatRank(stat: number) {
   const value = Math.max(0, stat);

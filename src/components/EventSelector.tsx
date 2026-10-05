@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useEvent } from "../contexts/PvpEventContext";
+import { useEvent } from "../contexts/EventContext";
 import { config } from "../lib/config";
 import {
   getAdjacentEvent,
@@ -8,6 +8,9 @@ import {
 } from "../lib/eventNavigation";
 import type { RaceEntry } from "../types/RaceEntry";
 import { IndexedDbRepository } from "./indexedDbRepository";
+
+const RACE_ENTRIES_LAST_FETCHED_KEY = "raceEntriesLastFetched";
+const ONE_DAY_IN_MILLISECONDS = 24 * 60 * 60 * 1000;
 
 export default function EventSelector() {
   const { selectedEvent, setSelectedEvent } = useEvent();
@@ -40,19 +43,45 @@ export default function EventSelector() {
         if (storedEntries.length > 0) {
           setRaceEntries(storedEntries as RaceEntry[]);
           console.log("Loaded race entries from IndexedDB");
+        }
+
+        const lastFetched = Number(
+          localStorage.getItem(RACE_ENTRIES_LAST_FETCHED_KEY),
+        );
+        if (
+          storedEntries.length > 0 &&
+          Number.isFinite(lastFetched) &&
+          Date.now() - lastFetched < ONE_DAY_IN_MILLISECONDS
+        ) {
           return;
         }
 
         const response = await fetch(`${config.apiBaseUrl}/races`);
+        if (!response.ok) {
+          throw new Error(`Unable to fetch race entries (${response.status})`);
+        }
+
         const data: RaceEntry[] = await response.json();
 
+        const fetchedEventTitles = new Set(
+          data.map((entry) => entry.eventTitle),
+        );
+        await Promise.all(
+          storedEntries
+            .filter((entry) => !fetchedEventTitles.has(entry.eventTitle))
+            .map((entry) => db.deleteByKey(entry.eventTitle)),
+        );
         await db.addMany(data);
+        localStorage.setItem(
+          RACE_ENTRIES_LAST_FETCHED_KEY,
+          String(Date.now()),
+        );
 
         if (!cancelled) {
           setRaceEntries(data);
         }
 
-        console.log("Fetched and stored race entries in IndexedDB");
+        console.log("Fetched and updated race entries in IndexedDB");
       } catch (error) {
         console.error("Error fetching race entries:", error);
       }

@@ -1,5 +1,5 @@
 import { config } from "../../lib/config";
-import type { EventTeam } from "./pvpPlannerTypes";
+import type { EventTeam } from "./plannerTypes";
 
 function toStoredTeam(value: unknown): EventTeam | null {
   if (!value || typeof value !== "object") return null;

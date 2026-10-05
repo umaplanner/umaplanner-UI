@@ -3,15 +3,17 @@ import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import UmaBuildAptitudes from "./UmaBuildAptitudes";
 import UmaBuildStats from "./UmaBuildStats";
 import { findSkill, sortSkillsByDisplayOrder } from "./umaBuildUtils";
+import SupportCardImage from "./SupportCardImage";
 
 interface Props {
   build: UmaBuildData;
   uniqueSkill: SkillEntry | undefined;
   skillList: SkillEntry[];
   teamNumber: number;
+  showSupportCards: boolean;
 }
 
-export default function UmaBuildDisplaySections({ build, uniqueSkill, skillList, teamNumber }: Props) {
+export default function UmaBuildDisplaySections({ build, uniqueSkill, skillList, teamNumber, showSupportCards }: Props) {
   return (
     <>
       <section className="uma-build__panel uma-build__stats-panel" aria-labelledby={`stats-heading-${teamNumber}`}>
@@ -30,6 +32,22 @@ export default function UmaBuildDisplaySections({ build, uniqueSkill, skillList,
           <UmaBuildAptitudes value={build} />
         </div>
       </section>
+
+      {showSupportCards && build.supportCards && build.supportCards.length > 0 ? (
+        <section className="uma-build__panel uma-build__support-cards" aria-labelledby={`support-cards-heading-${teamNumber}`}>
+          <div className="uma-build__section-heading">
+            <h4 id={`support-cards-heading-${teamNumber}`}>Support Cards</h4>
+          </div>
+          <div className="uma-build__support-card-list">
+            {build.supportCards.map((card) => (
+              <div className="uma-build__support-card" key={card.position}>
+                <SupportCardImage card={card} />
+                <small>LB {card.limit_break_count}</small>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="uma-build__panel uma-build__skills" aria-labelledby={`skills-heading-${teamNumber}`}>
         <div className="uma-build__section-heading">

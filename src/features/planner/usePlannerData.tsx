@@ -3,13 +3,15 @@ import { ensureDataLoaded } from "../../lib/data";
 import type { RaceEntry } from "../../types/RaceEntry";
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaEntry } from "../../types/UmaEntry";
-import { createRaceRepository } from "./pvpPlannerRepository";
+import type { SupportCardEntry } from "../../types/UmaBuild";
+import { createRaceRepository } from "./plannerRepository";
 import { normalizeSkillData } from "./skillData";
 
-export function usePvpPlannerData(selectedEvent: string | null) {
+export function usePlannerData(selectedEvent: string | null) {
   const [raceEntry, setRaceEntry] = useState<RaceEntry>();
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
   const [skillList, setSkillList] = useState<SkillEntry[]>([]);
+  const [supportCardList, setSupportCardList] = useState<SupportCardEntry[]>([]);
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -57,10 +59,22 @@ export function usePvpPlannerData(selectedEvent: string | null) {
         const loadedData = await ensureDataLoaded();
         const data = (loadedData.outfits as UmaEntry[] | undefined) ?? [];
         const skills = normalizeSkillData(loadedData.skills);
+        const rawSupportCards = loadedData.supportCards ?? loadedData.support_cards;
+        const supportCards = Array.isArray(rawSupportCards)
+          ? rawSupportCards.flatMap((entry) => {
+            if (!entry || typeof entry !== "object") return [];
+            const record = entry as Record<string, unknown>;
+            const id = Number(record.id ?? record.support_card_id ?? record.card_id);
+            return Number.isFinite(id)
+              ? [{ id, name: typeof record.name === "string" ? record.name : undefined }]
+              : [];
+          })
+          : [];
 
         if (!cancelled) {
           setUmaList(data);
           setSkillList(skills);
+          setSupportCardList(supportCards);
         }
       } catch (error) {
         console.error("Error fetching UMA variants:", error);
@@ -73,5 +87,5 @@ export function usePvpPlannerData(selectedEvent: string | null) {
     };
   }, []);
 
-  return { raceEntry, umaList, skillList };
+  return { raceEntry, umaList, skillList, supportCardList };
 }

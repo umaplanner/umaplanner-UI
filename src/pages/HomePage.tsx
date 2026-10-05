@@ -4,8 +4,8 @@ export default function HomePage() {
   return (
     <section className="home-page">
       <div className="home-intro">
-        <p className="home-eyebrow">Uma Musume PvP planning</p>
-        <h1>Plan your PvP teams.</h1>
+        <p className="home-eyebrow">Uma Musume planning</p>
+        <h1>Plan your teams.</h1>
         <p className="home-description">
           UmaPlanner is a tool for planning teams for Champions Meeting and
           Legends of Heroes. Check the race conditions, choose your
@@ -23,7 +23,7 @@ export default function HomePage() {
           <li>
             <span className="feature-icon" aria-hidden="true">01</span>
             <span>
-              <strong>PvP Overview</strong>
+              <strong>Overview</strong>
               <span>See community team trends and the most popular Umas for each event.</span>
             </span>
           </li>

@@ -1,9 +1,10 @@
 import { Routes, Route } from "react-router";
 import Layout from "../components/Layout";
 import HomePage from "../pages/HomePage";
-import PvpOverviewPage from "../pages/PvpOverviewPage";
-import PvpPlannerPage from "../pages/PvpPlannerPage";
-import { EventProvider } from "../contexts/PvpEventContext";
+import OverviewPage from "../pages/OverviewPage";
+import PlannerPage from "../pages/PlannerPage";
+import UmaImport from "../features/uma-import/UmaImport";
+import { EventProvider } from "../contexts/EventContext";
 import { AuthProvider } from "../contexts/AuthContext";
 import { routes } from "./routes";
 
@@ -14,8 +15,9 @@ export default function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path={routes.overview} element={<PvpOverviewPage />} />
-            <Route path={routes.planner} element={<PvpPlannerPage />} />
+            <Route path={routes.overview} element={<OverviewPage />} />
+            <Route path={routes.planner} element={<PlannerPage />} />
+            <Route path={routes.umaImport} element={<UmaImport />} />
           </Routes>
         </Layout>
       </EventProvider>

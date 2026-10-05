@@ -26,9 +26,21 @@ function toStoredBuild(response: BuildResponse): StoredUmaBuild | null {
     typeof data.distanceAptitude !== "string" ||
     typeof data.surfaceAptitude !== "string" ||
     typeof data.strategyAptitude !== "string" || typeof data.mood !== "number" ||
+    (data.create_time !== undefined &&
+      typeof data.create_time !== "number" &&
+      typeof data.create_time !== "string") ||
     !Array.isArray(data.skills) ||
     !data.skills.every((skill) => typeof skill === "string") ||
-    !data.forcedSkillPositions || typeof data.forcedSkillPositions !== "object"
+    !data.forcedSkillPositions || typeof data.forcedSkillPositions !== "object" ||
+    (data.supportCards !== undefined && (
+      !Array.isArray(data.supportCards) ||
+      !data.supportCards.every((card) =>
+        card && typeof card === "object" &&
+        typeof card.position === "number" &&
+        typeof card.support_card_id === "number" &&
+        typeof card.limit_break_count === "number"
+      )
+    ))
   ) return null;
   return {
     ...data,

@@ -4,7 +4,7 @@ export default function HomePage() {
   return (
     <section className="home-page">
       <div className="home-intro">
-        <p className="home-eyebrow">Uma Musume planning</p>
+        <p className="home-eyebrow">UmaMusume planning</p>
         <h1>Plan your teams.</h1>
         <p className="home-description">
           UmaPlanner is a tool for planning teams for Champions Meeting and
@@ -12,12 +12,13 @@ export default function HomePage() {
           Umas, and save your plans in the planner.
         </p>
         <p className="home-note">
-          Plans are currently saved locally in your browser.
+          Plans are saved locally in your browser. <br />
+          If you want to access your plans across devices, sign in with Discord to sync your plans.
         </p>
       </div>
 
       <div className="home-roadmap">
-        <p className="home-eyebrow">Planned updates</p>
+        <p className="home-eyebrow">In progress or planned updates</p>
         <h2>Upcoming features</h2>
         <ul className="feature-list">
           <li>
@@ -30,24 +31,26 @@ export default function HomePage() {
           <li>
             <span className="feature-icon" aria-hidden="true">02</span>
             <span>
-              <strong>Account sync</strong>
-              <span>Sign in with Discord and access your plans across devices.</span>
+              <strong>Plans</strong>
+              <span>A simplified "editor" for simple plans without needing builds</span>
             </span>
           </li>
           <li>
             <span className="feature-icon" aria-hidden="true">03</span>
             <span>
-              <strong>Sharing and privacy</strong>
-              <span>Share plans with others, or keep them private and anonymous.</span>
+              <strong>Inherits</strong>
+              <span>
+                Have a separate section for parents either for specific events or for general styles/distances.
+              </span>
             </span>
           </li>
-          <li>
-            <span className="feature-icon" aria-hidden="true">04</span>
-            <span>
-              <strong>Public stats and Discord tools</strong>
-              <span>Compare Uma and support-card usage, with easier access through Discord.</span>
-            </span>
-          </li>
+          {/* <li> */}
+          {/*   <span className="feature-icon" aria-hidden="true">04</span> */}
+          {/*   <span> */}
+          {/*     <strong>Potentially a Discord bot (Probably not)</strong> */}
+          {/*     <span>Option for using discord as a way to access the overview/builds</span> */}
+          {/*   </span> */}
+          {/* </li> */}
         </ul>
       </div>
     </section>

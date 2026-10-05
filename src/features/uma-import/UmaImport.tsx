@@ -92,7 +92,7 @@ export default function UmaImport() {
     <section className="builds-page">
       <header className="builds-page__header">
         <h1>Imports</h1>
-        <p>Select a JSON export containing a list of Uma builds.</p>
+        <p>Import your UmaExtractor JSON export.</p>
         <label>
           Import JSON
           <input type="file" accept="application/json,.json" onChange={handleFileChange} />

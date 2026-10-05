@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import {
@@ -68,6 +68,10 @@ export default function useUmaBuildEditor({
   const uniqueSkill = uniqueSkillId === undefined
     ? undefined
     : skillList.find((skill) => skill.id === String(uniqueSkillId));
+  const getSkillId = useCallback(
+    (skill: string) => findSkill(skillList, skill)?.id ?? skill,
+    [skillList],
+  );
 
   useEffect(() => setDraftBuildName(buildName), [buildName]);
 
@@ -75,28 +79,23 @@ export default function useUmaBuildEditor({
     const shouldForceUniqueSkill = uniqueSkill !== undefined &&
       (!isRunawaySkill(skillList, uniqueSkill.id) ||
         value.strategy === runawayStrategy);
+    const previouslyForcedSkills = new Set(
+      Object.keys(value.forcedSkillPositions).map(getSkillId),
+    );
+    const retainedSkills = value.skills.filter((skill) => {
+      const skillId = getSkillId(skill);
+      return !previouslyForcedSkills.has(skillId) &&
+        !(uniqueSkill && !shouldForceUniqueSkill && skillId === uniqueSkill.id);
+    });
     const skills = shouldForceUniqueSkill && uniqueSkill
       ? [
           uniqueSkill.id,
-          ...value.skills.filter((skill) =>
-            getSkillId(skill) !== uniqueSkill.id &&
-            value.forcedSkillPositions[skill] === undefined,
-          ),
+          ...retainedSkills.filter((skill) => getSkillId(skill) !== uniqueSkill.id),
         ]
-      : uniqueSkill && isRunawaySkill(skillList, uniqueSkill.id)
-        ? value.skills.filter((skill) => getSkillId(skill) !== uniqueSkill.id)
-        : value.skills;
-    const forcedSkillPositions = Object.fromEntries(
-      Object.entries(value.forcedSkillPositions).filter(([skillName]) =>
-        skills.includes(skillName) &&
-          (!uniqueSkill ||
-            shouldForceUniqueSkill && skillName === uniqueSkill.id),
-      ),
-    );
-
-    if (shouldForceUniqueSkill && uniqueSkill) {
-      forcedSkillPositions[uniqueSkill.id] = 0;
-    }
+      : retainedSkills;
+    const forcedSkillPositions = shouldForceUniqueSkill && uniqueSkill
+      ? { [uniqueSkill.id]: 0 }
+      : {};
 
     if (
       value.skills.length === skills.length &&
@@ -107,7 +106,7 @@ export default function useUmaBuildEditor({
     ) return;
 
     onChange({ ...value, skills, forcedSkillPositions });
-  }, [onChange, skillList, uniqueSkill, value]);
+  }, [getSkillId, onChange, skillList, uniqueSkill, value]);
 
   useEffect(() => {
     if (!isSkillPickerOpen) return;
@@ -158,10 +157,6 @@ export default function useUmaBuildEditor({
     } else {
       onChange(emptyBuild);
     }
-  }
-
-  function getSkillId(skill: string) {
-    return findSkill(skillList, skill)?.id ?? skill;
   }
 
   function isForcedSkill(skillId: string) {

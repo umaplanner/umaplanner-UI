@@ -24,6 +24,16 @@ const ordinarySkill: SkillEntry = {
   rarity: 1,
 };
 
+const uniqueSkill: SkillEntry = {
+  id: "100001",
+  name: "Unique skill",
+  groupId: null,
+  iconId: 3,
+  isGeneralSkill: false,
+  displayOrder: 0,
+  rarity: 1,
+};
+
 function createBuild(strategy: string, skills: string[]): UmaBuild {
   return {
     outfitId: "1001",
@@ -140,6 +150,38 @@ describe("useUmaBuildEditor runaway skill behavior", () => {
       expect.objectContaining({
         strategy: "Nige",
         skills: [ordinarySkill.id],
+      }),
+    );
+  });
+
+  it("removes a previously forced unique skill when the selected outfit has none", () => {
+    const onChange = vi.fn();
+    const initialValue = {
+      ...createBuild("Nige", [uniqueSkill.id, ordinarySkill.id]),
+      forcedSkillPositions: { [uniqueSkill.id]: 0 },
+    };
+    const initialProps: { uniqueSkillId: number | undefined } = {
+      uniqueSkillId: Number(uniqueSkill.id),
+    };
+    const { rerender } = renderHook(
+      ({ selectedUniqueSkillId }) => useUmaBuildEditor({
+        value: initialValue,
+        onChange,
+        skillList: [uniqueSkill, runawaySkill, ordinarySkill],
+        uniqueSkillId: selectedUniqueSkillId,
+        buildName: "",
+        buildId: null,
+        savedBuilds: [],
+      }),
+      { initialProps: { selectedUniqueSkillId: initialProps.uniqueSkillId } },
+    );
+
+    rerender({ selectedUniqueSkillId: undefined });
+
+    expect(onChange).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        skills: [ordinarySkill.id],
+        forcedSkillPositions: {},
       }),
     );
   });

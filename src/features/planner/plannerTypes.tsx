@@ -24,6 +24,7 @@ export type TeamState = EventTeam & {
 export function createDefaultBuild(outfitId = ""): UmaBuildData {
   return {
     outfitId,
+    "build-type": "standard",
     starCount: 3,
     uniqueLv: 1,
     speed: 1200,

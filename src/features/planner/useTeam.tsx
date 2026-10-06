@@ -367,6 +367,7 @@ export function useTeam(selectedEvent: string | null) {
     try {
       const storedBuild: StoredUmaBuild = {
         ...build,
+        "build-type": build["build-type"] ?? "standard",
         event,
         id,
         name: name.trim(),

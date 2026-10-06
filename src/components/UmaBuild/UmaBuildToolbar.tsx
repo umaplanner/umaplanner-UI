@@ -2,6 +2,7 @@ import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../types/UmaBu
 
 interface Props {
   value: UmaBuildData;
+  onTogglePlan: (isPlan: boolean) => void;
   savedBuilds: StoredUmaBuild[];
   onNewBuild: () => void;
   onSaveBuild?: (build: UmaBuildData, name: string) => void | Promise<void>;
@@ -19,7 +20,7 @@ interface Props {
 }
 
 export default function UmaBuildToolbar({
-  value, savedBuilds, onNewBuild, onSaveBuild, onSelectSavedBuild,
+  value, onTogglePlan, savedBuilds, onNewBuild, onSaveBuild, onSelectSavedBuild,
   isBuildCopied, isBuildLoaded, draftBuildName, setDraftBuildName,
   hasDuplicateName, saveMenuRef, isSaveMenuOpen, setIsSaveMenuOpen,
   copyBuildJson, loadBuildJson,
@@ -36,6 +37,14 @@ export default function UmaBuildToolbar({
         }}>{hasDuplicateName ? "Override" : "Submit"}</button>
       </span> : null}
     </span> : null}
+    <label className="uma-build__plan-toggle" aria-label="Plan build">
+    <input
+      type="checkbox"
+      checked={value["build-type"] === "plan"}
+      onChange={(event) => onTogglePlan(event.target.checked)}
+    />
+    Plan
+    </label>
     {onSelectSavedBuild ? <select aria-label="Load unused build" defaultValue="" onChange={(event) => {
       if (event.target.value) {
         void onSelectSavedBuild(event.target.value);

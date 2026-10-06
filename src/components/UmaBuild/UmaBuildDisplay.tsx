@@ -86,13 +86,21 @@ export default function UmaBuildDisplay({
         {selectedUma ? (
           <>
             <UmaImage uma={selectedUma} alt="" />
-            <span>
+            <span className="uma-build__uma-copy">
+              {build?.["build-type"] === "plan" ? (
+                <small className="uma-build__plan-label">PLAN</small>
+              ) : null}
               <strong>{selectedUma.outfitTitle}</strong>
               <small>{selectedUma.baseCharacterName}</small>
             </span>
           </>
         ) : (
-          <span className="uma-build__uma-placeholder">No Uma selected</span>
+          <span className="uma-build__uma-placeholder">
+            {build?.["build-type"] === "plan" ? (
+              <small className="uma-build__plan-label">PLAN</small>
+            ) : null}
+            No Uma selected
+          </span>
         )}
         {availableBuilds.length > 0 || build ? (
           <div className="uma-build__display-actions">

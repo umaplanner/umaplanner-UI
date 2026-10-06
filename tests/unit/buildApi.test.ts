@@ -29,7 +29,10 @@ describe("postBuilds", () => {
     expect(JSON.parse(request.body)).toEqual([
       expect.objectContaining({
         id: "runaway",
-        data: expect.objectContaining({ strategy: "Oonige" }),
+        data: expect.objectContaining({
+          strategy: "Oonige",
+          "build-type": "standard",
+        }),
       }),
     ]);
   });
@@ -67,7 +70,7 @@ describe("postBuilds", () => {
       json: async () => [{
         event,
         id,
-        data: { ...data, strategy: "Oonige" },
+        data: { ...data, strategy: "Oonige", "build-type": "plan" },
       }],
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -75,5 +78,6 @@ describe("postBuilds", () => {
     const result = await fetchBuilds(event);
 
     expect(result.builds[0].strategy).toBe("Oonige");
+    expect(result.builds[0]["build-type"]).toBe("plan");
   });
 });

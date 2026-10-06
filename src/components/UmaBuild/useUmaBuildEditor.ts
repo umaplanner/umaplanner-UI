@@ -24,6 +24,7 @@ interface Options {
 
 const emptyBuild: UmaBuildData = {
   outfitId: "",
+  "build-type": "standard",
   starCount: 3,
   uniqueLv: 1,
   speed: 1200,
@@ -299,10 +300,14 @@ async function loadBuildJson() {
       !Array.isArray(rawBuild.forcedSkillPositions) &&
       (Object.keys(rawBuild.forcedSkillPositions).length === 0 || 
        Object.values(rawBuild.forcedSkillPositions).every((position) => typeof position === "number" && Number.isFinite(position)));
+    const buildTypeValid = rawBuild["build-type"] === undefined ||
+      rawBuild["build-type"] === "standard" ||
+      rawBuild["build-type"] === "plan";
 
     const valid = rawBuild && typeof rawBuild === "object" &&
       numberFieldsValid &&
       stringFieldsValid &&
+      buildTypeValid &&
       moodValid &&
       skillsValid &&
       forcedSkillPositionsValid;
@@ -312,6 +317,9 @@ async function loadBuildJson() {
     // Set default value for starCount if it doesn't exist
     if (rawBuild.starCount === undefined) {
       rawBuild.starCount = 3;
+    }
+    if (rawBuild["build-type"] === undefined) {
+      rawBuild["build-type"] = "standard";
     }
 
     const loadedBuild = rawBuild as unknown as UmaBuildData;

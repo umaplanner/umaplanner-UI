@@ -26,6 +26,9 @@ function toStoredBuild(response: BuildResponse): StoredUmaBuild | null {
     typeof data.distanceAptitude !== "string" ||
     typeof data.surfaceAptitude !== "string" ||
     typeof data.strategyAptitude !== "string" || typeof data.mood !== "number" ||
+    (data["build-type"] !== undefined &&
+      data["build-type"] !== "standard" &&
+      data["build-type"] !== "plan") ||
     (data.create_time !== undefined &&
       typeof data.create_time !== "number" &&
       typeof data.create_time !== "string") ||

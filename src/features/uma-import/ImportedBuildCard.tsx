@@ -92,6 +92,7 @@ export default function ImportedBuildCard({
     name: build.name ?? "",
     lastUpdate: 0,
     outfitId: String(build.card_id),
+    "build-type": build["build-type"] ?? "standard",
     create_time: build.created_time ?? build.create_time,
     starCount: 0,
     uniqueLv: 0,

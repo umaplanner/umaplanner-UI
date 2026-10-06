@@ -90,6 +90,7 @@ export default function UmaBuild({
     <section className="uma-build" aria-label={`Build Uma ${teamNumber}`}>
       <UmaBuildToolbar
         value={value}
+        onTogglePlan={(isPlan) => editor.updateField("build-type", isPlan ? "plan" : "standard")}
         savedBuilds={savedBuilds}
         onNewBuild={editor.startNewBuild}
         onSaveBuild={onSaveBuild}

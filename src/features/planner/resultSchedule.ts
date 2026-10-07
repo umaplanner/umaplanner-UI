@@ -23,14 +23,26 @@ export function getResultOpenAt(
   return startDate;
 }
 
+export function getResultOpeningDates(
+  raceEntry: RaceEntry | undefined,
+): Record<TeamResultRow, Date | null> {
+  return Object.fromEntries(
+    (Object.keys(resultDayOffsets) as TeamResultRow[]).map((row) => [
+      row,
+      getResultOpenAt(raceEntry, row),
+    ]),
+  ) as Record<TeamResultRow, Date | null>;
+}
+
 export function getResultAvailability(
   raceEntry: RaceEntry | undefined,
   now = new Date(),
 ): Record<TeamResultRow, boolean> {
+  const openingDates = getResultOpeningDates(raceEntry);
   return Object.fromEntries(
-    (Object.keys(resultDayOffsets) as TeamResultRow[]).map((row) => [
+    (Object.keys(openingDates) as TeamResultRow[]).map((row) => [
       row,
-      (getResultOpenAt(raceEntry, row)?.getTime() ?? Infinity) <= now.getTime(),
+      (openingDates[row]?.getTime() ?? Infinity) <= now.getTime(),
     ]),
   ) as Record<TeamResultRow, boolean>;
 }
@@ -39,8 +51,7 @@ export function getNextResultOpeningAt(
   raceEntry: RaceEntry | undefined,
   now = new Date(),
 ): Date | null {
-  const upcoming = (Object.keys(resultDayOffsets) as TeamResultRow[])
-    .map((row) => getResultOpenAt(raceEntry, row))
+  const upcoming = Object.values(getResultOpeningDates(raceEntry))
     .filter((date): date is Date => date !== null && date.getTime() > now.getTime())
     .sort((left, right) => left.getTime() - right.getTime());
 

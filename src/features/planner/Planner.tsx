@@ -19,6 +19,7 @@ import { getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../
 import {
   getNextResultOpeningAt,
   getResultAvailability,
+  getResultOpeningDates,
 } from "./resultSchedule";
 
 export default function Planner() {
@@ -47,6 +48,7 @@ export default function Planner() {
     ? raceEntry
     : undefined;
   const resultAvailability = getResultAvailability(activeRaceEntry, currentTime);
+  const resultOpeningDates = getResultOpeningDates(activeRaceEntry);
   const {
     umas,
     allBuilds,
@@ -291,6 +293,7 @@ export default function Planner() {
             event={selectedEvent}
             results={eventResults.results}
             resultAvailability={resultAvailability}
+            resultOpeningDates={resultOpeningDates}
             buildAssignments={eventResults.buildAssignments}
             ticketBuildResults={eventResults.ticketBuildResults}
             ticketCounts={eventResults.ticketCounts}

@@ -38,9 +38,7 @@ export function createResultActions({
     const current = getCurrentResults();
     const rowResults = current?.results[row];
     const currentTicketCount = current?.ticketCounts[row];
-    const winsTotal = builds.length > 0
-      ? builds.reduce((total, build) => total + build.wins, 0)
-      : teamWins;
+    const winsTotal = teamWins ?? builds.reduce((total, build) => total + build.wins, 0);
     const uniqueBuilds = new Set(builds.map((build) => build.buildId));
     const uniqueSlots = new Set(builds.map((build) => build.slot));
     if (
@@ -53,7 +51,7 @@ export function createResultActions({
     if (
       currentTicketCount === undefined ||
       ticket > currentTicketCount + 1 ||
-      builds.length > 3 ||
+      builds.length !== 3 ||
       uniqueBuilds.size !== builds.length ||
       uniqueSlots.size !== builds.length ||
       winsTotal === undefined ||
@@ -88,7 +86,7 @@ export function createResultActions({
       ...current.ticketBuildResults,
       [row]: {
         ...current.ticketBuildResults[row],
-        [ticket]: builds,
+        [ticket]: teamWins === undefined ? builds : [],
       },
     };
     saveEventResults({

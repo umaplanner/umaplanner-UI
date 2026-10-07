@@ -10,7 +10,11 @@ import type { UmaEntry } from "../../../types/UmaEntry";
 import UmaImage from "../../UmaImage";
 import UmaBuildDisplay from "../display/Display";
 import type { ResultBuildSummary } from "./types";
-import { formatUmaPlacement, formatWinRate } from "./utils";
+import {
+  formatResultOpeningDate,
+  formatUmaPlacement,
+  formatWinRate,
+} from "./utils";
 
 interface Props {
   finalPlacement: TeamFinalPlacement | null;
@@ -18,6 +22,7 @@ interface Props {
   finalBuilds: [StoredUmaBuild | undefined, StoredUmaBuild | undefined, StoredUmaBuild | undefined];
   hasFinalsData: boolean;
   canAddFinals: boolean;
+  finalsOpeningDate: Date | null;
   summaryBuilds: ResultBuildSummary[];
   totalWinRate: number | null;
   totalWins: number;
@@ -35,6 +40,7 @@ export default function Summary({
   finalBuilds,
   hasFinalsData,
   canAddFinals,
+  finalsOpeningDate,
   summaryBuilds,
   totalWinRate,
   totalWins,
@@ -102,6 +108,13 @@ export default function Summary({
                 {hasFinalsData ? "Edit Finals" : "Add Finals results"}
               </button>
             </div>
+            {!hasFinalsData && !canAddFinals ? (
+              <p className="uma-build-results__availability" role="status">
+                {finalsOpeningDate
+                  ? `Available at ${formatResultOpeningDate(finalsOpeningDate)}`
+                  : "Not available yet"}
+              </p>
+            ) : null}
             {hasFinalsData ? (
               <div className="uma-build-results__summary-finals-grid">
                 {([1, 2, 3] as const).map((slot, index) => {
@@ -208,7 +221,6 @@ export default function Summary({
           className="build-card__details-dialog"
           aria-labelledby="uma-build-results-summary-details-heading"
           onCancel={() => setSummaryDetails(null)}
-          onClose={() => setSummaryDetails(null)}
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setSummaryDetails(null);
           }}

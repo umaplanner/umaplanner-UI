@@ -19,6 +19,14 @@ export function formatWinRate(value: number): string {
   return Number(value.toFixed(1)).toString();
 }
 
+export function formatResultOpeningDate(date: Date): string {
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 export function clampWins(value: string) {
   const wins = Number(value);
   return Number.isFinite(wins) ? Math.min(5, Math.max(0, Math.trunc(wins))) : 0;

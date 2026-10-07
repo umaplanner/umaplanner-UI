@@ -91,6 +91,48 @@ describe("UmaBuildResults", () => {
     unmount();
   });
 
+  it("keeps ticket and Finals editors open through Strict Mode effect cleanup", async () => {
+    const user = userEvent.setup();
+    Object.defineProperty(dialogPrototype, "close", {
+      configurable: true,
+      value: function (this: HTMLDialogElement) {
+        this.removeAttribute("open");
+        this.dispatchEvent(new Event("close"));
+      },
+    });
+
+    render(
+      <StrictMode>
+        <UmaBuildResults
+          event="CM 42"
+          results={createDefaultTeamResults()}
+          buildAssignments={{}}
+          ticketBuildResults={{}}
+          ticketCounts={createDefaultTicketCounts()}
+          initialBuildIds={[null, null, null]}
+          finalPlacement={null}
+          availableBuilds={[]}
+          umaList={[]}
+          skillList={[]}
+          showSupportCards={false}
+          onSaveTicket={vi.fn()}
+          onRemoveTicket={vi.fn()}
+          onToggleRoundExcluded={vi.fn()}
+          onSaveFinals={vi.fn()}
+        />
+      </StrictMode>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Add Finals results" }));
+    expect(screen.getByRole("dialog", { name: "Add Finals results" }))
+      .toHaveAttribute("open");
+    await user.click(screen.getByRole("button", { name: "Close Finals editor" }));
+
+    await user.click(screen.getAllByRole("button", { name: "Add ticket" })[0]);
+    expect(screen.getByRole("dialog", { name: "Add ticket — Round 1 Day 1" }))
+      .toHaveAttribute("open");
+  });
+
   it("shows rounds with two day rows and computes rates out of 20", () => {
     const onRemoveTicket = vi.fn();
     const builds = [1, 2, 3].map((slot) => ({
@@ -135,11 +177,15 @@ describe("UmaBuildResults", () => {
     );
 
     const round1 = screen.getByRole("region", { name: "Round 1" });
-    const day1 = within(round1).getByRole("row", { name: /Day 1/ });
+    const day1 = within(round1).getByRole("region", { name: "Day 1" });
     expect(within(day1).getByLabelText("Round 1 Day 1 win rate")).toHaveTextContent("50%");
     expect(within(day1).getAllByRole("article", { name: /^Ticket / })).toHaveLength(4);
     expect(within(day1).getAllByText("Build 1").length).toBeGreaterThan(0);
     expect(within(day1).getAllByText("0 wins").length).toBeGreaterThan(0);
+    expect(
+      within(within(day1).getByRole("article", { name: "Ticket 1" }))
+        .getByText("Team wins: 3/5"),
+    ).toBeInTheDocument();
     fireEvent.click(
       within(within(day1).getByRole("article", { name: "Ticket 1" }))
         .getByRole("button", { name: "Edit" }),
@@ -157,10 +203,10 @@ describe("UmaBuildResults", () => {
     expect(
       round1.compareDocumentPosition(round2) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
-    const round2Rows = within(round2).getAllByRole("row");
-    expect(round2Rows).toHaveLength(3);
-    expect(round2Rows[1]).toHaveTextContent("Day 1");
-    expect(round2Rows[2]).toHaveTextContent("Day 2");
+    const round2Days = within(round2).getAllByRole("region", { name: /^Day/ });
+    expect(round2Days).toHaveLength(2);
+    expect(round2Days[0]).toHaveTextContent("Day 1");
+    expect(round2Days[1]).toHaveTextContent("Day 2");
     expect(screen.queryByRole("region", { name: "Finals" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add Finals results" })).toBeInTheDocument();
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
@@ -185,6 +231,13 @@ describe("UmaBuildResults", () => {
         event="CM 42"
         results={createDefaultTeamResults()}
         resultAvailability={resultAvailability}
+        resultOpeningDates={{
+          round1Day1: null,
+          round1Day2: new Date(2026, 8, 5),
+          round2Day1: null,
+          round2Day2: null,
+          finals: null,
+        }}
         buildAssignments={{}}
         ticketBuildResults={{}}
         ticketCounts={createDefaultTicketCounts()}
@@ -203,20 +256,30 @@ describe("UmaBuildResults", () => {
 
     const round1 = within(screen.getByRole("region", { name: "Round 1" }));
     expect(
-      within(round1.getByRole("row", { name: /Day 1/ }))
+      within(round1.getByRole("region", { name: "Day 1" }))
         .getByRole("button", { name: "Add ticket" }),
     ).toBeEnabled();
     expect(
-      within(round1.getByRole("row", { name: /Day 2/ }))
+      within(round1.getByRole("region", { name: "Day 2" }))
         .getByRole("button", { name: "Add ticket" }),
     ).toBeDisabled();
+    expect(
+      within(round1.getByRole("region", { name: "Day 2" }))
+        .getByRole("status"),
+    ).toHaveTextContent("Available at 5 September 2026");
     const round2 = within(screen.getByRole("region", { name: "Round 2" }));
     expect(
-      within(round2.getByRole("row", { name: /Day 1/ }))
+      within(round2.getByRole("region", { name: "Day 1" }))
         .getByRole("button", { name: "Add ticket" }),
     ).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Add Finals results" }))
-      .toBeDisabled();
+    expect(
+      within(round2.getByRole("region", { name: "Day 1" })).getByRole("status"),
+    ).toHaveTextContent("Not available yet");
+    expect(screen.getByRole("button", { name: "Add Finals results" })).toBeDisabled();
+    expect(
+      within(screen.getByRole("region", { name: "Summary" })).getByRole("status"),
+    )
+      .toBeInTheDocument();
   });
 
   it.each([
@@ -299,7 +362,7 @@ describe("UmaBuildResults", () => {
     );
 
     const round1Day1 = within(screen.getByRole("region", { name: "Round 1" }))
-      .getByRole("row", { name: /Day 1/ });
+      .getByRole("region", { name: "Day 1" });
     expect(within(round1Day1).getByLabelText("Round 1 Day 1 win rate"))
       .toHaveTextContent("6.7% (1/15)");
     expect(screen.getByLabelText("Total win rate"))
@@ -594,9 +657,16 @@ describe("UmaBuildResults", () => {
       .toHaveTextContent("3/5");
   });
 
-  it("records team wins without build assignment and displays per-build results as N/A", async () => {
+  it("requires three builds when recording team wins without a per-build breakdown", async () => {
     const user = userEvent.setup();
     const onSaveTicket = vi.fn();
+    const builds = [1, 2, 3].map((slot) => ({
+      ...createDefaultBuild(String(slot)),
+      id: `build-${slot}`,
+      event: "CM 42",
+      name: `Build ${slot}`,
+      lastUpdate: slot,
+    }));
     const props = {
       event: "CM 42",
       results: createDefaultTeamResults(),
@@ -605,8 +675,13 @@ describe("UmaBuildResults", () => {
       ticketCounts: createDefaultTicketCounts(),
       initialBuildIds: [null, null, null] as [null, null, null],
       finalPlacement: null,
-      availableBuilds: [],
-      umaList: [],
+      availableBuilds: builds,
+      umaList: builds.map((_, index) => ({
+        id: index + 1,
+        charaId: index + 1,
+        baseCharacterName: `Character ${index + 1}`,
+        outfitTitle: `Uma ${index + 1}`,
+      })),
       skillList: [],
       showSupportCards: false,
       onSaveTicket,
@@ -617,19 +692,32 @@ describe("UmaBuildResults", () => {
     const { rerender } = render(<UmaBuildResults {...props} />);
 
     const day1 = within(screen.getByRole("region", { name: "Round 1" }))
-      .getByRole("row", { name: /Day 1/ });
+      .getByRole("region", { name: "Day 1" });
     await user.click(within(day1).getByRole("button", { name: "Add ticket" }));
     const dialog = screen.getByRole("dialog", {
       name: "Add ticket — Round 1 Day 1",
     });
+    const submitButton = within(dialog).getByRole("button", { name: "Submit ticket" });
+    expect(submitButton).toBeDisabled();
     await user.click(within(dialog).getByRole("checkbox", {
-      name: "Record team wins instead of per-build wins",
+      name: "I know the team wins, but not which builds got them",
     }));
     fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Team wins" }), {
       target: { value: "3" },
     });
-    await user.click(within(dialog).getByRole("button", { name: "Submit ticket" }));
-    expect(onSaveTicket).toHaveBeenCalledWith("round1Day1", 1, [], 3);
+    expect(submitButton).toBeDisabled();
+    await chooseSavedBuild(user, dialog, 1, /Build 1/);
+    expect(submitButton).toBeDisabled();
+    await chooseSavedBuild(user, dialog, 2, /Build 2/);
+    expect(submitButton).toBeDisabled();
+    await chooseSavedBuild(user, dialog, 3, /Build 3/);
+    expect(submitButton).toBeEnabled();
+    await user.click(submitButton);
+    expect(onSaveTicket).toHaveBeenCalledWith("round1Day1", 1, [
+      { buildId: "build-1", slot: 1, wins: 0 },
+      { buildId: "build-2", slot: 2, wins: 0 },
+      { buildId: "build-3", slot: 3, wins: 0 },
+    ], 3);
 
     rerender(
       <UmaBuildResults
@@ -638,14 +726,25 @@ describe("UmaBuildResults", () => {
           ...props.results,
           round1Day1: [3, 0, 0, 0],
         }}
+        buildAssignments={{
+          round1Day1: {
+            1: [{ buildId: "build-1", tickets: [1] }],
+            2: [{ buildId: "build-2", tickets: [1] }],
+            3: [{ buildId: "build-3", tickets: [1] }],
+          },
+        }}
         ticketBuildResults={{ round1Day1: { 1: [] } }}
         ticketCounts={{ ...props.ticketCounts, round1Day1: 1 }}
       />,
     );
     const savedDay1 = within(screen.getByRole("region", { name: "Round 1" }))
-      .getByRole("row", { name: /Day 1/ });
-    expect(within(savedDay1).getByText("Per-build wins: N/A · Team wins: 3/5"))
+      .getByRole("region", { name: "Day 1" });
+    expect(within(savedDay1).getByText("Team wins: 3/5"))
       .toBeInTheDocument();
+    [1, 2, 3].forEach((slot) => {
+      expect(within(savedDay1).getByText(`Build ${slot}`)).toBeInTheDocument();
+    });
+    expect(within(savedDay1).getAllByText("Wins N/A")).toHaveLength(3);
     expect(within(savedDay1).getByLabelText("Round 1 Day 1 win rate"))
       .toHaveTextContent("60% (3/5)");
     expect(screen.getByLabelText("Total win rate")).toHaveTextContent("60% WR");
@@ -692,7 +791,7 @@ describe("UmaBuildResults", () => {
     );
     await user.click(
       within(within(screen.getByRole("region", { name: "Round 1" }))
-        .getByRole("row", { name: /Day 1/ }))
+        .getByRole("region", { name: "Day 1" }))
         .getByRole("button", { name: "Add ticket" }),
     );
     const dialog = screen.getByRole("dialog", {
@@ -704,7 +803,6 @@ describe("UmaBuildResults", () => {
     expect(buildACard).toHaveTextContent("Character A");
     expect(buildACard).toHaveTextContent("Speed 1200");
     await user.click(buildACard);
-    await user.click(within(dialog).getByRole("button", { name: "Add build" }));
     const secondBuildPicker = await openSavedBuildPicker(user, dialog, 2);
     expect(within(secondBuildPicker).queryByRole("button", { name: /Build B/ }))
       .not.toBeInTheDocument();
@@ -717,7 +815,7 @@ describe("UmaBuildResults", () => {
     }));
   });
 
-  it("adds a ticket with up to three builds and limits combined wins to five", async () => {
+  it("requires three builds and limits combined wins to five", async () => {
     const user = userEvent.setup();
     const onSaveTicket = vi.fn();
     const builds = [1, 2, 3, 4].map((slot) => ({
@@ -756,15 +854,13 @@ describe("UmaBuildResults", () => {
     );
 
     const round1Day1 = within(screen.getByRole("region", { name: "Round 1" }))
-      .getByRole("row", { name: /Day 1/ });
+      .getByRole("region", { name: "Day 1" });
     await user.click(within(round1Day1).getByRole("button", { name: "Add ticket" }));
 
     const dialog = screen.getByRole("dialog", { name: "Add ticket — Round 1 Day 1" });
-    await user.click(within(dialog).getByRole("button", { name: "Add build" }));
     await chooseSavedBuild(user, dialog, 1, /Build 1/);
     expect(within(dialog).getByRole("spinbutton", { name: "Wins for Build 1" }))
       .toHaveValue(0);
-    await user.click(within(dialog).getByRole("button", { name: "Add build" }));
     await chooseSavedBuild(user, dialog, 2, /Build 2/);
 
     fireEvent.change(
@@ -779,11 +875,9 @@ describe("UmaBuildResults", () => {
     expect(secondWins).toHaveValue(1);
     expect(within(dialog).getByText("Total wins: 5/5")).toBeInTheDocument();
 
-    await user.click(within(dialog).getByRole("button", { name: "Add build" }));
     await chooseSavedBuild(user, dialog, 3, /Build 3/);
     expect(within(dialog).getAllByRole("button", { name: /Choose build for Uma/ }))
       .toHaveLength(3);
-    expect(within(dialog).getByRole("button", { name: "Add build" })).toBeDisabled();
 
     await user.click(within(dialog).getByRole("button", { name: "Submit ticket" }));
     expect(onSaveTicket).toHaveBeenCalledWith("round1Day1", 1, [
@@ -829,7 +923,7 @@ describe("UmaBuildResults", () => {
     );
 
     const day1 = within(screen.getByRole("region", { name: "Round 1" }))
-      .getByRole("row", { name: /Day 1/ });
+      .getByRole("region", { name: "Day 1" });
     await user.click(within(day1).getByRole("button", { name: "Add ticket" }));
     const dialog = screen.getByRole("dialog", {
       name: "Add ticket — Round 1 Day 1",
@@ -847,7 +941,6 @@ describe("UmaBuildResults", () => {
         within(dialog).getByRole("spinbutton", { name: `Wins for Build ${slot}` }),
       ).toHaveValue(0);
     });
-    expect(within(dialog).getByRole("button", { name: "Add build" })).toBeDisabled();
     await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
 
     const ticketCounts = { ...createDefaultTicketCounts(), round1Day1: 1 as const };
@@ -883,7 +976,7 @@ describe("UmaBuildResults", () => {
       />,
     );
     const updatedDay1 = within(screen.getByRole("region", { name: "Round 1" }))
-      .getByRole("row", { name: /Day 1/ });
+      .getByRole("region", { name: "Day 1" });
     await user.click(within(updatedDay1).getByRole("button", { name: "Add ticket" }));
     const nextTicketDialog = screen.getByRole("dialog", {
       name: "Add ticket — Round 1 Day 1",
@@ -936,7 +1029,7 @@ describe("UmaBuildResults", () => {
     );
 
     const day1 = within(screen.getByRole("region", { name: "Round 1" }))
-      .getByRole("row", { name: /Day 1/ });
+      .getByRole("region", { name: "Day 1" });
     expect(within(day1).getByText("Build 4")).toBeInTheDocument();
     expect(within(day1).getByLabelText("Round 1 Day 1 win rate"))
       .toHaveTextContent("100% (5/5)");
@@ -1083,7 +1176,7 @@ describe("UmaBuildResults", () => {
     const { rerender } = render(<UmaBuildResults {...props} />);
 
     const round1 = screen.getByRole("region", { name: "Round 1" });
-    expect(within(round1).getAllByRole("row")).toHaveLength(3);
+    expect(within(round1).getAllByRole("region", { name: /^Day/ })).toHaveLength(2);
     expect(screen.queryByRole("checkbox", { name: "Exclude Finals" })).not.toBeInTheDocument();
     const excludeRound1 = within(round1).getByRole("checkbox", { name: "Exclude Round 1" });
     expect(excludeRound1).not.toBeChecked();

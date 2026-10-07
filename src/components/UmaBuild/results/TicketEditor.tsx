@@ -57,40 +57,23 @@ export default function TicketEditor({
   const savedBuildResults = editor.ticket === null
     ? null
     : ticketBuildResults[editor.row]?.[editor.ticket];
-  const legacyBuildResults = editor.ticket === null
-    ? []
-    : savedBuildResults ?? ([1, 2, 3] as const).flatMap((slot) => {
-        const buildId = getEffectiveBuildId(editor.row, editor.ticket!, slot);
-        return buildId ? [{ buildId, slot, wins: null }] : [];
-      });
   const previousTicket = ticketCounts[editor.row] > 0
     ? ticketCounts[editor.row] as TeamTicket
     : 1;
-  const previousBuildDraft = editor.ticket === null
-    ? ([1, 2, 3] as const).flatMap((slot) => {
-        const buildId = getEffectiveBuildId(editor.row, previousTicket, slot);
-        const build = getBuild(buildId);
-        return buildId && build?.["build-type"] !== "plan"
-          ? [{ slot, buildId, wins: 0 }]
-          : [];
-      }).filter((build, index, builds) =>
-        builds.findIndex((candidate) => candidate.buildId === build.buildId) === index
-      )
-    : [];
-  const initialDraft = savedBuildResults
-    ? savedBuildResults.map((build) => ({ ...build }))
-    : editor.ticket === null
-      ? previousBuildDraft.length > 0
-        ? previousBuildDraft
-        : [{ slot: 1 as const, buildId: "", wins: 0 }]
-      : legacyBuildResults.length > 0
-        ? legacyBuildResults.map((build) => ({ ...build, wins: 0 }))
-        : [{ slot: 1 as const, buildId: "", wins: 0 }];
+  const initialDraft = ([1, 2, 3] as const).map((slot) => {
+    const savedBuild = savedBuildResults?.find((build) => build.slot === slot);
+    const buildId = savedBuild?.buildId ??
+      getEffectiveBuildId(editor.row, editor.ticket ?? previousTicket, slot);
+    const build = getBuild(buildId);
+    return {
+      slot,
+      buildId: build?.["build-type"] !== "plan" ? build?.id ?? "" : "",
+      wins: savedBuild?.wins ?? 0,
+    };
+  });
   const [draft, setDraft] = useState<TeamTicketBuildResult[]>(initialDraft);
   const [isTeamWinsMode, setIsTeamWinsMode] = useState(
-    savedBuildResults !== null &&
-      savedBuildResults !== undefined &&
-      savedBuildResults.length === 0,
+    savedBuildResults?.length === 0,
   );
   const [teamWins, setTeamWins] = useState(
     editor.ticket === null ? 0 : results[editor.row]?.[editor.ticket - 1] ?? 0,
@@ -113,28 +96,28 @@ export default function TicketEditor({
     };
   }, []);
 
-  const canSubmit = isTeamWinsMode
+  const hasValidLineup =
+    draft.length === 3 &&
+    draft.every((build) =>
+      build.buildId !== "" &&
+      getBuild(build.buildId)?.["build-type"] !== "plan"
+    ) &&
+    new Set(draft.map((build) => build.buildId)).size === 3 &&
+    !hasDuplicateBaseUmaIds(draft.map((build) => getBuild(build.buildId)));
+  const canSubmit = hasValidLineup && (isTeamWinsMode
     ? Number.isInteger(teamWins) && teamWins >= 0 && teamWins <= 5
-    : draft.length > 0 &&
-      draft.length <= 3 &&
-      draft.every((build) => build.buildId !== "") &&
-      draft.every((build) => getBuild(build.buildId)?.["build-type"] !== "plan") &&
-      new Set(draft.map((build) => build.buildId)).size === draft.length &&
-      !hasDuplicateBaseUmaIds(draft.map((build) => getBuild(build.buildId))) &&
-      draftWins <= 5;
-
-  function addBuild() {
-    const usedSlots = new Set(draft.map((build) => build.slot));
-    const slot = ([1, 2, 3] as const).find((candidate) => !usedSlots.has(candidate));
-    if (!slot || draft.length >= 3) return;
-    setDraft((current) => [...current, { slot, buildId: "", wins: 0 }]);
-  }
+    : draftWins <= 5);
 
   function submit() {
     if (editor.ticket === null && !canAddTicket) return;
     const ticket = editor.ticket ?? (ticketCounts[editor.row] + 1) as TeamTicket;
     if (isTeamWinsMode) {
-      onSaveTicket(editor.row, ticket, [], teamWins);
+      onSaveTicket(
+        editor.row,
+        ticket,
+        draft.map((build) => ({ ...build, wins: 0 })),
+        teamWins,
+      );
     } else {
       onSaveTicket(editor.row, ticket, draft);
     }
@@ -148,7 +131,6 @@ export default function TicketEditor({
       aria-labelledby="uma-build-results-ticket-heading"
       tabIndex={-1}
       onCancel={onClose}
-      onClose={onClose}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -174,18 +156,13 @@ export default function TicketEditor({
         <input
           type="checkbox"
           checked={isTeamWinsMode}
-          onChange={(event) => {
-            const teamMode = event.target.checked;
-            setIsTeamWinsMode(teamMode);
-            if (!teamMode && draft.length === 0) {
-              setDraft([{ slot: 1, buildId: "", wins: 0 }]);
-            }
-          }}
+          onChange={(event) => setIsTeamWinsMode(event.target.checked)}
         />
-        Record team wins instead of per-build wins
+        I know the team wins, but not which builds got them
       </label>
       {isTeamWinsMode ? (
         <div className="uma-build-results__team-wins-input">
+          <p>Record all three builds in the lineup, then enter the team's total wins.</p>
           <label>
             Team wins
             <input
@@ -199,42 +176,45 @@ export default function TicketEditor({
             />
           </label>
         </div>
-      ) : (
-        <div className="uma-build-results__ticket-editor-builds">
-          {draft.map((buildDraft, index) => {
-            const chosenBuild = getBuild(buildDraft.buildId);
-            const otherWins = draftWins - buildDraft.wins;
-            const maxWins = Math.max(0, 5 - otherWins);
-            const selectedElsewhere = new Set(
-              draft
-                .filter((_, otherIndex) => otherIndex !== index)
-                .map((build) => getBuild(build.buildId))
-                .filter((build): build is StoredUmaBuild => build !== undefined)
-                .map((build) => getBaseUmaId(build.outfitId))
-                .filter(Boolean),
-            );
-            const choices = selectableBuilds.filter(
-              (build) => !selectedElsewhere.has(getBaseUmaId(build.outfitId)),
-            );
-            return (
-              <div className="uma-build-results__ticket-editor-build" key={buildDraft.slot}>
-                <BuildSelector
-                  slot={buildDraft.slot as UmaSlot}
-                  buildId={buildDraft.buildId}
-                  choices={choices}
-                  availableBuilds={availableBuilds}
-                  umaList={umaList}
-                  ariaLabel={`Choose build for Uma ${buildDraft.slot}`}
-                  onChange={(buildId) =>
-                    setDraft((current) =>
-                      current.map((build, buildIndex) =>
-                        buildIndex === index ? { ...build, buildId } : build,
-                      ))}
-                />
+      ) : null}
+      <div className="uma-build-results__ticket-editor-builds">
+        {draft.map((buildDraft, index) => {
+          const otherWins = draftWins - buildDraft.wins;
+          const maxWins = Math.max(0, 5 - otherWins);
+          const selectedElsewhere = new Set(
+            draft
+              .filter((_, otherIndex) => otherIndex !== index)
+              .map((build) => getBuild(build.buildId))
+              .filter((build): build is StoredUmaBuild => build !== undefined)
+              .map((build) => getBaseUmaId(build.outfitId))
+              .filter(Boolean),
+          );
+          const choices = selectableBuilds.filter(
+            (build) => !selectedElsewhere.has(getBaseUmaId(build.outfitId)),
+          );
+          return (
+            <div
+              className={`uma-build-results__ticket-editor-build${isTeamWinsMode ? " uma-build-results__ticket-editor-build--team-wins" : ""}`}
+              key={buildDraft.slot}
+            >
+              <BuildSelector
+                slot={buildDraft.slot as UmaSlot}
+                buildId={buildDraft.buildId}
+                choices={choices}
+                availableBuilds={availableBuilds}
+                umaList={umaList}
+                ariaLabel={`Choose build for Uma ${buildDraft.slot}`}
+                onChange={(buildId) =>
+                  setDraft((current) =>
+                    current.map((build, buildIndex) =>
+                      buildIndex === index ? { ...build, buildId } : build,
+                    ))}
+              />
+              {!isTeamWinsMode ? (
                 <label>
                   Wins
                   <input
-                    aria-label={`Wins for ${chosenBuild?.name || `Uma ${buildDraft.slot}`}`}
+                    aria-label={`Wins for ${getBuild(buildDraft.buildId)?.name || `Uma ${buildDraft.slot}`}`}
                     type="number"
                     min={0}
                     max={maxWins}
@@ -249,40 +229,11 @@ export default function TicketEditor({
                     }}
                   />
                 </label>
-                <button
-                  className="uma-build-results__remove-build"
-                  type="button"
-                  aria-label={`Remove Uma ${buildDraft.slot} build`}
-                  onClick={() =>
-                    setDraft((current) =>
-                      current.filter((_, buildIndex) => buildIndex !== index))}
-                >
-                  Remove
-                </button>
-              </div>
-            );
-          })}
-          {editor.ticket === null ? (
-            <button
-              className="uma-build-results__add-build-button"
-              type="button"
-              disabled={
-                draft.length >= 3 ||
-                !selectableBuilds.some((build) => {
-                  const baseId = getBaseUmaId(build.outfitId);
-                  return !draft.some(
-                    (buildDraft) =>
-                      getBaseUmaId(getBuild(buildDraft.buildId)?.outfitId ?? "") === baseId,
-                  );
-                })
-              }
-              onClick={addBuild}
-            >
-              Add build
-            </button>
-          ) : null}
-        </div>
-      )}
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
       <p className="uma-build-results__ticket-wins-total" aria-live="polite">
         Total wins: {isTeamWinsMode ? teamWins : draftWins}/5
       </p>

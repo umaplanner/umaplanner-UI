@@ -41,6 +41,7 @@ interface Props {
   event: string;
   results: TeamResults;
   resultAvailability?: Record<TeamResultRow, boolean>;
+  resultOpeningDates?: Record<TeamResultRow, Date | null>;
   buildAssignments: TeamBuildAssignments;
   ticketBuildResults: TeamTicketBuildResults;
   ticketCounts: Record<TeamResultRow, TeamTicketCount>;
@@ -88,6 +89,7 @@ const resultGroups: ResultGroup[] = [
 export default function Results({
   event,
   results,
+  resultOpeningDates,
   resultAvailability = {
     round1Day1: true,
     round1Day2: true,
@@ -130,7 +132,15 @@ export default function Results({
     ticket: TeamTicket,
   ): ResolvedTicketBuildResult[] {
     const savedResults = ticketBuildResults[row]?.[ticket];
-    if (savedResults) return savedResults;
+    if (savedResults) {
+      if (savedResults.length > 0) return savedResults;
+      return ([1, 2, 3] as const).flatMap((slot) => {
+        const buildId = buildAssignments[row]?.[slot]
+          ?.find((assignment) => assignment.tickets.includes(ticket))
+          ?.buildId;
+        return buildId ? [{ buildId, slot, wins: null }] : [];
+      });
+    }
     return ([1, 2, 3] as const).flatMap((slot) => {
       const buildId = getEffectiveBuildId(row, ticket, slot);
       return buildId ? [{ buildId, slot, wins: null }] : [];
@@ -219,6 +229,7 @@ export default function Results({
         finalBuilds={finalBuilds}
         hasFinalsData={hasFinalsData}
         canAddFinals={resultAvailability.finals}
+        finalsOpeningDate={resultOpeningDates?.finals ?? null}
         summaryBuilds={summaryBuilds}
         totalWinRate={totalWinRate}
         totalWins={totalWins}
@@ -237,6 +248,7 @@ export default function Results({
           ticketBuildResults={ticketBuildResults}
           ticketCounts={ticketCounts}
           resultAvailability={resultAvailability}
+          resultOpeningDates={resultOpeningDates}
           collapsed={collapsedGroups[group.title] ?? false}
           excluded={isTeamResultRoundExcluded(results, group.round)}
           umaList={umaList}

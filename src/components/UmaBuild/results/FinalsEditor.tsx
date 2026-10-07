@@ -142,7 +142,6 @@ export default function FinalsEditor({
       aria-labelledby="uma-build-results-finals-heading"
       tabIndex={-1}
       onCancel={onClose}
-      onClose={onClose}
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

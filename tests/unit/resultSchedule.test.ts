@@ -3,6 +3,7 @@ import {
   getNextResultOpeningAt,
   getResultAvailability,
   getResultOpenAt,
+  getResultOpeningDates,
   resultDayOffsets,
 } from "../../src/features/planner/resultSchedule";
 import type { RaceEntry } from "../../src/types/RaceEntry";
@@ -31,6 +32,7 @@ describe("result schedule", () => {
       const expected = new Date(startDate);
       expected.setDate(expected.getDate() + resultDayOffsets[row]);
       expect(getResultOpenAt(raceEntry, row)).toEqual(expected);
+      expect(getResultOpeningDates(raceEntry)[row]).toEqual(expected);
       expect(getResultAvailability(raceEntry, expected)[row]).toBe(true);
     }
   });
@@ -54,6 +56,8 @@ describe("result schedule", () => {
     expect(
       getResultAvailability({ ...raceEntry, isConfirmed: false }).round1Day1,
     ).toBe(false);
+    expect(getResultOpeningDates({ ...raceEntry, isConfirmed: false }).round1Day1)
+      .toBeNull();
     expect(getResultOpenAt({ ...raceEntry, releaseDate: "invalid" }, "finals"))
       .toBeNull();
   });

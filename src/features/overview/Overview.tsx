@@ -1,5 +1,5 @@
 import UmaImage from "../../components/UmaImage";
-import { strategyIcons } from "../../components/UmaBuild/umaBuildUtils";
+import { strategyIcons } from "../../components/UmaBuild/utils";
 import type { UmaEntry } from "../../types/UmaEntry";
 import "../../styles/Overview.css";
 

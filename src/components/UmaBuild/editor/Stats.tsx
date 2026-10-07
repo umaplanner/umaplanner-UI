@@ -1,5 +1,5 @@
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { getStatRank, statFields } from "./umaBuildUtils";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
+import { getStatRank, statFields } from "../utils";
 
 interface Props {
   value: UmaBuildData;

@@ -112,6 +112,7 @@ export async function postBuilds(builds: StoredUmaBuild[]): Promise<void> {
 
 export async function deleteBuild(event: string, id: string): Promise<void> {
   if (!config.apiBaseUrl) return;
+  await new Promise<void>((resolve) => setTimeout(resolve, 2_000));
   const url = `${config.apiBaseUrl}/builds/delete`;
   const response = await fetch(url, {
     method: "DELETE",

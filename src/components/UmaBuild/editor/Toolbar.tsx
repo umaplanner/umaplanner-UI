@@ -1,4 +1,4 @@
-import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../types/UmaBuild";
+import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../../types/UmaBuild";
 
 interface Props {
   value: UmaBuildData;
@@ -43,7 +43,7 @@ export default function UmaBuildToolbar({
       checked={value["build-type"] === "plan"}
       onChange={(event) => onTogglePlan(event.target.checked)}
     />
-    Plan
+    plan
     </label>
     {onSelectSavedBuild ? <select aria-label="Load unused build" defaultValue="" onChange={(event) => {
       if (event.target.value) {

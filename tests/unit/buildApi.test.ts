@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
-import { fetchBuilds, postBuilds } from "../../src/features/planner/buildApi";
+import {
+  deleteBuild,
+  fetchBuilds,
+  postBuilds,
+} from "../../src/features/planner/buildApi";
 import type { StoredUmaBuild } from "../../src/types/UmaBuild";
 
 vi.mock("../../src/lib/config", () => ({
@@ -79,5 +83,29 @@ describe("postBuilds", () => {
 
     expect(result.builds[0].strategy).toBe("Oonige");
     expect(result.builds[0]["build-type"]).toBe("plan");
+  });
+});
+
+describe("deleteBuild", () => {
+  it("waits two seconds before sending the delete request", async () => {
+    vi.useFakeTimers();
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const deletion = deleteBuild("CM 42", "build-1");
+    await vi.advanceTimersByTimeAsync(1_999);
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(1);
+    await deletion;
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/builds/delete",
+      expect.objectContaining({
+        method: "DELETE",
+        body: JSON.stringify({ event: "CM 42", id: "build-1" }),
+      }),
+    );
+    vi.useRealTimers();
   });
 });

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import UmaBuildSkills from "../../src/components/UmaBuild/UmaBuildSkills";
+import UmaBuildSkills from "../../src/components/UmaBuild/editor/Skills";
 import type { SkillEntry } from "../../src/types/SkillEntry";
 import type { UmaBuild } from "../../src/types/UmaBuild";
 

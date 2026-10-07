@@ -1,7 +1,7 @@
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { sortSkillsByDisplayOrderWithIndex } from "./umaBuildUtils";
-import type { SkillSort } from "../Preferences";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
+import { sortSkillsByDisplayOrderWithIndex } from "../utils";
+import type { SkillSort } from "../../Preferences";
 
 interface Props {
   value: UmaBuildData;

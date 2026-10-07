@@ -2,7 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import type { SkillEntry } from "../../src/types/SkillEntry";
 import type { UmaBuild } from "../../src/types/UmaBuild";
-import useUmaBuildEditor from "../../src/components/UmaBuild/useUmaBuildEditor";
+import useUmaBuildEditor from "../../src/components/UmaBuild/editor/useBuildEditor";
 
 const runawaySkill: SkillEntry = {
   id: "202051",

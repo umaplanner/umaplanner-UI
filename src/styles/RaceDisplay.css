@@ -162,16 +162,73 @@
 @media (max-width: 520px) {
   .race-card__header,
   .race-card__details {
-    padding-right: 1rem;
-    padding-left: 1rem;
+    padding-right: 0.65rem;
+    padding-left: 0.65rem;
   }
 
   .race-card__header::after {
-    right: 1rem;
-    left: 1rem;
+    right: 0.65rem;
+    left: 0.65rem;
+  }
+
+  .race-card__header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.7rem;
+  }
+
+  .race-card__number {
+    margin-bottom: 0.2rem;
+    font-size: 0.6rem;
+  }
+
+  .race-card__title {
+    font-size: clamp(1rem, 5vw, 1.3rem);
+    line-height: 1.15;
+  }
+
+  .race-card__date-status {
+    margin-bottom: 0.1rem;
+    font-size: 0.55rem;
+  }
+
+  .race-card__date-day {
+    font-size: 1.35rem;
+  }
+
+  .race-card__date-month,
+  .race-card__date-year {
+    font-size: 0.68rem;
   }
 
   .race-card__details {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.35rem 0.15rem;
+    padding-top: 0.45rem;
+    padding-bottom: 0.55rem;
+  }
+
+  .race-card__details > div {
+    align-items: flex-start;
+    gap: 0.1rem;
+    padding: 0.1rem;
+    text-align: left;
+  }
+
+  .race-card__label {
+    font-size: 0.5rem;
+    letter-spacing: 0.03em;
+  }
+
+  .race-card__details > div > span:last-child {
+    font-size: 0.68rem;
+    white-space: normal;
+  }
+
+  .race-card__date {
+    min-width: 0;
   }
 }

@@ -1,9 +1,9 @@
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import UmaBuildAptitudes from "./UmaBuildAptitudes";
-import UmaBuildStats from "./UmaBuildStats";
-import { findSkill, sortSkillsByDisplayOrder } from "./umaBuildUtils";
-import SupportCardImage from "./SupportCardImage";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
+import UmaBuildAptitudes from "../editor/Aptitudes";
+import UmaBuildStats from "../editor/Stats";
+import { findSkill, sortSkillsByDisplayOrder } from "../utils";
+import SupportCardImage from "../support-cards/Image";
 
 interface Props {
   build: UmaBuildData;

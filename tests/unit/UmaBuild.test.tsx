@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import UmaBuild from "../../src/components/UmaBuild/UmaBuild";
-import UmaBuildDisplay from "../../src/components/UmaBuild/UmaBuildDisplay";
+import UmaBuild from "../../src/components/UmaBuild/editor/BuildEditor";
+import UmaBuildDisplay from "../../src/components/UmaBuild/display/Display";
 import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
 
 describe("UmaBuild aptitude selectors", () => {
@@ -104,5 +104,33 @@ describe("UmaBuild aptitude selectors", () => {
     );
 
     expect(screen.getByText("PLAN").closest('[aria-label="Selected Uma"]')).toBeInTheDocument();
+  });
+
+  it("allows clearing a selected team build", async () => {
+    const user = userEvent.setup();
+    const onSelectBuild = vi.fn();
+    const build = {
+      ...createDefaultBuild("100101"),
+      id: "build-1",
+      event: "CM 42",
+      name: "Build 1",
+      lastUpdate: 1,
+    };
+
+    render(
+      <UmaBuildDisplay
+        teamNumber={1}
+        build={build}
+        availableBuilds={[build]}
+        umaList={[]}
+        skillList={[]}
+        canClearBuild
+        onSelectBuild={onSelectBuild}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Swap" }));
+    await user.click(screen.getByRole("button", { name: "Clear selected build" }));
+    expect(onSelectBuild).toHaveBeenCalledWith(null);
   });
 });

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import type { StoredUmaBuild } from "../../types/UmaBuild";
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaEntry } from "../../types/UmaEntry";
-import UmaImage from "../UmaImage";
-import UmaBuildDisplaySections from "./UmaBuildDisplaySections";
-import UmaBuildSavedBuildDialog from "./UmaBuildSavedBuildDialog";
-import { findSkill, getUmaUniqueSkillId } from "./umaBuildUtils";
-import "../../styles/UmaBuild.css";
+import type { StoredUmaBuild } from "../../../types/UmaBuild";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaEntry } from "../../../types/UmaEntry";
+import UmaImage from "../../UmaImage";
+import UmaBuildDisplaySections from "./DisplaySections";
+import UmaBuildSavedBuildDialog from "./SavedBuildDialog";
+import { findSkill, getUmaUniqueSkillId } from "../utils";
+import "../../../styles/UmaBuild.css";
 
 interface UmaBuildDisplayProps {
   teamNumber: number;
@@ -14,9 +14,11 @@ interface UmaBuildDisplayProps {
   availableBuilds: StoredUmaBuild[];
   umaList: UmaEntry[];
   skillList: SkillEntry[];
-  onSelectBuild: (buildId: string) => void;
+  onSelectBuild: (buildId: string | null) => void;
   showSupportCards?: boolean;
   compactText?: boolean;
+  showCopyButton?: boolean;
+  canClearBuild?: boolean;
 }
 
 export default function UmaBuildDisplay({
@@ -28,9 +30,12 @@ export default function UmaBuildDisplay({
   onSelectBuild,
   showSupportCards = true,
   compactText = false,
+  showCopyButton = true,
+  canClearBuild = false,
 }: UmaBuildDisplayProps) {
   const [isSavedBuildsOpen, setIsSavedBuildsOpen] = useState(false);
   const [isBuildCopied, setIsBuildCopied] = useState(false);
+  const [showMobileDetails, setShowMobileDetails] = useState(false);
   const selectedUma = build
     ? umaList.find((uma) => String(uma.id) === build.outfitId) ?? null
     : null;
@@ -79,7 +84,7 @@ export default function UmaBuildDisplay({
 
   return (
     <section
-      className={`uma-build uma-build--display${build ? "" : " uma-build--display-empty"}${compactText ? " uma-build--display-compact" : ""}`}
+      className={`uma-build uma-build--display${build ? "" : " uma-build--display-empty"}${compactText ? " uma-build--display-compact" : ""}${showMobileDetails ? " uma-build--display-details-open" : ""}`}
       aria-label={`Build Uma ${teamNumber}`}
     >
       <section className="uma-build__uma-display" aria-label="Selected Uma">
@@ -102,9 +107,11 @@ export default function UmaBuildDisplay({
             No Uma selected
           </span>
         )}
-        {availableBuilds.length > 0 || build ? (
+        {(build && showCopyButton) ||
+        availableBuilds.length > 0 ||
+        (canClearBuild && build) ? (
           <div className="uma-build__display-actions">
-            {build ? (
+            {build && showCopyButton ? (
               <button
                 className="uma-build__copy-button"
                 type="button"
@@ -118,19 +125,29 @@ export default function UmaBuildDisplay({
                 </svg>
               </button>
             ) : null}
-            {availableBuilds.length > 0 ? (
-            <button
-              className="uma-build__swap-button"
-              type="button"
-              onClick={() => setIsSavedBuildsOpen(true)}
-            >
-              {build ? "Swap" : "Select build"}
-            </button>
+            {availableBuilds.length > 0 || (canClearBuild && build) ? (
+              <button
+                className="uma-build__swap-button"
+                type="button"
+                onClick={() => setIsSavedBuildsOpen(true)}
+              >
+                {build ? "Swap" : "Select build"}
+              </button>
             ) : null}
           </div>
         ) : null}
       </section>
-      {isSavedBuildsOpen ? <UmaBuildSavedBuildDialog teamNumber={teamNumber} builds={availableBuilds} umaList={umaList} onSelect={onSelectBuild} onClose={() => setIsSavedBuildsOpen(false)} /> : null}
+      {build ? (
+        <button
+          className="uma-build__mobile-details-toggle"
+          type="button"
+          aria-expanded={showMobileDetails}
+          onClick={() => setShowMobileDetails((isOpen) => !isOpen)}
+        >
+          {showMobileDetails ? "Hide details" : "Details"}
+        </button>
+      ) : null}
+      {isSavedBuildsOpen ? <UmaBuildSavedBuildDialog teamNumber={teamNumber} builds={availableBuilds} umaList={umaList} canClear={canClearBuild && Boolean(build)} onSelect={onSelectBuild} onClose={() => setIsSavedBuildsOpen(false)} /> : null}
       {build ? (
         <UmaBuildDisplaySections
           build={build}

@@ -1,18 +1,24 @@
 import { useEffect, useState } from "react";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import { useEvent } from "../../contexts/EventContext";
-import UmaBuild from "../../components/UmaBuild/UmaBuild";
-import UmaBuildDisplay from "../../components/UmaBuild/UmaBuildDisplay";
-import UmaBuildList from "../../components/UmaBuild/UmaBuildList";
+import UmaBuild from "../../components/UmaBuild/editor/BuildEditor";
+import UmaBuildDisplay from "../../components/UmaBuild/display/Display";
+import UmaBuildList from "../../components/UmaBuild/list/List";
+import UmaBuildResults from "../../components/UmaBuild/results/Results";
 import RaceDisplay from "../../components/RaceDisplay";
 import "../../styles/Planner.css";
 import { usePlannerData } from "./usePlannerData";
 import { useTeam } from "./useTeam";
-import { createDefaultBuild, type UmaSlot } from "./plannerTypes";
-import { getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../components/UmaBuild/umaBuildUtils";
+import {
+  createDefaultBuild,
+  hasDuplicateBaseUmaIds,
+  type InitialTeamBuildIds,
+  type UmaSlot,
+} from "./plannerTypes";
+import { getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../components/UmaBuild/utils";
 
 export default function Planner() {
-  const [buildMode, setBuildMode] = useState<"display" | "edit" | "builds">("display");
+  const [buildMode, setBuildMode] = useState<"display" | "edit" | "builds" | "results">("display");
   const [showSupportCards, setShowSupportCards] = useState(true);
   const [editingBuild] = useState<UmaSlot>(1);
   const [editingBuildDraft, setEditingBuildDraft] = useState<{
@@ -31,8 +37,13 @@ export default function Planner() {
   const {
     umas,
     allBuilds,
+    eventResults,
     saveBuild,
     swapTeamBuild,
+    saveTicketResult,
+    removeTicketResult,
+    updateResultRoundExcluded,
+    saveFinalsResult,
   } = useTeam(selectedEvent);
   useEffect(() => {
     setDisplayBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
@@ -41,6 +52,9 @@ export default function Planner() {
     teamNumber: (index + 1) as UmaSlot,
     build: allBuilds.find((entry) => entry.id === buildId) ?? null,
   }));
+  const hasDuplicateDisplayedUmas = hasDuplicateBaseUmaIds(
+    displayBuilds.map(({ build }) => build),
+  );
   const selectedBuild = umas[`uma${editingBuild}Build`];
   const selectedUma = selectedBuild.outfitId === ""
     ? null
@@ -156,7 +170,7 @@ export default function Planner() {
           aria-pressed={buildMode === "display"}
           onClick={() => setBuildMode("display")}
         >
-          Display
+          Team
         </button>
         <button
           type="button"
@@ -172,10 +186,37 @@ export default function Planner() {
         >
           Builds
         </button>
+        <button
+          type="button"
+          aria-pressed={buildMode === "results"}
+          onClick={() => setBuildMode("results")}
+        >
+          Results
+        </button>
       </div>
       <section className="uma-build-area" aria-label="Build selected Uma">
         {buildMode === "builds" ? (
           <UmaBuildList />
+        ) : buildMode === "results" ? (
+          <UmaBuildResults
+            key={selectedEvent}
+            event={selectedEvent}
+            results={eventResults.results}
+            buildAssignments={eventResults.buildAssignments}
+            ticketBuildResults={eventResults.ticketBuildResults}
+            ticketCounts={eventResults.ticketCounts}
+            initialBuildIds={eventResults.initialBuildIds}
+            finalPlacement={eventResults.finalPlacement}
+            finalBuildPlacements={eventResults.finalBuildPlacements}
+            availableBuilds={allBuilds}
+            umaList={umaList}
+            skillList={skillList}
+            showSupportCards={showSupportCards}
+            onSaveTicket={saveTicketResult}
+            onRemoveTicket={removeTicketResult}
+            onToggleRoundExcluded={updateResultRoundExcluded}
+            onSaveFinals={saveFinalsResult}
+          />
         ) : buildMode === "display" ? (
           <div className="uma-build-display">
             <label className="uma-build-display__support-toggle">
@@ -186,6 +227,12 @@ export default function Planner() {
               />
               Show support cards
             </label>
+            {hasDuplicateDisplayedUmas ? (
+              <p className="uma-build-display__duplicate-warning" role="alert">
+                This team cannot be saved while it contains multiple builds for
+                the same Uma.
+              </p>
+            ) : null}
             <div className="uma-build-display-grid">
               {displayBuilds.map(({ teamNumber, build }) => (
                 <UmaBuildDisplay
@@ -197,13 +244,12 @@ export default function Planner() {
                   skillList={skillList}
                   showSupportCards={showSupportCards}
                   compactText
+                  canClearBuild
                   onSelectBuild={(buildId) => {
-                    setDisplayBuildIds((currentIds) => {
-                      const nextIds = [...currentIds];
-                      nextIds[teamNumber - 1] = buildId;
-                      return nextIds;
-                    });
-                    void swapTeamBuild(teamNumber, buildId).catch((error) => {
+                    const nextIds = [...displayBuildIds] as InitialTeamBuildIds;
+                    nextIds[teamNumber - 1] = buildId;
+                    setDisplayBuildIds(nextIds);
+                    void swapTeamBuild(nextIds).catch((error) => {
                       console.error("Error swapping team build:", error);
                     });
                   }}

@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../types/UmaBuild";
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaEntry } from "../../types/UmaEntry";
-import UmaSelect from "../UmaSelect";
-import UmaBuildAptitudes from "./UmaBuildAptitudes";
-import UmaBuildSkills from "./UmaBuildSkills";
-import UmaBuildStats from "./UmaBuildStats";
-import UmaBuildToolbar from "./UmaBuildToolbar";
-import useUmaBuildEditor from "./useUmaBuildEditor";
-import "../../styles/UmaBuild.css";
+import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../../types/UmaBuild";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaEntry } from "../../../types/UmaEntry";
+import UmaSelect from "../../UmaSelect";
+import UmaBuildAptitudes from "./Aptitudes";
+import UmaBuildSkills from "./Skills";
+import UmaBuildStats from "./Stats";
+import UmaBuildToolbar from "./Toolbar";
+import useUmaBuildEditor from "./useBuildEditor";
+import "../../../styles/UmaBuild.css";
 
 interface UmaBuildProps {
   teamNumber: number;

@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
 import {
   findSkill,
   hasRunawaySkill,
   isRunawaySkill,
   runawaySkillId,
   runawayStrategy,
-} from "./umaBuildUtils";
-import { useSkillPickerPreferences } from "../Preferences";
+} from "../utils";
+import { useSkillPickerPreferences } from "../../Preferences";
 
 interface Options {
   value: UmaBuildData;

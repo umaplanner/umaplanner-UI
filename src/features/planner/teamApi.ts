@@ -1,7 +1,16 @@
 import { config } from "../../lib/config";
-import type { EventTeam } from "./plannerTypes";
+import {
+  getLegacyEventResults,
+  type EventResults,
+  type EventTeam,
+} from "./plannerTypes";
 
-function toStoredTeam(value: unknown): EventTeam | null {
+export interface FetchedTeam {
+  team: EventTeam;
+  legacyResults: EventResults | null;
+}
+
+function toStoredTeam(value: unknown): FetchedTeam | null {
   if (!value || typeof value !== "object") return null;
   const data = value as Record<string, unknown>;
   if (
@@ -13,15 +22,18 @@ function toStoredTeam(value: unknown): EventTeam | null {
     return null;
   }
   return {
-    event: data.event,
-    uma1: data.uma1 as string | null,
-    uma2: data.uma2 as string | null,
-    uma3: data.uma3 as string | null,
-    lastUpdate: typeof data.lastUpdate === "number" ? data.lastUpdate : 0,
+    team: {
+      event: data.event,
+      uma1: data.uma1 as string | null,
+      uma2: data.uma2 as string | null,
+      uma3: data.uma3 as string | null,
+      lastUpdate: typeof data.lastUpdate === "number" ? data.lastUpdate : 0,
+    },
+    legacyResults: getLegacyEventResults(data, data.event),
   };
 }
 
-export async function fetchTeams(event: string): Promise<EventTeam[]> {
+export async function fetchTeams(event: string): Promise<FetchedTeam[]> {
   if (!config.apiBaseUrl) return [];
   const url = `${config.apiBaseUrl}/teams`;
   const response = await fetch(url, { credentials: "include" });
@@ -33,8 +45,8 @@ export async function fetchTeams(event: string): Promise<EventTeam[]> {
   const payload: unknown = await response.json();
   const records = Array.isArray(payload) ? payload : [payload];
   return records.flatMap((record) => {
-    const team = toStoredTeam(record);
-    return team && team.event === event ? [team] : [];
+    const snapshot = toStoredTeam(record);
+    return snapshot && snapshot.team.event === event ? [snapshot] : [];
   });
 }
 

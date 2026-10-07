@@ -91,7 +91,8 @@
   padding: 0.35rem;
 }
 
-.uma-build__plan-toggle {
+.uma-build__plan-toggle,
+.uma-build-results__exclude {
   display: inline-flex;
   flex: 0 0 auto;
   flex-direction: row;
@@ -112,7 +113,9 @@
 }
 
 .uma-build__plan-toggle:hover,
-.uma-build__plan-toggle:focus-within {
+.uma-build__plan-toggle:focus-within,
+.uma-build-results__exclude:hover,
+.uma-build-results__exclude:focus-within {
   background: rgba(105, 183, 255, 0.16);
   border-color: var(--accent-color);
 }
@@ -127,7 +130,8 @@
   text-transform: none;
 }
 
-.uma-build__toolbar .uma-build__plan-toggle input {
+.uma-build__toolbar .uma-build__plan-toggle input,
+.uma-build-results .uma-build-results__exclude input {
   flex: 0 0 auto;
   order: -1;
   width: 1rem;
@@ -518,6 +522,10 @@
   color: var(--muted-text-color);
 }
 
+.uma-build__mobile-details-toggle {
+  display: none;
+}
+
 .uma-build__swap-button {
   margin-left: auto;
   padding: 0.55rem 0.8rem;
@@ -607,6 +615,18 @@
 
 .uma-build__saved-builds {
   width: min(54rem, 100%);
+  margin: auto;
+  color: var(--text-color);
+  overscroll-behavior: contain;
+}
+
+.uma-build__saved-builds::backdrop {
+  background: rgb(0 0 0 / 68%);
+}
+
+.uma-build__saved-build-clear {
+  width: 100%;
+  margin-bottom: 0.75rem;
 }
 
 .uma-build__saved-builds-grid {
@@ -1428,11 +1448,92 @@
   .uma-build__aptitudes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .uma-build-display-grid .uma-build--display {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    gap: 0.2rem;
+    padding: 0.2rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display {
+    min-width: 0;
+    min-height: 0;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    padding: 0.35rem;
+    text-align: center;
+  }
+
+  .uma-build-display-grid .uma-build--display:not(.uma-build--display-empty) .uma-build__uma-display {
+    min-height: 0;
+    padding: 0.35rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display img {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display span {
+    align-items: center;
+    width: 100%;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__display-actions {
+    position: static;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__display-actions button {
+    min-width: 0;
+    padding: 0.25rem 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  .uma-build-display-grid .uma-build__mobile-details-toggle {
+    display: block;
+    min-height: 2rem;
+    padding: 0.25rem;
+    font-size: 0.65rem;
+  }
+
+  .uma-build-display-grid .uma-build--display:not(.uma-build--display-details-open) .uma-build__panel {
+    display: none;
+  }
+
+  .uma-build-display-grid .uma-build--display-details-open .uma-build__panel {
+    display: block;
+  }
 }
 
 @media (max-width: 480px) {
+  .uma-build {
+    gap: 0.65rem;
+    padding: 0.25rem;
+  }
+
+  .uma-build__toolbar {
+    gap: 0.35rem;
+    padding: 0.5rem;
+  }
+
+  .uma-build__toolbar button,
+  .uma-build__toolbar select {
+    min-height: 2.75rem;
+  }
+
   .uma-build__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .uma-build__stats label,
+  .uma-build__stats > div {
+    min-width: 0;
   }
 
   .uma-build__skill-row {
@@ -1446,5 +1547,23 @@
 
   .uma-build__skill-options {
     grid-template-columns: 1fr;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display img {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display strong {
+    font-size: 0.65rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display small {
+    font-size: 0.58rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__display-actions button {
+    padding: 0.2rem 0.25rem;
+    font-size: 0.58rem;
   }
 }

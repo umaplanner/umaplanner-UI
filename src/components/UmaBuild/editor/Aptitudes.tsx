@@ -1,5 +1,5 @@
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { aptitudeOptions, aptitudeRankImages, strategyIcons, strategyOptions } from "./umaBuildUtils";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
+import { aptitudeOptions, aptitudeRankImages, strategyIcons, strategyOptions } from "../utils";
 
 interface Props {
   value: UmaBuildData;

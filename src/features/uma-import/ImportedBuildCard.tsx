@@ -4,7 +4,7 @@ import { getImportedSkillIds } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type { SkillEntry } from "../../types/SkillEntry";
 import UmaImage from "../../components/UmaImage";
-import UmaBuildDisplay from "../../components/UmaBuild/UmaBuildDisplay";
+import UmaBuildDisplay from "../../components/UmaBuild/display/Display";
 import {
   getAptitudeRank,
   getAptitudeRankImage,
@@ -13,7 +13,7 @@ import {
   runawayStrategy,
   runningStyleNames,
   strategyIcons,
-} from "../../components/UmaBuild/umaBuildUtils";
+} from "../../components/UmaBuild/utils";
 
 interface ImportedBuildCardProps {
   build: ImportedUmaBuild;

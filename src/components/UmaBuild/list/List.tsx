@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { useEvent } from "../../contexts/EventContext";
-import { useAuth } from "../../contexts/AuthContext";
-import UmaImage from "../../components/UmaImage";
-import UmaBuildDisplay from "./UmaBuildDisplay";
-import type { StoredUmaBuild } from "../../types/UmaBuild";
-import type { UmaEntry } from "../../types/UmaEntry";
-import type { SkillEntry } from "../../types/SkillEntry";
-import { ensureDataLoaded } from "../../lib/data";
-import { normalizeSkillData } from "../../features/planner/skillData";
+import { useEvent } from "../../../contexts/EventContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import UmaImage from "../../UmaImage";
+import UmaBuildDisplay from "../display/Display";
+import type { StoredUmaBuild } from "../../../types/UmaBuild";
+import type { UmaEntry } from "../../../types/UmaEntry";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import { ensureDataLoaded } from "../../../lib/data";
+import { normalizeSkillData } from "../../../features/planner/skillData";
 import {
   createBuildRepository,
   createTeamRepository,
   normalizeStoredTeam,
-} from "../../features/planner/plannerRepository";
-import { deleteBuild } from "../../features/planner/buildApi";
-import "../../styles/Builds.css";
-import { aptitudeRankImages, getStatRank, sortBuildsNewestFirst, statFields, strategyIcons } from "./umaBuildUtils";
+} from "../../../features/planner/plannerRepository";
+import { deleteBuild } from "../../../features/planner/buildApi";
+import "../../../styles/Builds.css";
+import { aptitudeRankImages, getStatRank, sortBuildsNewestFirst, statFields, strategyIcons } from "../utils";
 
 export default function Builds() {
   const { selectedEvent } = useEvent();

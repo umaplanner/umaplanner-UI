@@ -169,6 +169,53 @@ describe("UmaBuildResults", () => {
     expect(onRemoveTicket).toHaveBeenCalledWith("round1Day1", 2);
   });
 
+  it("gates adding tickets and Finals results until their scheduled days", () => {
+    const resultAvailability = {
+      round1Day1: true,
+      round1Day2: false,
+      round2Day1: false,
+      round2Day2: false,
+      finals: false,
+    };
+    render(
+      <UmaBuildResults
+        event="CM 42"
+        results={createDefaultTeamResults()}
+        resultAvailability={resultAvailability}
+        buildAssignments={{}}
+        ticketBuildResults={{}}
+        ticketCounts={createDefaultTicketCounts()}
+        initialBuildIds={[null, null, null]}
+        finalPlacement={null}
+        availableBuilds={[]}
+        umaList={[]}
+        skillList={[]}
+        showSupportCards={false}
+        onSaveTicket={vi.fn()}
+        onRemoveTicket={vi.fn()}
+        onToggleRoundExcluded={vi.fn()}
+        onSaveFinals={vi.fn()}
+      />,
+    );
+
+    const round1 = within(screen.getByRole("region", { name: "Round 1" }));
+    expect(
+      within(round1.getByRole("row", { name: /Day 1/ }))
+        .getByRole("button", { name: "Add ticket" }),
+    ).toBeEnabled();
+    expect(
+      within(round1.getByRole("row", { name: /Day 2/ }))
+        .getByRole("button", { name: "Add ticket" }),
+    ).toBeDisabled();
+    const round2 = within(screen.getByRole("region", { name: "Round 2" }));
+    expect(
+      within(round2.getByRole("row", { name: /Day 1/ }))
+        .getByRole("button", { name: "Add ticket" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Add Finals results" }))
+      .toBeDisabled();
+  });
+
   it("remembers collapsed result groups across remounts", () => {
     const props = {
       event: "CM 42",

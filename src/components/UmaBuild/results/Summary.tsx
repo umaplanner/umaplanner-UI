@@ -17,6 +17,7 @@ interface Props {
   finalBuildPlacements: TeamFinalBuildPlacements;
   finalBuilds: [StoredUmaBuild | undefined, StoredUmaBuild | undefined, StoredUmaBuild | undefined];
   hasFinalsData: boolean;
+  canAddFinals: boolean;
   summaryBuilds: ResultBuildSummary[];
   totalWinRate: number | null;
   totalTicketWins: number;
@@ -33,6 +34,7 @@ export default function Summary({
   finalBuildPlacements,
   finalBuilds,
   hasFinalsData,
+  canAddFinals,
   summaryBuilds,
   totalWinRate,
   totalTicketWins,
@@ -91,6 +93,10 @@ export default function Summary({
               <button
                 className="uma-build-results__add-ticket"
                 type="button"
+                disabled={!hasFinalsData && !canAddFinals}
+                title={!hasFinalsData && !canAddFinals
+                  ? "Finals results can be added starting on Finals day."
+                  : undefined}
                 onClick={onEditFinals}
               >
                 {hasFinalsData ? "Edit Finals" : "Add Finals results"}

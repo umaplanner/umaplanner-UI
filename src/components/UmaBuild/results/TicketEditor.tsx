@@ -36,6 +36,7 @@ interface Props {
     builds: TeamTicketBuildResult[],
     teamWins?: number,
   ) => void;
+  canAddTicket: boolean;
   onClose: () => void;
 }
 
@@ -50,6 +51,7 @@ export default function TicketEditor({
   getBuild,
   getEffectiveBuildId,
   onSaveTicket,
+  canAddTicket,
   onClose,
 }: Props) {
   const savedBuildResults = editor.ticket === null
@@ -129,6 +131,7 @@ export default function TicketEditor({
   }
 
   function submit() {
+    if (editor.ticket === null && !canAddTicket) return;
     const ticket = editor.ticket ?? (ticketCounts[editor.row] + 1) as TeamTicket;
     if (isTeamWinsMode) {
       onSaveTicket(editor.row, ticket, [], teamWins);
@@ -287,7 +290,8 @@ export default function TicketEditor({
         <button
           type="button"
           onClick={submit}
-          disabled={!canSubmit || (editor.ticket === null && ticketCounts[editor.row] >= 4)}
+          disabled={!canSubmit || (editor.ticket === null &&
+            (!canAddTicket || ticketCounts[editor.row] >= 4))}
         >
           {editor.ticket === null ? "Submit ticket" : "Save ticket"}
         </button>

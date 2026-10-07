@@ -16,9 +16,14 @@ import {
   type UmaSlot,
 } from "./plannerTypes";
 import { getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../components/UmaBuild/utils";
+import {
+  getNextResultOpeningAt,
+  getResultAvailability,
+} from "./resultSchedule";
 
 export default function Planner() {
   const [buildMode, setBuildMode] = useState<"display" | "edit" | "builds" | "results">("display");
+  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [showSupportCards, setShowSupportCards] = useState(true);
   const [editingBuild] = useState<UmaSlot>(1);
   const [editingBuildDraft, setEditingBuildDraft] = useState<{
@@ -36,6 +41,10 @@ export default function Planner() {
   const [focusedTeamSlot, setFocusedTeamSlot] = useState<UmaSlot | null>(1);
   const { selectedEvent } = useEvent();
   const { raceEntry, umaList, skillList } = usePlannerData(selectedEvent);
+  const activeRaceEntry = raceEntry?.eventTitle === selectedEvent
+    ? raceEntry
+    : undefined;
+  const resultAvailability = getResultAvailability(activeRaceEntry, currentTime);
   const {
     umas,
     allBuilds,
@@ -47,6 +56,19 @@ export default function Planner() {
     updateResultRoundExcluded,
     saveFinalsResult,
   } = useTeam(selectedEvent);
+  useEffect(() => {
+    const nextOpening = getNextResultOpeningAt(activeRaceEntry);
+    if (!nextOpening) return;
+
+    const timeout = window.setTimeout(
+      () => setCurrentTime(new Date()),
+      Math.max(0, nextOpening.getTime() - Date.now()),
+    );
+    return () => window.clearTimeout(timeout);
+  }, [activeRaceEntry, currentTime]);
+  useEffect(() => {
+    setBuildMode(resultAvailability.round1Day1 ? "results" : "display");
+  }, [selectedEvent, resultAvailability.round1Day1]);
   useEffect(() => {
     setDisplayBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
   }, [umas]);
@@ -204,6 +226,13 @@ export default function Planner() {
       <div className="uma-build-mode" role="group" aria-label="Build mode">
         <button
           type="button"
+          aria-pressed={buildMode === "results"}
+          onClick={() => setBuildMode("results")}
+        >
+          Results
+        </button>
+        <button
+          type="button"
           aria-pressed={buildMode === "display"}
           onClick={() => setBuildMode("display")}
         >
@@ -223,13 +252,6 @@ export default function Planner() {
         >
           Builds
         </button>
-        <button
-          type="button"
-          aria-pressed={buildMode === "results"}
-          onClick={() => setBuildMode("results")}
-        >
-          Results
-        </button>
       </div>
       <section className="uma-build-area" aria-label="Build selected Uma">
         {buildMode === "builds" ? (
@@ -239,6 +261,7 @@ export default function Planner() {
             key={selectedEvent}
             event={selectedEvent}
             results={eventResults.results}
+            resultAvailability={resultAvailability}
             buildAssignments={eventResults.buildAssignments}
             ticketBuildResults={eventResults.ticketBuildResults}
             ticketCounts={eventResults.ticketCounts}

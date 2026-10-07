@@ -1,6 +1,6 @@
 export const routes = {
-  home: "/",
+  planner: "/",
+  plannerLegacy: "/planner",
   overview: "/overview",
-  planner: "/planner",
   umaImport: "/uma-import",
 } as const;

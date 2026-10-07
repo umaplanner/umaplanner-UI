@@ -40,6 +40,7 @@ import "../../../styles/UmaBuildResults.css";
 interface Props {
   event: string;
   results: TeamResults;
+  resultAvailability?: Record<TeamResultRow, boolean>;
   buildAssignments: TeamBuildAssignments;
   ticketBuildResults: TeamTicketBuildResults;
   ticketCounts: Record<TeamResultRow, TeamTicketCount>;
@@ -87,6 +88,13 @@ const resultGroups: ResultGroup[] = [
 export default function Results({
   event,
   results,
+  resultAvailability = {
+    round1Day1: true,
+    round1Day2: true,
+    round2Day1: true,
+    round2Day2: true,
+    finals: true,
+  },
   buildAssignments,
   ticketBuildResults,
   ticketCounts,
@@ -191,6 +199,7 @@ export default function Results({
         finalBuildPlacements={finalBuildPlacements}
         finalBuilds={finalBuilds}
         hasFinalsData={hasFinalsData}
+        canAddFinals={resultAvailability.finals}
         summaryBuilds={summaryBuilds}
         totalWinRate={totalWinRate}
         totalTicketWins={totalTicketWins}
@@ -208,6 +217,7 @@ export default function Results({
           results={results}
           ticketBuildResults={ticketBuildResults}
           ticketCounts={ticketCounts}
+          resultAvailability={resultAvailability}
           collapsed={collapsedGroups[group.title] ?? false}
           excluded={isTeamResultRoundExcluded(results, group.round)}
           umaList={umaList}
@@ -235,12 +245,14 @@ export default function Results({
           getBuild={getBuild}
           getEffectiveBuildId={getEffectiveBuildId}
           onSaveTicket={onSaveTicket}
+          canAddTicket={resultAvailability[ticketEditor.row]}
           onClose={() => setTicketEditor(null)}
         />
       ) : null}
       {isFinalsEditorOpen ? (
         <FinalsEditor
           hasFinalsData={hasFinalsData}
+          canAddFinals={resultAvailability.finals}
           finalPlacement={finalPlacement}
           finalBuildPlacements={finalBuildPlacements}
           availableBuilds={availableBuilds}

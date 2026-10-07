@@ -325,18 +325,6 @@ button:hover {
     padding: 1.25rem 0.75rem 3rem;
   }
 
-  .home-page {
-    padding-bottom: 1rem;
-  }
-
-  .home-page h1 {
-    font-size: clamp(2.35rem, 11vw, 3.5rem);
-  }
-
-  .home-roadmap {
-    padding: 1.15rem;
-  }
-
   .builds-page {
     padding: 0;
   }

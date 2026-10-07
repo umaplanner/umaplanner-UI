@@ -21,6 +21,7 @@ interface Props {
   results: TeamResults;
   ticketBuildResults: TeamTicketBuildResults;
   ticketCounts: Record<TeamResultRow, TeamTicketCount>;
+  resultAvailability: Record<TeamResultRow, boolean>;
   collapsed: boolean;
   excluded: boolean;
   umaList: UmaEntry[];
@@ -40,6 +41,7 @@ export default function Group({
   results,
   ticketBuildResults,
   ticketCounts,
+  resultAvailability,
   collapsed,
   excluded,
   umaList,
@@ -188,6 +190,10 @@ export default function Group({
                           <button
                             className="uma-build-results__add-ticket"
                             type="button"
+                            disabled={!resultAvailability[row]}
+                            title={!resultAvailability[row]
+                              ? "Tickets can be added starting on this result day."
+                              : undefined}
                             onClick={() =>
                               onEditTicket({ row, groupTitle: title, label, ticket: null })}
                           >

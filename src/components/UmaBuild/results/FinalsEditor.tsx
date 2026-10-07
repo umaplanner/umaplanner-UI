@@ -19,6 +19,7 @@ import { formatUmaPlacement, umaPlacements } from "./utils";
 
 interface Props {
   hasFinalsData: boolean;
+  canAddFinals: boolean;
   finalPlacement: TeamFinalPlacement | null;
   finalBuildPlacements: TeamFinalBuildPlacements;
   availableBuilds: StoredUmaBuild[];
@@ -36,6 +37,7 @@ interface Props {
 
 export default function FinalsEditor({
   hasFinalsData,
+  canAddFinals,
   finalPlacement,
   finalBuildPlacements,
   availableBuilds,
@@ -123,6 +125,7 @@ export default function FinalsEditor({
   }
 
   function save() {
+    if (!hasFinalsData && !canAddFinals) return;
     if (!draft.placement || !canSave) return;
     onSaveFinals(
       draft.buildIds.map((buildId) => buildId || null) as InitialTeamBuildIds,
@@ -249,7 +252,11 @@ export default function FinalsEditor({
         </div>
       </div>
       <div className="uma-build-results__ticket-editor-actions">
-        <button type="button" onClick={save} disabled={!canSave}>
+        <button
+          type="button"
+          onClick={save}
+          disabled={!canSave || (!hasFinalsData && !canAddFinals)}
+        >
           Save Finals results
         </button>
         <button type="button" onClick={onClose}>Cancel</button>

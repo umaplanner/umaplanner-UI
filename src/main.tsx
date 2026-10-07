@@ -4,6 +4,12 @@ import { BrowserRouter } from "react-router";
 import App from "./app/App";
 import "./styles/index.css";
 
+if (import.meta.env.PROD && "serviceWorker" in navigator) {
+  void navigator.serviceWorker.register("/sw.js").catch((error: unknown) => {
+    console.error("Unable to register the service worker:", error);
+  });
+}
+
 const rootElement = document.getElementById("root");
 
 if (!rootElement) {

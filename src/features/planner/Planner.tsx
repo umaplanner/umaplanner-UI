@@ -32,6 +32,8 @@ export default function Planner() {
     null,
     null,
   ]);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [focusedTeamSlot, setFocusedTeamSlot] = useState<UmaSlot | null>(1);
   const { selectedEvent } = useEvent();
   const { raceEntry, umaList, skillList } = usePlannerData(selectedEvent);
   const {
@@ -48,10 +50,45 @@ export default function Planner() {
   useEffect(() => {
     setDisplayBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
   }, [umas]);
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") {
+      return;
+    }
+
+    const mobileQuery = window.matchMedia("(max-width: 760px)");
+    const updateViewport = () => {
+      setIsMobileViewport(mobileQuery.matches);
+      if (mobileQuery.matches) {
+        setFocusedTeamSlot((focused) => focused ?? 1);
+      } else {
+        setFocusedTeamSlot(null);
+      }
+    };
+    updateViewport();
+    mobileQuery.addEventListener("change", updateViewport);
+    return () => mobileQuery.removeEventListener("change", updateViewport);
+  }, []);
+  useEffect(() => {
+    setFocusedTeamSlot(1);
+  }, [selectedEvent]);
   const displayBuilds = displayBuildIds.map((buildId, index) => ({
     teamNumber: (index + 1) as UmaSlot,
     build: allBuilds.find((entry) => entry.id === buildId) ?? null,
   }));
+  const focusedTeamBuild = displayBuilds.find(
+    ({ teamNumber }) => teamNumber === focusedTeamSlot,
+  );
+  const selectTeamBuild = (teamNumber: UmaSlot, buildId: string | null) => {
+    const nextIds = [...displayBuildIds] as InitialTeamBuildIds;
+    nextIds[teamNumber - 1] = buildId;
+    setDisplayBuildIds(nextIds);
+    if (buildId === null) {
+      setFocusedTeamSlot((focused) => focused === teamNumber ? null : focused);
+    }
+    void swapTeamBuild(nextIds).catch((error) => {
+      console.error("Error swapping team build:", error);
+    });
+  };
   const hasDuplicateDisplayedUmas = hasDuplicateBaseUmaIds(
     displayBuilds.map(({ build }) => build),
   );
@@ -244,18 +281,41 @@ export default function Planner() {
                   skillList={skillList}
                   showSupportCards={showSupportCards}
                   compactText
-                  canClearBuild
-                  onSelectBuild={(buildId) => {
-                    const nextIds = [...displayBuildIds] as InitialTeamBuildIds;
-                    nextIds[teamNumber - 1] = buildId;
-                    setDisplayBuildIds(nextIds);
-                    void swapTeamBuild(nextIds).catch((error) => {
-                      console.error("Error swapping team build:", error);
-                    });
-                  }}
+                  showCopyButton={false}
+                  showSwapButton={false}
+                  mobileSummary={isMobileViewport}
+                  mobileDetailsFocused={isMobileViewport && focusedTeamSlot === teamNumber}
+                  onToggleMobileDetails={isMobileViewport ? () => {
+                    setFocusedTeamSlot((focused) =>
+                      focused === teamNumber ? null : teamNumber
+                    );
+                  } : undefined}
+                  onSelectBuild={(buildId) => selectTeamBuild(teamNumber, buildId)}
                 />
               ))}
             </div>
+            {isMobileViewport && focusedTeamBuild?.build ? (
+              <section
+                className="uma-build-display__focused-details"
+                aria-label={`Uma ${focusedTeamBuild.teamNumber} build details`}
+                aria-live="polite"
+              >
+                <UmaBuildDisplay
+                  key={`${focusedTeamBuild.teamNumber}-${focusedTeamBuild.build.id}`}
+                  teamNumber={focusedTeamBuild.teamNumber}
+                  build={focusedTeamBuild.build}
+                  availableBuilds={allBuilds}
+                  umaList={umaList}
+                  skillList={skillList}
+                  showSupportCards={showSupportCards}
+                  compactText
+                  canClearBuild
+                  onSelectBuild={(buildId) =>
+                    selectTeamBuild(focusedTeamBuild.teamNumber, buildId)
+                  }
+                />
+              </section>
+            ) : null}
           </div>
         ) : <UmaBuild {...editProps} teamNumber={editingBuild} />}
       </section>

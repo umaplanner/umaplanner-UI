@@ -130,6 +130,7 @@ export default function Builds() {
             const uma = umaList.find(
               (entry) => String(entry.id) === build.outfitId,
             );
+            const createdTime = getCreateTime(build);
             return (
               <article className="build-card" key={build.id}>
                 <button
@@ -147,23 +148,31 @@ export default function Builds() {
                     {uma ? <p>{uma.outfitTitle}</p> : null}
                     {uma ? <p>{uma.baseCharacterName}</p> : null}
                   </div>
-                </div>
-                <div className="build-card__aptitudes" aria-label="Aptitudes">
-                  <span>
-                    Surface
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.surfaceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.surfaceAptitude}`} />
-                  </span>
-                  <span>
-                    Distance
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.distanceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.distanceAptitude}`} />
-                  </span>
-                  <span>
-                    Style
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.strategyAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.strategyAptitude}`} />
-                    {strategyIcons[build.strategy] ? <img src={`/icons/style/${strategyIcons[build.strategy]}.webp`} alt={build.strategy} /> : null}
+                  <div className="build-card__actions">
+                    {createdTime ? (
+                      <time className="build-card__created-time build-card__created-time--saved" dateTime={createdTime.toISOString()}>
+                        <span>{createdTime.toLocaleDateString()}</span>
+                        <span>{createdTime.toLocaleTimeString()}</span>
+                      </time>
+                    ) : null}
                     <button className="build-card__details-button" type="button" onClick={() => setDetailsBuild(build)}>
                       Details
                     </button>
+                  </div>
+                </div>
+                <div className="build-card__aptitudes" aria-label="Aptitudes">
+                  <span>
+                    <span>Surface</span>
+                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.surfaceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.surfaceAptitude}`} />
+                  </span>
+                  <span>
+                    <span>Distance</span>
+                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.distanceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.distanceAptitude}`} />
+                  </span>
+                  <span>
+                    <span>Style</span>
+                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.strategyAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.strategyAptitude}`} />
+                    {strategyIcons[build.strategy] ? <img src={`/icons/style/${strategyIcons[build.strategy]}.webp`} alt={build.strategy} /> : null}
                   </span>
                 </div>
                 <div className="build-card__stats" aria-label="Stats">
@@ -177,12 +186,6 @@ export default function Builds() {
                     </span>
                   ))}
                 </div>
-                {getCreateTime(build) ? (
-                  <time className="build-card__created-time build-card__created-time--saved" dateTime={getCreateTime(build)?.toISOString()}>
-                    <span>{getCreateTime(build)?.toLocaleDateString()}</span>
-                    <span>{getCreateTime(build)?.toLocaleTimeString()}</span>
-                  </time>
-                ) : null}
               </article>
             );
           })}

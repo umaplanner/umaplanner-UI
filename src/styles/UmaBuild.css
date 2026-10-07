@@ -522,10 +522,6 @@
   color: var(--muted-text-color);
 }
 
-.uma-build__mobile-details-toggle {
-  display: none;
-}
-
 .uma-build__swap-button {
   margin-left: auto;
   padding: 0.55rem 0.8rem;
@@ -967,6 +963,12 @@
 .uma-build-display__support-toggle input {
   width: auto;
   min-height: 0;
+}
+
+.uma-build-display__focused-details {
+  display: none;
+  min-width: 0;
+  gap: 0.5rem;
 }
 
 .uma-build__support-card-list {
@@ -1495,20 +1497,114 @@
     font-size: 0.65rem;
   }
 
-  .uma-build-display-grid .uma-build__mobile-details-toggle {
-    display: block;
-    min-height: 2rem;
-    padding: 0.25rem;
-    font-size: 0.65rem;
-  }
-
-  .uma-build-display-grid .uma-build--display:not(.uma-build--display-details-open) .uma-build__panel {
+  .uma-build-display-grid .uma-build--team-summary .uma-build__panel {
     display: none;
   }
 
-  .uma-build-display-grid .uma-build--display-details-open .uma-build__panel {
-    display: block;
+  .uma-build-display-grid .uma-build--mobile-details-focused {
+    background: rgba(105, 183, 255, 0.1);
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
   }
+
+  .uma-build-display-grid .uma-build--team-summary {
+    cursor: pointer;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary:hover,
+  .uma-build-display-grid .uma-build--team-summary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-display .uma-build__plan-label {
+    position: static;
+    align-self: center;
+    height: 0.75rem;
+    margin: 0;
+    line-height: 0.75rem;
+    transform: none;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(0, auto);
+    min-width: 0;
+    width: 100%;
+    gap: 0.1rem;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-copy:not(:has(.uma-build__plan-label))::before {
+    height: 0.75rem;
+    content: "";
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-display strong,
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-display small,
+  .uma-build-display__focused-details .uma-build__uma-display strong,
+  .uma-build-display__focused-details .uma-build__uma-display small {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-copy {
+    overflow: hidden;
+  }
+
+  .uma-build-display__focused-details {
+    display: grid;
+    width: 100%;
+  }
+
+  .uma-build-display-grid + .uma-build-display__focused-details {
+    margin-top: 0.5rem;
+  }
+
+  .uma-build-display__focused-details > .uma-build--display:not(.uma-build--display-empty) .uma-build__uma-display {
+    min-height: 0;
+    padding-right: 4.5rem;
+  }
+
+  .uma-build-display__focused-details > .uma-build--display:not(.uma-build--display-empty) .uma-build__uma-display img {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .uma-build-display__focused-details .uma-build__uma-display {
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .uma-build-display__focused-details .uma-build__uma-display .uma-build__plan-label {
+    position: static;
+    align-self: flex-start;
+    height: 0.75rem;
+    margin: 0;
+    line-height: 0.75rem;
+    transform: none;
+  }
+}
+
+@media (min-width: 761px) {
+  .uma-build-display-grid > .uma-build--display {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .uma-build-display-grid > .uma-build--display .uma-build__skills {
+    flex: 1;
+    min-height: max-content;
+  }
+}
+
+.build-card__details-dialog .uma-build__copy-button {
+  transform: translateX(-1.8rem);
 }
 
 @media (max-width: 480px) {

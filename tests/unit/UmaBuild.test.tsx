@@ -133,4 +133,38 @@ describe("UmaBuild aptitude selectors", () => {
     await user.click(screen.getByRole("button", { name: "Clear selected build" }));
     expect(onSelectBuild).toHaveBeenCalledWith(null);
   });
+
+  it("selects a mobile team build for details without copy or swap controls", async () => {
+    const user = userEvent.setup();
+    const onToggleMobileDetails = vi.fn();
+    const build = {
+      ...createDefaultBuild("100101"),
+      id: "build-1",
+      event: "CM 42",
+      name: "Build 1",
+      lastUpdate: 1,
+    };
+
+    render(
+      <UmaBuildDisplay
+        teamNumber={1}
+        build={build}
+        availableBuilds={[build]}
+        umaList={[]}
+        skillList={[]}
+        onSelectBuild={vi.fn()}
+        showCopyButton={false}
+        showSwapButton={false}
+        mobileSummary
+        onToggleMobileDetails={onToggleMobileDetails}
+      />,
+    );
+
+    const teamBuild = screen.getByRole("button", { name: "Build Uma 1" });
+    await user.click(teamBuild);
+
+    expect(onToggleMobileDetails).toHaveBeenCalledOnce();
+    expect(screen.queryByRole("button", { name: "Swap" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Copy build JSON" })).not.toBeInTheDocument();
+  });
 });

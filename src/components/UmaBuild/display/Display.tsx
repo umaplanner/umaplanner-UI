@@ -19,6 +19,10 @@ interface UmaBuildDisplayProps {
   compactText?: boolean;
   showCopyButton?: boolean;
   canClearBuild?: boolean;
+  mobileSummary?: boolean;
+  mobileDetailsFocused?: boolean;
+  onToggleMobileDetails?: () => void;
+  showSwapButton?: boolean;
 }
 
 export default function UmaBuildDisplay({
@@ -32,10 +36,13 @@ export default function UmaBuildDisplay({
   compactText = false,
   showCopyButton = true,
   canClearBuild = false,
+  mobileSummary = false,
+  mobileDetailsFocused = false,
+  onToggleMobileDetails,
+  showSwapButton = true,
 }: UmaBuildDisplayProps) {
   const [isSavedBuildsOpen, setIsSavedBuildsOpen] = useState(false);
   const [isBuildCopied, setIsBuildCopied] = useState(false);
-  const [showMobileDetails, setShowMobileDetails] = useState(false);
   const selectedUma = build
     ? umaList.find((uma) => String(uma.id) === build.outfitId) ?? null
     : null;
@@ -84,8 +91,18 @@ export default function UmaBuildDisplay({
 
   return (
     <section
-      className={`uma-build uma-build--display${build ? "" : " uma-build--display-empty"}${compactText ? " uma-build--display-compact" : ""}${showMobileDetails ? " uma-build--display-details-open" : ""}`}
+      className={`uma-build uma-build--display${build ? "" : " uma-build--display-empty"}${compactText ? " uma-build--display-compact" : ""}${mobileSummary ? " uma-build--team-summary" : ""}${mobileDetailsFocused ? " uma-build--mobile-details-focused" : ""}`}
       aria-label={`Build Uma ${teamNumber}`}
+      role={mobileSummary ? "button" : undefined}
+      tabIndex={mobileSummary ? 0 : undefined}
+      aria-pressed={mobileSummary ? mobileDetailsFocused : undefined}
+      onClick={mobileSummary ? onToggleMobileDetails : undefined}
+      onKeyDown={mobileSummary ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onToggleMobileDetails?.();
+        }
+      } : undefined}
     >
       <section className="uma-build__uma-display" aria-label="Selected Uma">
         {selectedUma ? (
@@ -108,8 +125,7 @@ export default function UmaBuildDisplay({
           </span>
         )}
         {(build && showCopyButton) ||
-        availableBuilds.length > 0 ||
-        (canClearBuild && build) ? (
+        (showSwapButton && (availableBuilds.length > 0 || (canClearBuild && build))) ? (
           <div className="uma-build__display-actions">
             {build && showCopyButton ? (
               <button
@@ -125,7 +141,7 @@ export default function UmaBuildDisplay({
                 </svg>
               </button>
             ) : null}
-            {availableBuilds.length > 0 || (canClearBuild && build) ? (
+            {showSwapButton && (availableBuilds.length > 0 || (canClearBuild && build)) ? (
               <button
                 className="uma-build__swap-button"
                 type="button"
@@ -137,16 +153,6 @@ export default function UmaBuildDisplay({
           </div>
         ) : null}
       </section>
-      {build ? (
-        <button
-          className="uma-build__mobile-details-toggle"
-          type="button"
-          aria-expanded={showMobileDetails}
-          onClick={() => setShowMobileDetails((isOpen) => !isOpen)}
-        >
-          {showMobileDetails ? "Hide details" : "Details"}
-        </button>
-      ) : null}
       {isSavedBuildsOpen ? <UmaBuildSavedBuildDialog teamNumber={teamNumber} builds={availableBuilds} umaList={umaList} canClear={canClearBuild && Boolean(build)} onSelect={onSelectBuild} onClose={() => setIsSavedBuildsOpen(false)} /> : null}
       {build ? (
         <UmaBuildDisplaySections

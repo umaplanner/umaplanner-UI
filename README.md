@@ -26,7 +26,7 @@ The main dashboard where you can see an overview of upcoming events.
 
 **PvP Overview**
 A page dedicated to the general plans the community has for whichever pvp event is selected.
-- [ ] Should show PvP events their most common individual uma, team comp, and allow to further inspect.
+- [x] Should show PvP events their most common individual uma, team comp, and allow to further inspect.
 - [ ] Past PvP events should have the "most common" locked in this page even if users change their plans
 
 **PvP Planner Page**
@@ -35,53 +35,3 @@ The content of this page should change based on the event selected in the navbar
 - [ ] Should allow users to private their plans if they wish
 - [ ] Should allow users to share their plans as an anonymous user if they wish
 
-## Roadmap
-
-### v0.1.0 - Basic planner
-- [x] PvP Planner page 
-    - [x] Only own team for the next couple of CMs
-    - [x] Umas only in searchable dropdowns
-    - [x] Implement cache as the initial method for saving
-
-### v0.2.0 - Expand PvP Planner
-- [x] Dynamic list of events in the navbar
-    - [x] All events until current JP server events
-    - [x] Track conditions for each event
-    - [x] Focus on Current event, if no current event, focus on next
-- [x] Implement indexedDB for saving plans locally 
-
-### v0.2.1 - Improve uma search
-- [x] Implement images and a new search instead of dropdowns for uma selection
-    - [x] Use cloudflare r2 or similar object storage for images
-
-### v0.3.0 - Auth
-- [x] Auth using Discord
-- [x] Save and retrieve based on auth
-- [x] Design and implement database
-
-### v0.3.1 - Introduce skills 
-- [x] Implement skill and stat selection for each uma 
-    - should work kind of like the simulators
-- [x] include skill images in "public" section 
-
-
-### v0.4.0 - Implement failsafes/logic
-- [ ] Implement failsafes for users to not lose their plans if they accidentally close the page or refresh
-- [ ] Ensure it is not possible to select several of the same uma in a team
-- More to come
-
-
-### v1.0.0 - PvP Overview
-- PvP Overview page
-    - Show PvP events their most common uma and most common uma
-    - Past PvP events should have the "most common" locked even if users change their plans
-
-### v1.1.0 - Team sharing, Privacy, and Discord bot
-- Implement discord bot (as a separate repository) for easier access/sharing of plans
-
-### v1.2.0 - Settings
-- [ ] Implement settings for:
-    - [ ] Private/Anonymous plans
-    - [ ] Past events toggle
-    - [ ] How far into the future the event selector should look
-    - More to come

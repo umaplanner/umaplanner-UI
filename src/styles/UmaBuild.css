@@ -29,8 +29,10 @@
   grid-template-rows: auto;
 }
 
-.uma-build--display-empty .uma-build__uma-display {
-  min-height: 8rem;
+.uma-build--display .uma-build__uma-display {
+  box-sizing: border-box;
+  height: 10.5rem;
+  min-height: 10.5rem;
 }
 
 .uma-build--display-empty .uma-build__uma-display {
@@ -52,7 +54,6 @@
 }
 
 .uma-build--display:not(.uma-build--display-empty) .uma-build__uma-display {
-  min-height: 10.5rem;
   justify-content: flex-start;
   gap: 0.85rem;
   padding: 0.65rem;
@@ -89,6 +90,81 @@
   width: 1.85rem;
   height: 1.85rem;
   padding: 0.35rem;
+}
+
+.uma-build__plan-toggle,
+.uma-build-results__exclude {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.7rem;
+  color: var(--text-color);
+  background: rgba(105, 183, 255, 0.08);
+  border: 1px solid rgba(105, 183, 255, 0.22);
+  border-radius: 0.45rem;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.uma-build__plan-toggle:hover,
+.uma-build__plan-toggle:focus-within,
+.uma-build-results__exclude:hover,
+.uma-build-results__exclude:focus-within {
+  background: rgba(105, 183, 255, 0.16);
+  border-color: var(--accent-color);
+}
+
+.uma-build .uma-build__plan-toggle {
+  flex-direction: row;
+  gap: 0.4rem;
+  color: var(--text-color);
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.uma-build__toolbar .uma-build__plan-toggle input,
+.uma-build-results .uma-build-results__exclude input {
+  flex: 0 0 auto;
+  order: -1;
+  width: 1rem;
+  height: 1rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  accent-color: var(--accent-color);
+}
+
+.uma-build__plan-label {
+  color: #ef4444;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-shadow: 0 1px 2px #000;
+}
+
+.uma-build--display .uma-build__uma-display .uma-build__plan-label {
+  display: block;
+  position: absolute;
+  top: -1.1rem;
+  left: 0;
+  color: #ef4444;
+  transform: none;
+}
+
+.uma-build__uma-copy,
+.uma-build__uma-placeholder {
+  position: relative;
 }
 
 .uma-build__copy-button svg {
@@ -536,6 +612,18 @@
 
 .uma-build__saved-builds {
   width: min(54rem, 100%);
+  margin: auto;
+  color: var(--text-color);
+  overscroll-behavior: contain;
+}
+
+.uma-build__saved-builds::backdrop {
+  background: rgb(0 0 0 / 68%);
+}
+
+.uma-build__saved-build-clear {
+  width: 100%;
+  margin-bottom: 0.75rem;
 }
 
 .uma-build__saved-builds-grid {
@@ -876,6 +964,12 @@
 .uma-build-display__support-toggle input {
   width: auto;
   min-height: 0;
+}
+
+.uma-build-display__focused-details {
+  display: none;
+  min-width: 0;
+  gap: 0.5rem;
 }
 
 .uma-build__support-card-list {
@@ -1357,11 +1451,187 @@
   .uma-build__aptitudes {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .uma-build-display-grid .uma-build--display {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    gap: 0.2rem;
+    padding: 0.2rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display {
+    min-width: 0;
+    height: 8rem;
+    min-height: 8rem;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    padding: 0.35rem;
+    text-align: center;
+  }
+
+  .uma-build-display-grid .uma-build--display:not(.uma-build--display-empty) .uma-build__uma-display {
+    padding: 0.35rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display img {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display span {
+    align-items: center;
+    width: 100%;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__display-actions {
+    position: static;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__display-actions button {
+    min-width: 0;
+    padding: 0.25rem 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__panel {
+    display: none;
+  }
+
+  .uma-build-display-grid .uma-build--mobile-details-focused {
+    background: rgba(105, 183, 255, 0.1);
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary {
+    cursor: pointer;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary:hover,
+  .uma-build-display-grid .uma-build--team-summary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-display .uma-build__plan-label {
+    position: static;
+    align-self: center;
+    height: 0.75rem;
+    margin: 0;
+    line-height: 0.75rem;
+    transform: none;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(0, auto);
+    min-width: 0;
+    width: 100%;
+    gap: 0.1rem;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-copy:not(:has(.uma-build__plan-label))::before {
+    height: 0.75rem;
+    content: "";
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-display strong,
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-display small,
+  .uma-build-display__focused-details .uma-build__uma-display strong,
+  .uma-build-display__focused-details .uma-build__uma-display small {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .uma-build-display-grid .uma-build--team-summary .uma-build__uma-copy {
+    overflow: hidden;
+  }
+
+  .uma-build-display__focused-details {
+    display: grid;
+    width: 100%;
+  }
+
+  .uma-build-display-grid + .uma-build-display__focused-details {
+    margin-top: 0.5rem;
+  }
+
+  .uma-build-display__focused-details > .uma-build--display:not(.uma-build--display-empty) .uma-build__uma-display {
+    padding-right: 4.5rem;
+  }
+
+  .uma-build-display__focused-details > .uma-build--display:not(.uma-build--display-empty) .uma-build__uma-display img {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .uma-build-display__focused-details .uma-build__uma-display {
+    min-width: 0;
+    height: 8rem;
+    min-height: 8rem;
+    overflow: hidden;
+  }
+
+  .uma-build-display__focused-details .uma-build__uma-display .uma-build__plan-label {
+    position: static;
+    align-self: flex-start;
+    height: 0.75rem;
+    margin: 0;
+    line-height: 0.75rem;
+    transform: none;
+  }
+}
+
+@media (min-width: 761px) {
+  .uma-build-display-grid > .uma-build--display {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .uma-build-display-grid > .uma-build--display .uma-build__skills {
+    flex: 1;
+    min-height: max-content;
+  }
+}
+
+.build-card__details-dialog .uma-build__copy-button {
+  transform: translateX(-1.8rem);
 }
 
 @media (max-width: 480px) {
+  .uma-build {
+    gap: 0.65rem;
+    padding: 0.25rem;
+  }
+
+  .uma-build__toolbar {
+    gap: 0.35rem;
+    padding: 0.5rem;
+  }
+
+  .uma-build__toolbar button,
+  .uma-build__toolbar select {
+    min-height: 2.75rem;
+  }
+
   .uma-build__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .uma-build__stats label,
+  .uma-build__stats > div {
+    min-width: 0;
   }
 
   .uma-build__skill-row {
@@ -1375,5 +1645,23 @@
 
   .uma-build__skill-options {
     grid-template-columns: 1fr;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display img {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display strong {
+    font-size: 0.65rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__uma-display small {
+    font-size: 0.58rem;
+  }
+
+  .uma-build-display-grid .uma-build--display .uma-build__display-actions button {
+    padding: 0.2rem 0.25rem;
+    font-size: 0.58rem;
   }
 }

@@ -1,7 +1,7 @@
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { sortSkillsByDisplayOrder } from "./umaBuildUtils";
-import type { SkillSort } from "../Preferences";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
+import { sortSkillsByDisplayOrderWithIndex } from "../utils";
+import type { SkillSort } from "../../Preferences";
 
 interface Props {
   value: UmaBuildData;
@@ -53,7 +53,7 @@ export default function UmaBuildSkills({
         <strong>No skills added yet</strong>
         <span>Click to search and add a skill</span>
       </button> :
-      <div className="uma-build__skill-list">{sortSkillsByDisplayOrder(value.skills, skillList).map((skill, index) => {
+      <div className="uma-build__skill-list">{sortSkillsByDisplayOrderWithIndex(value.skills, skillList).map(({ skill, index }, displayIndex) => {
         const entry = getEntry(skill);
         const special = entry ? !entry.isGeneralSkill && entry.id.startsWith("1") : false;
         return <div className="uma-build__skill-row" key={`${skill}-${index}`}>
@@ -67,7 +67,7 @@ export default function UmaBuildSkills({
           <button 
             className="uma-build__remove-skill" 
             type="button" 
-            aria-label={`Remove skill ${index + 1}`} 
+            aria-label={`Remove skill ${displayIndex + 1}`}
             disabled={isForcedSkill(skill)} 
             onClick={() => removeSkill(index)}
           >×</button>

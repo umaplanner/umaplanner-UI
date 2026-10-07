@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
-import type { StoredUmaBuild } from "../../types/UmaBuild";
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaEntry } from "../../types/UmaEntry";
-import UmaImage from "../UmaImage";
-import UmaBuildDisplaySections from "./UmaBuildDisplaySections";
-import UmaBuildSavedBuildDialog from "./UmaBuildSavedBuildDialog";
-import { findSkill, getUmaUniqueSkillId } from "./umaBuildUtils";
-import "../../styles/UmaBuild.css";
+import type { StoredUmaBuild } from "../../../types/UmaBuild";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaEntry } from "../../../types/UmaEntry";
+import UmaImage from "../../UmaImage";
+import UmaBuildDisplaySections from "./DisplaySections";
+import UmaBuildSavedBuildDialog from "./SavedBuildDialog";
+import { findSkill, getUmaUniqueSkillId, normalizeStrategyName } from "../utils";
+import "../../../styles/UmaBuild.css";
 
 interface UmaBuildDisplayProps {
   teamNumber: number;
@@ -14,9 +14,15 @@ interface UmaBuildDisplayProps {
   availableBuilds: StoredUmaBuild[];
   umaList: UmaEntry[];
   skillList: SkillEntry[];
-  onSelectBuild: (buildId: string) => void;
+  onSelectBuild: (buildId: string | null) => void;
   showSupportCards?: boolean;
   compactText?: boolean;
+  showCopyButton?: boolean;
+  canClearBuild?: boolean;
+  mobileSummary?: boolean;
+  mobileDetailsFocused?: boolean;
+  onToggleMobileDetails?: () => void;
+  showSwapButton?: boolean;
 }
 
 export default function UmaBuildDisplay({
@@ -28,6 +34,12 @@ export default function UmaBuildDisplay({
   onSelectBuild,
   showSupportCards = true,
   compactText = false,
+  showCopyButton = true,
+  canClearBuild = false,
+  mobileSummary = false,
+  mobileDetailsFocused = false,
+  onToggleMobileDetails,
+  showSwapButton = true,
 }: UmaBuildDisplayProps) {
   const [isSavedBuildsOpen, setIsSavedBuildsOpen] = useState(false);
   const [isBuildCopied, setIsBuildCopied] = useState(false);
@@ -62,6 +74,8 @@ export default function UmaBuildDisplay({
       const normalizeSkill = (skill: string) => findSkill(skillList, skill)?.id ?? skill;
       await navigator.clipboard.writeText(JSON.stringify({
         ...build,
+        strategy: normalizeStrategyName(build.strategy),
+        mood: 2,
         skills: build.skills.map(normalizeSkill),
         forcedSkillPositions: Object.fromEntries(
           Object.entries(build.forcedSkillPositions).map(([skill, position]) => [
@@ -79,24 +93,43 @@ export default function UmaBuildDisplay({
 
   return (
     <section
-      className={`uma-build uma-build--display${build ? "" : " uma-build--display-empty"}${compactText ? " uma-build--display-compact" : ""}`}
+      className={`uma-build uma-build--display${build ? "" : " uma-build--display-empty"}${compactText ? " uma-build--display-compact" : ""}${mobileSummary ? " uma-build--team-summary" : ""}${mobileDetailsFocused ? " uma-build--mobile-details-focused" : ""}`}
       aria-label={`Build Uma ${teamNumber}`}
+      role={mobileSummary ? "button" : undefined}
+      tabIndex={mobileSummary ? 0 : undefined}
+      aria-pressed={mobileSummary ? mobileDetailsFocused : undefined}
+      onClick={mobileSummary ? onToggleMobileDetails : undefined}
+      onKeyDown={mobileSummary ? (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onToggleMobileDetails?.();
+        }
+      } : undefined}
     >
       <section className="uma-build__uma-display" aria-label="Selected Uma">
         {selectedUma ? (
           <>
             <UmaImage uma={selectedUma} alt="" />
-            <span>
+            <span className="uma-build__uma-copy">
+              {build?.["build-type"] === "plan" ? (
+                <small className="uma-build__plan-label">PLAN</small>
+              ) : null}
               <strong>{selectedUma.outfitTitle}</strong>
               <small>{selectedUma.baseCharacterName}</small>
             </span>
           </>
         ) : (
-          <span className="uma-build__uma-placeholder">No Uma selected</span>
+          <span className="uma-build__uma-placeholder">
+            {build?.["build-type"] === "plan" ? (
+              <small className="uma-build__plan-label">PLAN</small>
+            ) : null}
+            No Uma selected
+          </span>
         )}
-        {availableBuilds.length > 0 || build ? (
+        {(build && showCopyButton) ||
+        (showSwapButton && (availableBuilds.length > 0 || (canClearBuild && build))) ? (
           <div className="uma-build__display-actions">
-            {build ? (
+            {build && showCopyButton ? (
               <button
                 className="uma-build__copy-button"
                 type="button"
@@ -110,19 +143,19 @@ export default function UmaBuildDisplay({
                 </svg>
               </button>
             ) : null}
-            {availableBuilds.length > 0 ? (
-            <button
-              className="uma-build__swap-button"
-              type="button"
-              onClick={() => setIsSavedBuildsOpen(true)}
-            >
-              {build ? "Swap" : "Select build"}
-            </button>
+            {showSwapButton && (availableBuilds.length > 0 || (canClearBuild && build)) ? (
+              <button
+                className="uma-build__swap-button"
+                type="button"
+                onClick={() => setIsSavedBuildsOpen(true)}
+              >
+                {build ? "Swap" : "Select build"}
+              </button>
             ) : null}
           </div>
         ) : null}
       </section>
-      {isSavedBuildsOpen ? <UmaBuildSavedBuildDialog teamNumber={teamNumber} builds={availableBuilds} umaList={umaList} onSelect={onSelectBuild} onClose={() => setIsSavedBuildsOpen(false)} /> : null}
+      {isSavedBuildsOpen ? <UmaBuildSavedBuildDialog teamNumber={teamNumber} builds={availableBuilds} umaList={umaList} canClear={canClearBuild && Boolean(build)} onSelect={onSelectBuild} onClose={() => setIsSavedBuildsOpen(false)} /> : null}
       {build ? (
         <UmaBuildDisplaySections
           build={build}

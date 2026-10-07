@@ -1,21 +1,21 @@
 import { useEffect, useRef, useState } from "react";
-import { useEvent } from "../../contexts/EventContext";
-import { useAuth } from "../../contexts/AuthContext";
-import UmaImage from "../../components/UmaImage";
-import UmaBuildDisplay from "./UmaBuildDisplay";
-import type { StoredUmaBuild } from "../../types/UmaBuild";
-import type { UmaEntry } from "../../types/UmaEntry";
-import type { SkillEntry } from "../../types/SkillEntry";
-import { ensureDataLoaded } from "../../lib/data";
-import { normalizeSkillData } from "../../features/planner/skillData";
+import { useEvent } from "../../../contexts/EventContext";
+import { useAuth } from "../../../contexts/AuthContext";
+import UmaImage from "../../UmaImage";
+import UmaBuildDisplay from "../display/Display";
+import type { StoredUmaBuild } from "../../../types/UmaBuild";
+import type { UmaEntry } from "../../../types/UmaEntry";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import { ensureDataLoaded } from "../../../lib/data";
+import { normalizeSkillData } from "../../../features/planner/skillData";
 import {
   createBuildRepository,
   createTeamRepository,
   normalizeStoredTeam,
-} from "../../features/planner/plannerRepository";
-import { deleteBuild } from "../../features/planner/buildApi";
-import "../../styles/Builds.css";
-import { aptitudeRankImages, getStatRank, sortBuildsNewestFirst, statFields, strategyIcons } from "./umaBuildUtils";
+} from "../../../features/planner/plannerRepository";
+import { deleteBuild } from "../../../features/planner/buildApi";
+import "../../../styles/Builds.css";
+import { aptitudeRankImages, getStatRank, normalizeStrategyName, sortBuildsNewestFirst, statFields, strategyIcons } from "../utils";
 
 export default function Builds() {
   const { selectedEvent } = useEvent();
@@ -130,6 +130,7 @@ export default function Builds() {
             const uma = umaList.find(
               (entry) => String(entry.id) === build.outfitId,
             );
+            const createdTime = getCreateTime(build);
             return (
               <article className="build-card" key={build.id}>
                 <button
@@ -138,7 +139,9 @@ export default function Builds() {
                   aria-label={`Delete ${build.name || "Unnamed build"}`}
                   onClick={() => void handleDelete(build)}
                 >
-                  🗑
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                  </svg>
                 </button>
                 <div className="build-card__main">
                   {uma ? <UmaImage uma={uma} alt="" /> : null}
@@ -147,23 +150,31 @@ export default function Builds() {
                     {uma ? <p>{uma.outfitTitle}</p> : null}
                     {uma ? <p>{uma.baseCharacterName}</p> : null}
                   </div>
-                </div>
-                <div className="build-card__aptitudes" aria-label="Aptitudes">
-                  <span>
-                    Surface
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.surfaceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.surfaceAptitude}`} />
-                  </span>
-                  <span>
-                    Distance
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.distanceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.distanceAptitude}`} />
-                  </span>
-                  <span>
-                    Style
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.strategyAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.strategyAptitude}`} />
-                    {strategyIcons[build.strategy] ? <img src={`/icons/style/${strategyIcons[build.strategy]}.webp`} alt={build.strategy} /> : null}
+                  <div className="build-card__actions">
+                    {createdTime ? (
+                      <time className="build-card__created-time build-card__created-time--saved" dateTime={createdTime.toISOString()}>
+                        <span>{createdTime.toLocaleDateString()}</span>
+                        <span>{createdTime.toLocaleTimeString()}</span>
+                      </time>
+                    ) : null}
                     <button className="build-card__details-button" type="button" onClick={() => setDetailsBuild(build)}>
                       Details
                     </button>
+                  </div>
+                </div>
+                <div className="build-card__aptitudes" aria-label="Aptitudes">
+                  <span>
+                    <span>Surface</span>
+                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.surfaceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.surfaceAptitude}`} />
+                  </span>
+                  <span>
+                    <span>Distance</span>
+                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.distanceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.distanceAptitude}`} />
+                  </span>
+                  <span>
+                    <span>Style</span>
+                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.strategyAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.strategyAptitude}`} />
+                    {strategyIcons[normalizeStrategyName(build.strategy)] ? <img src={`/icons/style/${strategyIcons[normalizeStrategyName(build.strategy)]}.webp`} alt={normalizeStrategyName(build.strategy)} /> : null}
                   </span>
                 </div>
                 <div className="build-card__stats" aria-label="Stats">
@@ -177,12 +188,6 @@ export default function Builds() {
                     </span>
                   ))}
                 </div>
-                {getCreateTime(build) ? (
-                  <time className="build-card__created-time build-card__created-time--saved" dateTime={getCreateTime(build)?.toISOString()}>
-                    <span>{getCreateTime(build)?.toLocaleDateString()}</span>
-                    <span>{getCreateTime(build)?.toLocaleTimeString()}</span>
-                  </time>
-                ) : null}
               </article>
             );
           })}

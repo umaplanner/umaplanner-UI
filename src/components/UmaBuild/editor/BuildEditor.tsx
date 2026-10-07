@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../types/UmaBuild";
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaEntry } from "../../types/UmaEntry";
-import UmaSelect from "../UmaSelect";
-import UmaBuildAptitudes from "./UmaBuildAptitudes";
-import UmaBuildSkills from "./UmaBuildSkills";
-import UmaBuildStats from "./UmaBuildStats";
-import UmaBuildToolbar from "./UmaBuildToolbar";
-import useUmaBuildEditor from "./useUmaBuildEditor";
-import "../../styles/UmaBuild.css";
+import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../../types/UmaBuild";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaEntry } from "../../../types/UmaEntry";
+import UmaSelect from "../../UmaSelect";
+import UmaBuildAptitudes from "./Aptitudes";
+import UmaBuildSkills from "./Skills";
+import UmaBuildStats from "./Stats";
+import UmaBuildToolbar from "./Toolbar";
+import useUmaBuildEditor from "./useBuildEditor";
+import "../../../styles/UmaBuild.css";
 
 interface UmaBuildProps {
   teamNumber: number;
@@ -36,6 +36,7 @@ export default function UmaBuild({
 }: UmaBuildProps) {
   const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
   const saveMenuRef = useRef<HTMLSpanElement | null>(null);
+  const aptitudesRef = useRef<HTMLDivElement | null>(null);
   const defaultBuildName = buildName || selectedUma?.baseCharacterName || "";
   const editor = useUmaBuildEditor({
     value,
@@ -48,6 +49,12 @@ export default function UmaBuild({
     onNewBuild,
     onBuildLoaded,
   });
+  const {
+    openAptitude,
+    openChoice,
+    setOpenAptitude,
+    setOpenChoice,
+  } = editor;
 
   useEffect(() => {
     if (!isSaveMenuOpen) return;
@@ -60,10 +67,30 @@ export default function UmaBuild({
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [isSaveMenuOpen]);
 
+  useEffect(() => {
+    if (openAptitude === null && openChoice === null) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!aptitudesRef.current?.contains(event.target as Node)) {
+        setOpenAptitude(null);
+        setOpenChoice(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [
+    openAptitude,
+    openChoice,
+    setOpenAptitude,
+    setOpenChoice,
+  ]);
+
   return (
     <section className="uma-build" aria-label={`Build Uma ${teamNumber}`}>
       <UmaBuildToolbar
         value={value}
+        onTogglePlan={(isPlan) => editor.updateField("build-type", isPlan ? "plan" : "standard")}
         savedBuilds={savedBuilds}
         onNewBuild={editor.startNewBuild}
         onSaveBuild={onSaveBuild}
@@ -91,7 +118,7 @@ export default function UmaBuild({
           <div className="uma-build__section-heading"><h4 id={`stats-heading-${teamNumber}`}>Stats</h4></div>
           <UmaBuildStats value={value} editable onChange={editor.updateField} />
         </div>
-        <div className="uma-build__aptitudes-section">
+        <div className="uma-build__aptitudes-section" ref={aptitudesRef}>
           <div className="uma-build__section-heading"><h4 id={`aptitudes-heading-${teamNumber}`}>Aptitudes</h4></div>
           <UmaBuildAptitudes
             value={value}

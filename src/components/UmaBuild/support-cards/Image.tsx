@@ -1,5 +1,5 @@
-import type { SupportCardBuild } from "../../types/UmaBuild";
-import { config } from "../../lib/config";
+import type { SupportCardBuild } from "../../../types/UmaBuild";
+import { config } from "../../../lib/config";
 
 interface SupportCardImageProps {
   card: SupportCardBuild;

@@ -4,7 +4,7 @@ import { getImportedSkillIds } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type { SkillEntry } from "../../types/SkillEntry";
 import UmaImage from "../../components/UmaImage";
-import UmaBuildDisplay from "../../components/UmaBuild/UmaBuildDisplay";
+import UmaBuildDisplay from "../../components/UmaBuild/display/Display";
 import {
   getAptitudeRank,
   getAptitudeRankImage,
@@ -13,7 +13,7 @@ import {
   runawayStrategy,
   runningStyleNames,
   strategyIcons,
-} from "../../components/UmaBuild/umaBuildUtils";
+} from "../../components/UmaBuild/utils";
 
 interface ImportedBuildCardProps {
   build: ImportedUmaBuild;
@@ -92,6 +92,7 @@ export default function ImportedBuildCard({
     name: build.name ?? "",
     lastUpdate: 0,
     outfitId: String(build.card_id),
+    "build-type": build["build-type"] ?? "standard",
     create_time: build.created_time ?? build.create_time,
     starCount: 0,
     uniqueLv: 0,
@@ -156,12 +157,6 @@ export default function ImportedBuildCard({
 
   return (
     <article className="build-card" data-testid="imported-build">
-      {createdTime && !Number.isNaN(createdTime.getTime()) ? (
-        <time className="build-card__created-time" dateTime={createdTime.toISOString()}>
-          <span>{createdTime.toLocaleDateString()}</span>
-          <span>{createdTime.toLocaleTimeString()}</span>
-        </time>
-      ) : null}
       <div className="build-card__main">
         {uma ? <UmaImage uma={uma} alt="" /> : null}
         <div>
@@ -170,17 +165,25 @@ export default function ImportedBuildCard({
           {displayName ? <p>{uma?.outfitTitle}</p> : null}
           {uma ? <p>{uma.baseCharacterName}</p> : null}
         </div>
-      </div>
-      <div className="build-card__aptitudes" aria-label="Aptitudes">
-        <span>Surface <img src={getRankImage(groundRank)} alt={`Rank ${getAptitudeRank(groundRank)}`} /></span>
-        <span>Distance <img src={getRankImage(distanceRank)} alt={`Rank ${getAptitudeRank(distanceRank)}`} /></span>
-        <span>
-          Style
-          <img src={getRankImage(styleRank)} alt={`Rank ${getAptitudeRank(styleRank)}`} />
-          {strategyIcon ? <img src={`/icons/style/${strategyIcon}.webp`} alt={strategyName} /> : null}
+        <div className="build-card__actions">
+          {createdTime && !Number.isNaN(createdTime.getTime()) ? (
+            <time className="build-card__created-time" dateTime={createdTime.toISOString()}>
+              <span>{createdTime.toLocaleDateString()}</span>
+              <span>{createdTime.toLocaleTimeString()}</span>
+            </time>
+          ) : null}
           <button className="build-card__details-button" type="button" onClick={() => setIsDetailsOpen(true)}>
             Details
           </button>
+        </div>
+      </div>
+      <div className="build-card__aptitudes" aria-label="Aptitudes">
+        <span><span>Surface</span><img src={getRankImage(groundRank)} alt={`Rank ${getAptitudeRank(groundRank)}`} /></span>
+        <span><span>Distance</span><img src={getRankImage(distanceRank)} alt={`Rank ${getAptitudeRank(distanceRank)}`} /></span>
+        <span>
+          <span>Style</span>
+          <img src={getRankImage(styleRank)} alt={`Rank ${getAptitudeRank(styleRank)}`} />
+          {strategyIcon ? <img src={`/icons/style/${strategyIcon}.webp`} alt={strategyName} /> : null}
         </span>
       </div>
       <div className="build-card__stats" aria-label="Stats">

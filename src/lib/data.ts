@@ -23,6 +23,11 @@ type CachedDataset = {
   data: unknown;
 };
 
+type CachedOverview = {
+  event: string;
+  data: unknown;
+};
+
 export type LoadedData = Record<string, unknown>;
 
 const dataRepository = new IndexedDbRepository<CachedDataset>({
@@ -30,6 +35,13 @@ const dataRepository = new IndexedDbRepository<CachedDataset>({
   version: 1,
   storeName: "datasets",
   keyPath: "name",
+});
+
+const overviewRepository = new IndexedDbRepository<CachedOverview>({
+  databaseName: "R2OverviewDB",
+  version: 1,
+  storeName: "overviews",
+  keyPath: "event",
 });
 
 let dataLoadPromise: Promise<LoadedData> | null = null;
@@ -159,4 +171,41 @@ export async function loadDataFromR2(): Promise<LoadedData> {
 export async function getCachedDataset<T>(name: string): Promise<T | null> {
   const dataset = await dataRepository.getByKey(name);
   return (dataset?.data as T | undefined) ?? null;
+}
+
+export async function getCachedOverview(event: string): Promise<unknown | undefined> {
+  const overview = await overviewRepository.getByKey(event);
+  return unwrapOverviewPayload(overview?.data);
+}
+
+export async function fetchAndCacheOverview(event: string): Promise<unknown> {
+  const baseUrl = import.meta.env.VITE_R2_BASE_URL?.replace(/\/$/, "");
+
+  if (!baseUrl) {
+    throw new Error("VITE_R2_BASE_URL is not configured");
+  }
+
+  const url = `${baseUrl}/data/overview/${encodeURIComponent(event)}.json`;
+  const response = await fetch(url, { cache: "no-store" });
+
+  if (!response.ok) {
+    throw new Error(`Unable to load overview data from ${url} (${response.status})`);
+  }
+
+  const data: unknown = unwrapOverviewPayload(await response.json());
+  await overviewRepository.put({ event, data });
+  return data;
+}
+
+function unwrapOverviewPayload(payload: unknown): unknown {
+  if (
+    payload &&
+    typeof payload === "object" &&
+    !Array.isArray(payload) &&
+    "data" in payload &&
+    "sha256" in payload
+  ) {
+    return payload.data;
+  }
+  return payload;
 }

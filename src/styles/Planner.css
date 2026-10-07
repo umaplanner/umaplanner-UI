@@ -115,6 +115,16 @@
   gap: 0.65rem;
 }
 
+.uma-build-display__duplicate-warning {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  color: #f0a4a8;
+  background: rgba(184, 92, 104, 0.12);
+  border: 1px solid rgba(184, 92, 104, 0.45);
+  border-radius: 0.45rem;
+  font-size: 0.82rem;
+}
+
 .uma-build-mode {
   display: flex;
   justify-content: center;
@@ -156,7 +166,8 @@
 
 @media (max-width: 760px) {
   .uma-build-display-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
   }
 
   .uma-selection {
@@ -166,22 +177,58 @@
   .uma-selection {
     gap: 0.4rem;
   }
+
+  .uma-build-display__support-toggle {
+    justify-content: flex-start;
+    margin-bottom: 0.25rem;
+    font-size: 0.65rem;
+  }
 }
 
 @media (max-width: 560px) {
   .uma-selection {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.4rem;
   }
 
   .uma-selection__tab {
-    justify-content: flex-start;
-    min-height: 4.5rem;
-    padding: 0.5rem 0.65rem;
-    text-align: left;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-height: 6rem;
+    padding: 0.4rem 0.2rem;
+    text-align: center;
   }
 
   .uma-selection__tab img {
-    width: 3.5rem;
-    height: 3.5rem;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .uma-selection__tab strong {
+    font-size: 0.75rem;
+  }
+
+  .uma-selection__tab small {
+    font-size: 0.65rem;
+  }
+
+  .uma-build-area {
+    gap: 0.5rem;
+    padding: 0.55rem;
+  }
+
+  .uma-build-mode {
+    width: 100%;
+    gap: 0.15rem;
+    padding: 0.2rem;
+  }
+
+  .uma-build-mode button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.55rem 0.2rem;
+    font-size: 0.8rem;
   }
 }

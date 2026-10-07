@@ -30,6 +30,20 @@ body {
     var(--background-color);
 }
 
+html:has(dialog[open]),
+html:has([aria-modal="true"]),
+html:has(.uma-select__backdrop),
+html:has(.uma-build__skill-backdrop) {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+dialog[open],
+.uma-select__popup,
+.uma-build__skill-dialog {
+  overscroll-behavior: contain;
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -254,21 +268,27 @@ button:hover {
 @media (max-width: 680px) {
   .site-header nav {
     flex-wrap: wrap;
+    gap: 0.15rem;
+    padding: 0.45rem 0.65rem;
+  }
+
+  .site-header nav > a:not(.login-button) {
+    padding: 0.45rem 0.4rem;
+    font-size: 0.78rem;
+    white-space: nowrap;
   }
 
   .event-selector {
     position: static;
-    order: 3;
+    order: 1;
     flex-basis: 100%;
+    min-width: 0;
     transform: none;
   }
 
   #event-select {
     flex-basis: 100%;
-    margin-left: 0;
-  }
-
-  .event-selector {
+    min-width: 0;
     margin-left: 0;
   }
 
@@ -276,7 +296,52 @@ button:hover {
     flex: 1;
   }
 
+  .user-menu {
+    order: 0;
+    margin-left: auto;
+  }
+
+  .user-profile {
+    min-height: 2.5rem;
+    padding: 0.2rem;
+  }
+
+  .user-profile > span {
+    display: none;
+  }
+
+  .site-header .login-button {
+    order: 0;
+    max-width: 5.5rem;
+    margin-left: auto;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.72rem;
+    text-align: center;
+    white-space: normal;
+  }
+
   .site-main {
-    padding-top: 2rem;
+    min-height: calc(100vh - 7rem);
+    padding: 1.25rem 0.75rem 3rem;
+  }
+
+  .builds-page {
+    padding: 0;
+  }
+
+  .builds-page__search {
+    min-height: 2.75rem;
+  }
+
+  .overview-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 380px) {
+  .site-header nav > a:not(.login-button) {
+    padding-right: 0.25rem;
+    padding-left: 0.25rem;
+    font-size: 0.72rem;
   }
 }

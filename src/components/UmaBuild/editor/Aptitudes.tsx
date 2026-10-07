@@ -1,5 +1,5 @@
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { aptitudeOptions, aptitudeRankImages, strategyIcons, strategyOptions } from "./umaBuildUtils";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
+import { aptitudeOptions, aptitudeRankImages, normalizeStrategyName, strategyIcons, strategyOptions } from "../utils";
 
 interface Props {
   value: UmaBuildData;
@@ -66,11 +66,11 @@ export default function UmaBuildAptitudes({ value, openAptitude = null, openChoi
             <button 
               className="uma-build__choice-current" 
               type="button" 
-              aria-label={`Strategy ${value.strategy}`} 
+              aria-label={`Strategy ${normalizeStrategyName(value.strategy)}`}
               aria-expanded={openChoice === "strategy"} 
               onClick={onToggleStrategy}
             >
-              {strategyIcons[value.strategy] ? <img src={`/icons/style/${strategyIcons[value.strategy]}.webp`} alt={value.strategy} /> : value.strategy}
+              {strategyIcons[normalizeStrategyName(value.strategy)] ? <img src={`/icons/style/${strategyIcons[normalizeStrategyName(value.strategy)]}.webp`} alt={normalizeStrategyName(value.strategy)} /> : normalizeStrategyName(value.strategy)}
             </button>
             {openChoice === "strategy" ? <span className="uma-build__choice-options" role="group" aria-label="Strategy options">
               {strategyOptions.map((strategy) => <button type="button" key={strategy} aria-label={`Strategy ${strategy}`} onClick={() => onChange?.("strategy", strategy)}>
@@ -80,7 +80,7 @@ export default function UmaBuildAptitudes({ value, openAptitude = null, openChoi
         </label>
       ) : <div>
         <span>Strategy</span>
-        {strategyIcons[value.strategy] ? <img src={`/icons/style/${strategyIcons[value.strategy]}.webp`} alt={value.strategy} /> : <strong>{value.strategy}</strong>}
+        {strategyIcons[normalizeStrategyName(value.strategy)] ? <img src={`/icons/style/${strategyIcons[normalizeStrategyName(value.strategy)]}.webp`} alt={normalizeStrategyName(value.strategy)} /> : <strong>{normalizeStrategyName(value.strategy)}</strong>}
         </div>
       }
     </div>

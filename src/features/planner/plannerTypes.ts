@@ -1,6 +1,5 @@
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 
-export type UmaSlot = 1 | 2 | 3;
 export type UmaKey = "uma1" | "uma2" | "uma3";
 export type BuildKey = "uma1Build" | "uma2Build" | "uma3Build";
 
@@ -19,13 +18,17 @@ export type TeamState = EventTeam & {
   uma1BuildName: string;
   uma2BuildName: string;
   uma3BuildName: string;
-};
+}
+
+export * from "./resultsTypes";
+export * from "./resultsNormalization";
 
 export function createDefaultBuild(outfitId = ""): UmaBuildData {
   return {
     outfitId,
+    "build-type": "standard",
     starCount: 3,
-    uniqueLv: 1,
+    uniqueLv: 3,
     speed: 1200,
     stamina: 1200,
     power: 800,

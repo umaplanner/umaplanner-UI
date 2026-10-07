@@ -1,8 +1,15 @@
-import { useEffect, useState } from "react";
-import type { SkillEntry } from "../../types/SkillEntry";
-import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
-import { findSkill, hasRunawaySkill, runawayStrategy } from "./umaBuildUtils";
-import { useSkillPickerPreferences } from "../Preferences";
+import { useCallback, useEffect, useState } from "react";
+import type { SkillEntry } from "../../../types/SkillEntry";
+import type { UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
+import {
+  findSkill,
+  hasRunawaySkill,
+  isRunawaySkill,
+  normalizeStrategyName,
+  runawaySkillId,
+  runawayStrategy,
+} from "../utils";
+import { useSkillPickerPreferences } from "../../Preferences";
 
 interface Options {
   value: UmaBuildData;
@@ -18,8 +25,9 @@ interface Options {
 
 const emptyBuild: UmaBuildData = {
   outfitId: "",
+  "build-type": "standard",
   starCount: 3,
-  uniqueLv: 1,
+  uniqueLv: 3,
   speed: 1200,
   stamina: 1200,
   power: 800,
@@ -62,29 +70,34 @@ export default function useUmaBuildEditor({
   const uniqueSkill = uniqueSkillId === undefined
     ? undefined
     : skillList.find((skill) => skill.id === String(uniqueSkillId));
+  const getSkillId = useCallback(
+    (skill: string) => findSkill(skillList, skill)?.id ?? skill,
+    [skillList],
+  );
 
   useEffect(() => setDraftBuildName(buildName), [buildName]);
 
   useEffect(() => {
-    const skills = uniqueSkill
+    const shouldForceUniqueSkill = uniqueSkill !== undefined &&
+      (!isRunawaySkill(skillList, uniqueSkill.id) ||
+        value.strategy === runawayStrategy);
+    const previouslyForcedSkills = new Set(
+      Object.keys(value.forcedSkillPositions).map(getSkillId),
+    );
+    const retainedSkills = value.skills.filter((skill) => {
+      const skillId = getSkillId(skill);
+      return !previouslyForcedSkills.has(skillId) &&
+        !(uniqueSkill && !shouldForceUniqueSkill && skillId === uniqueSkill.id);
+    });
+    const skills = shouldForceUniqueSkill && uniqueSkill
       ? [
           uniqueSkill.id,
-          ...value.skills.filter((skill) =>
-            getSkillId(skill) !== uniqueSkill.id &&
-            value.forcedSkillPositions[skill] === undefined,
-          ),
+          ...retainedSkills.filter((skill) => getSkillId(skill) !== uniqueSkill.id),
         ]
-      : value.skills;
-    const forcedSkillPositions = Object.fromEntries(
-      Object.entries(value.forcedSkillPositions).filter(([skillName]) =>
-        skills.includes(skillName) &&
-          (!uniqueSkill || skillName === uniqueSkill.id),
-      ),
-    );
-
-    if (uniqueSkill) {
-      forcedSkillPositions[uniqueSkill.id] = 0;
-    }
+      : retainedSkills;
+    const forcedSkillPositions = shouldForceUniqueSkill && uniqueSkill
+      ? { [uniqueSkill.id]: 0 }
+      : {};
 
     if (
       value.skills.length === skills.length &&
@@ -95,7 +108,7 @@ export default function useUmaBuildEditor({
     ) return;
 
     onChange({ ...value, skills, forcedSkillPositions });
-  }, [onChange, skillList, uniqueSkill, value]);
+  }, [getSkillId, onChange, skillList, uniqueSkill, value]);
 
   useEffect(() => {
     if (!isSkillPickerOpen) return;
@@ -109,15 +122,35 @@ export default function useUmaBuildEditor({
   }, [isSkillPickerOpen]);
 
   function updateField<K extends keyof UmaBuildData>(field: K, nextValue: UmaBuildData[K]) {
+    if (field === "strategy" && typeof nextValue === "string") {
+      if (nextValue === runawayStrategy) {
+        const runawaySkill = skillList.find((skill) =>
+          isRunawaySkill(skillList, skill.id),
+        );
+        const skills = hasRunawaySkill(skillList, value.skills)
+          ? value.skills
+          : [...value.skills, runawaySkill?.id ?? runawaySkillId];
+        onChange({ ...value, strategy: nextValue, skills });
+        return;
+      }
+
+      const removeRunawaySkills = nextValue !== runawayStrategy &&
+        hasRunawaySkill(skillList, value.skills);
+      if (removeRunawaySkills) {
+        const skills = value.skills.filter(
+          (skill) => !isRunawaySkill(skillList, skill),
+        );
+        const forcedSkillPositions = Object.fromEntries(
+          Object.entries(value.forcedSkillPositions).filter(([skill]) =>
+            skills.some((current) => getSkillId(current) === getSkillId(skill)),
+          ),
+        );
+        onChange({ ...value, strategy: nextValue, skills, forcedSkillPositions });
+        return;
+      }
+    }
     onChange({ ...value, [field]: nextValue });
   }
-
-  useEffect(() => {
-    if (!hasRunawaySkill(skillList, value.skills) || value.strategy === runawayStrategy) {
-      return;
-    }
-    onChange({ ...value, strategy: runawayStrategy });
-  }, [onChange, skillList, value]);
 
   function startNewBuild() {
     setDraftBuildName("");
@@ -128,12 +161,9 @@ export default function useUmaBuildEditor({
     }
   }
 
-  function getSkillId(skill: string) {
-    return findSkill(skillList, skill)?.id ?? skill;
-  }
-
   function isForcedSkill(skillId: string) {
-    return uniqueSkill?.id === getSkillId(skillId);
+    return uniqueSkill?.id === getSkillId(skillId) &&
+      !isRunawaySkill(skillList, skillId);
   }
 
   function isUnavailableSkill(skill: SkillEntry) {
@@ -154,6 +184,7 @@ export default function useUmaBuildEditor({
   function selectSkill(skillId: string) {
     const selectedSkill = skillList.find((entry) => entry.id === skillId);
     const selectedSkillId = selectedSkill?.id ?? skillId;
+    const hadRunawaySkill = hasRunawaySkill(skillList, value.skills);
 
     if (value.skills.some((skill) => getSkillId(skill) === selectedSkillId) &&
       skillPickerIndex === null) return;
@@ -162,10 +193,14 @@ export default function useUmaBuildEditor({
       ? value.skills.findIndex((skill) => findSkill(skillList, skill)?.groupId === selectedSkill.groupId)
       : -1;
 
-    const skillsWithoutGroup = selectedSkill?.groupId
-      ? value.skills.filter((skill) =>
-        findSkill(skillList, skill)?.groupId !== selectedSkill.groupId || isForcedSkill(skill))
-      : value.skills;
+    const skillsWithoutGroup = value.skills.filter((skill, index) => {
+      if (skillPickerIndex !== null && index === skillPickerIndex) {
+        return false;
+      }
+      return !selectedSkill?.groupId ||
+        findSkill(skillList, skill)?.groupId !== selectedSkill.groupId ||
+        isForcedSkill(skill);
+    });
 
     const skills = [...skillsWithoutGroup];
 
@@ -182,12 +217,18 @@ export default function useUmaBuildEditor({
         skills.some((current) => getSkillId(current) === getSkillId(skill)),
       ),
     );
+    const hasRunawayAfterChange = hasRunawaySkill(skillList, skills);
+    const strategy = !hadRunawaySkill && hasRunawayAfterChange
+      ? runawayStrategy
+      : hadRunawaySkill && !hasRunawayAfterChange && value.strategy === runawayStrategy
+        ? "Nige"
+        : value.strategy;
 
     onChange({
       ...value,
       skills,
       forcedSkillPositions,
-      strategy: hasRunawaySkill(skillList, skills) ? runawayStrategy : value.strategy,
+      strategy,
     });
   }
 
@@ -199,11 +240,18 @@ export default function useUmaBuildEditor({
     const forcedSkillPositions = { ...value.forcedSkillPositions };
 
     if (skillId) delete forcedSkillPositions[skillId];
+    const skills = value.skills.filter((_, skillIndex) => skillIndex !== index);
+    const strategy = value.strategy === runawayStrategy &&
+        isRunawaySkill(skillList, skillId ?? "") &&
+        !hasRunawaySkill(skillList, skills)
+      ? "Nige"
+      : value.strategy;
 
     onChange({
       ...value,
-      skills: value.skills.filter((_, skillIndex) => skillIndex !== index),
+      skills,
       forcedSkillPositions,
+      strategy,
     });
   }
 
@@ -224,6 +272,8 @@ export default function useUmaBuildEditor({
     try {
       await navigator.clipboard.writeText(JSON.stringify({
         ...value,
+        strategy: normalizeStrategyName(value.strategy),
+        mood: 2,
         skills: value.skills.map(normalise),
         forcedSkillPositions: Object.fromEntries(
           Object.entries(value.forcedSkillPositions).map(([skill, position]) => [normalise(skill), position]),
@@ -253,19 +303,29 @@ async function loadBuildJson() {
       !Array.isArray(rawBuild.forcedSkillPositions) &&
       (Object.keys(rawBuild.forcedSkillPositions).length === 0 || 
        Object.values(rawBuild.forcedSkillPositions).every((position) => typeof position === "number" && Number.isFinite(position)));
+    const buildTypeValid = rawBuild["build-type"] === undefined ||
+      rawBuild["build-type"] === "standard" ||
+      rawBuild["build-type"] === "plan";
 
     const valid = rawBuild && typeof rawBuild === "object" &&
       numberFieldsValid &&
       stringFieldsValid &&
+      buildTypeValid &&
       moodValid &&
       skillsValid &&
       forcedSkillPositionsValid;
 
     if (!valid) throw new Error("Uma build JSON has an invalid format");
 
-    // Set default value for starCount if it doesn't exist
+    // Set defaults for omitted build fields.
     if (rawBuild.starCount === undefined) {
       rawBuild.starCount = 3;
+    }
+    if (rawBuild.uniqueLv === undefined) {
+      rawBuild.uniqueLv = 3;
+    }
+    if (rawBuild["build-type"] === undefined) {
+      rawBuild["build-type"] = "standard";
     }
 
     const loadedBuild = rawBuild as unknown as UmaBuildData;

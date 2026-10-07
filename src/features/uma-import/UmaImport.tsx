@@ -67,8 +67,12 @@ export default function UmaImport() {
       if (!Array.isArray(parsed) || parsed.length === 0 || !parsed.every(isImportedUmaBuild)) {
         throw new Error("The JSON must contain a non-empty list of Uma builds.");
       }
-      await saveImportedBuilds(parsed, Date.now());
-      setBuilds(parsed);
+      const importedBuilds = parsed.map((build) => ({
+        ...build,
+        "build-type": build["build-type"] ?? "standard",
+      }));
+      await saveImportedBuilds(importedBuilds, Date.now());
+      setBuilds(importedBuilds);
       setError(null);
     } catch (caughtError) {
       const message = caughtError instanceof Error
@@ -92,7 +96,7 @@ export default function UmaImport() {
     <section className="builds-page">
       <header className="builds-page__header">
         <h1>Imports</h1>
-        <p>Select a JSON export containing a list of Uma builds.</p>
+        <p>Import your UmaExtractor JSON export.</p>
         <label>
           Import JSON
           <input type="file" accept="application/json,.json" onChange={handleFileChange} />

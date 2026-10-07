@@ -1,5 +1,6 @@
 export interface UmaBuild {
   outfitId: string;
+  "build-type"?: "standard" | "plan";
   create_time?: number | string;
   starCount: number;
   uniqueLv: number;
@@ -38,6 +39,7 @@ export interface SupportCardEntry {
 }
 
 export interface ImportedUmaBuild {
+  "build-type"?: "standard" | "plan";
   card_id: number;
   name: string | null;
   created_time?: number | string;
@@ -72,6 +74,9 @@ export function isImportedUmaBuild(value: unknown): value is ImportedUmaBuild {
   const build = value as Partial<ImportedUmaBuild>;
   return (
     typeof build.card_id === "number" &&
+    (build["build-type"] === undefined ||
+      build["build-type"] === "standard" ||
+      build["build-type"] === "plan") &&
     (typeof build.name === "string" || build.name === null) &&
     (build.created_time === undefined || typeof build.created_time === "number" || typeof build.created_time === "string") &&
     (build.create_time === undefined || typeof build.create_time === "number" || typeof build.create_time === "string") &&

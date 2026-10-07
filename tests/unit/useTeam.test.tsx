@@ -1,7 +1,10 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BuildFetchResult } from "../../src/features/planner/buildApi";
-import { createBuildRepository } from "../../src/features/planner/plannerRepository";
+import {
+  createBuildRepository,
+  createTeamRepository,
+} from "../../src/features/planner/plannerRepository";
 import { useTeam } from "../../src/features/planner/useTeam";
 import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
 import type { StoredUmaBuild } from "../../src/types/UmaBuild";
@@ -109,6 +112,39 @@ describe("useTeam build sync", () => {
         remoteBuild,
       );
     });
+    unmount();
+  });
+
+  it("loads the local team before waiting for remote build sync", async () => {
+    const event = "CM local-first test";
+    const localBuild: StoredUmaBuild = {
+      ...createDefaultBuild("123"),
+      id: "local-build",
+      event,
+      name: "Local build",
+      lastUpdate: 1,
+    };
+    await createBuildRepository().put(localBuild);
+    await createTeamRepository().put({
+      event,
+      uma1: localBuild.id,
+      uma2: null,
+      uma3: null,
+      lastUpdate: 1,
+    });
+    mocks.fetchBuilds.mockImplementation(
+      () => new Promise<BuildFetchResult>(() => undefined),
+    );
+
+    const { result, unmount } = renderHook(() => useTeam(event));
+    expect(result.current.isTeamLoading).toBe(true);
+    await waitFor(() => {
+      expect(result.current.umas.uma1).toBe(localBuild.id);
+      expect(result.current.allBuilds).toContainEqual(localBuild);
+      expect(result.current.isTeamLoading).toBe(false);
+    });
+
+    expect(mocks.fetchBuilds).toHaveBeenCalled();
     unmount();
   });
 });

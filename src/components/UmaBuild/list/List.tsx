@@ -6,7 +6,7 @@ import UmaBuildDisplay from "../display/Display";
 import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import type { SkillEntry } from "../../../types/SkillEntry";
-import { ensureDataLoaded } from "../../../lib/data";
+import { ensureDataLoaded, getCachedDataset } from "../../../lib/data";
 import { normalizeSkillData } from "../../../features/planner/skillData";
 import {
   createBuildRepository,
@@ -23,8 +23,10 @@ export default function Builds() {
   const [builds, setBuilds] = useState<StoredUmaBuild[]>([]);
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
   const [skillList, setSkillList] = useState<SkillEntry[]>([]);
+  const [loadedEvent, setLoadedEvent] = useState<string | null>(null);
   const [detailsBuild, setDetailsBuild] = useState<StoredUmaBuild | null>(null);
   const detailsDialogRef = useRef<HTMLDialogElement | null>(null);
+  const isLoading = Boolean(selectedEvent) && loadedEvent !== selectedEvent;
 
   async function handleDelete(build: StoredUmaBuild) {
     if (!selectedEvent) return;
@@ -65,25 +67,43 @@ export default function Builds() {
     async function loadBuilds() {
       if (!selectedEvent) {
         setBuilds([]);
+        setLoadedEvent(null);
         return;
       }
+      const event = selectedEvent;
 
       try {
-        const [storedBuilds, data] = await Promise.all([
+        const [storedBuilds, cachedOutfits, cachedSkills] = await Promise.all([
           createBuildRepository().getAll(),
-          ensureDataLoaded(),
+          getCachedDataset<UmaEntry[]>("outfits"),
+          getCachedDataset<unknown>("skills"),
         ]);
         if (cancelled) {
           return;
         }
 
         setBuilds(sortBuildsNewestFirst(storedBuilds.filter(
-          (build) => build.event === selectedEvent && build.outfitId !== "",
+          (build) => build.event === event && build.outfitId !== "",
         )));
-        setUmaList((data.outfits as UmaEntry[] | undefined) ?? []);
-        setSkillList(normalizeSkillData(data.skills));
+        setUmaList(cachedOutfits ?? []);
+        setSkillList(normalizeSkillData(cachedSkills));
+        setLoadedEvent(event);
+
+        try {
+          const data = await ensureDataLoaded();
+          if (cancelled) {
+            return;
+          }
+          setUmaList((data.outfits as UmaEntry[] | undefined) ?? []);
+          setSkillList(normalizeSkillData(data.skills));
+        } catch (error) {
+          console.error("Error refreshing saved build data:", error);
+        }
       } catch (error) {
         console.error("Error loading saved builds:", error);
+        if (!cancelled) {
+          setLoadedEvent(event);
+        }
       }
     }
 
@@ -122,7 +142,11 @@ export default function Builds() {
             : "Select an event to view builds."}
         </p>
       </header>
-      {builds.length === 0 ? (
+      {isLoading ? (
+        <p className="builds-page__empty" role="status">
+          Loading saved builds...
+        </p>
+      ) : builds.length === 0 ? (
         <p className="builds-page__empty">No saved builds available.</p>
       ) : (
         <div className="builds-grid">

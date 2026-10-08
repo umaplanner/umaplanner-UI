@@ -104,7 +104,7 @@ export default function UmaBuild({
         isBuildLoaded={editor.isBuildLoaded}
         draftBuildName={editor.draftBuildName}
         setDraftBuildName={editor.setDraftBuildName}
-        hasDuplicateName={editor.hasDuplicateName}
+        willOverrideBuild={editor.willOverrideBuild}
         saveMenuRef={saveMenuRef}
         isSaveMenuOpen={isSaveMenuOpen}
         setIsSaveMenuOpen={setIsSaveMenuOpen}

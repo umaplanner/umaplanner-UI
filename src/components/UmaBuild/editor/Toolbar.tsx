@@ -16,7 +16,7 @@ interface Props {
   isBuildLoaded: boolean;
   draftBuildName: string;
   setDraftBuildName: (name: string) => void;
-  hasDuplicateName: boolean;
+  willOverrideBuild: boolean;
   saveMenuRef: React.RefObject<HTMLSpanElement | null>;
   isSaveMenuOpen: boolean;
   setIsSaveMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -27,7 +27,7 @@ interface Props {
 export default function UmaBuildToolbar({
   teamNumber, value, onTogglePlan, savedBuilds, umaList, onNewBuild, onSaveBuild, onSelectSavedBuild,
   isBuildCopied, isBuildLoaded, draftBuildName, setDraftBuildName,
-  hasDuplicateName, saveMenuRef, isSaveMenuOpen, setIsSaveMenuOpen,
+  willOverrideBuild, saveMenuRef, isSaveMenuOpen, setIsSaveMenuOpen,
   copyBuildJson, loadBuildJson,
 }: Props) {
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false);
@@ -53,7 +53,7 @@ export default function UmaBuildToolbar({
           <button type="button" disabled={value.outfitId === "" || draftBuildName.trim() === ""} onClick={() => {
             void onSaveBuild(value, draftBuildName.trim());
             setIsSaveMenuOpen(false);
-          }}>{hasDuplicateName ? "Override" : "Submit"}</button>
+          }}>{willOverrideBuild ? "Override" : "Submit"}</button>
         </span> : null}
       </span> : null}
       {onSelectSavedBuild && savedBuilds.length > 0 ? <button

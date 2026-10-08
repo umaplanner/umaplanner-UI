@@ -109,4 +109,116 @@ describe("Planner build mode", () => {
       "true",
     );
   });
+
+  it("saves a loaded build as an override until its Uma changes", async () => {
+    localStorage.setItem("selectedEvent", "CM 42");
+    const user = userEvent.setup();
+    const oldUniqueSkill = {
+      id: "100001",
+      name: "Old unique",
+      groupId: null,
+      iconId: 1,
+      isGeneralSkill: false,
+      displayOrder: 0,
+      rarity: 1,
+    };
+    const newUniqueSkill = { ...oldUniqueSkill, id: "100002", name: "New unique" };
+    const ordinarySkill = {
+      id: "30001",
+      name: "Ordinary",
+      groupId: null,
+      iconId: 2,
+      isGeneralSkill: true,
+      displayOrder: 1,
+      rarity: 1,
+    };
+    const oldUma = {
+      id: 100101,
+      charaId: 1,
+      baseCharacterName: "Old Uma",
+      outfitTitle: "Old Outfit",
+      uniqueSkillId: 100001,
+    };
+    const newUma = {
+      id: 100201,
+      charaId: 2,
+      baseCharacterName: "New Uma",
+      outfitTitle: "New Outfit",
+      uniqueSkillId: 100002,
+    };
+    const savedBuild = {
+      ...createDefaultBuild(String(oldUma.id)),
+      id: "build-1",
+      event: "CM 42",
+      name: "Saved build",
+      lastUpdate: 1,
+      skills: [oldUniqueSkill.id, ordinarySkill.id],
+      forcedSkillPositions: { [oldUniqueSkill.id]: 0 },
+    };
+    const saveBuild = vi.fn();
+    mocks.usePlannerData.mockReturnValue({
+      raceEntry: { eventTitle: "CM 42" },
+      umaList: [oldUma, newUma],
+      skillList: [oldUniqueSkill, newUniqueSkill, ordinarySkill],
+    });
+    mocks.useTeam.mockReturnValue({
+      umas: {
+        event: "CM 42",
+        uma1: null,
+        uma2: null,
+        uma3: null,
+        lastUpdate: 0,
+        uma1Build: createDefaultBuild(),
+        uma2Build: createDefaultBuild(),
+        uma3Build: createDefaultBuild(),
+        uma1BuildName: "",
+        uma2BuildName: "",
+        uma3BuildName: "",
+      },
+      allBuilds: [savedBuild],
+      eventResults: {},
+      isTeamLoading: false,
+      saveBuild,
+      swapTeamBuild: vi.fn(),
+      saveTicketResult: vi.fn(),
+      removeTicketResult: vi.fn(),
+      updateResultRoundExcluded: vi.fn(),
+      saveFinalsResult: vi.fn(),
+    });
+
+    render(
+      <EventProvider>
+        <Planner />
+      </EventProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    await user.click(screen.getByRole("button", { name: "Load" }));
+    await user.click(screen.getByRole("button", { name: /Saved build/ }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(screen.getByRole("button", { name: "Override" }));
+    expect(saveBuild).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({ outfitId: String(oldUma.id) }),
+      "Saved build",
+      "build-1",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select an Uma for team 1" }));
+    await user.click(screen.getByRole("button", { name: /New Outfit/ }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("button", { name: "Submit" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(saveBuild).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        outfitId: String(newUma.id),
+        skills: expect.arrayContaining([newUniqueSkill.id, ordinarySkill.id]),
+      }),
+      newUma.baseCharacterName,
+      null,
+    );
+    expect(saveBuild.mock.calls[1][0].skills).not.toContain(oldUniqueSkill.id);
+  });
 });

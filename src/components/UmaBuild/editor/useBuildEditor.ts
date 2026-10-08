@@ -360,7 +360,8 @@ async function loadBuildJson() {
     draftBuildName,
     setDraftBuildName,
     saveName: draftBuildName.trim(),
-    hasDuplicateName: savedBuilds.some((build) => build.name === draftBuildName.trim() && build.id !== buildId),
+    willOverrideBuild: buildId !== null ||
+      savedBuilds.some((build) => build.name === draftBuildName.trim() && build.id !== buildId),
     updateField,
     startNewBuild,
     getSkillId,

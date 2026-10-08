@@ -92,6 +92,7 @@ export function sortSkillsByDisplayOrderWithIndex(
 
 export function getUmaUniqueSkillId(uma: UmaEntry | null | undefined) {
   if (!uma) return undefined;
+  if (uma.uniqueSkillId !== undefined) return uma.uniqueSkillId;
   const charaId = String(uma.charaId);
   const outfitNumber = Number(String(uma.id).slice(-1));
   if (!/^\d+$/.test(charaId) || !Number.isInteger(outfitNumber)) {

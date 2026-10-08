@@ -15,7 +15,7 @@ import {
   type InitialTeamBuildIds,
   type UmaSlot,
 } from "./plannerTypes";
-import { getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../components/UmaBuild/utils";
+import { findSkill, getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../components/UmaBuild/utils";
 import {
   getNextResultOpeningAt,
   getResultAvailability,
@@ -152,17 +152,35 @@ export default function Planner() {
     skillList,
     uniqueSkillId: getUmaUniqueSkillId(editorUma),
     onSelectUma: (uma: typeof selectedUma) => {
+      const outfitId = uma ? String(uma.id) : "";
+      const changedUma = outfitId !== editorBuild.outfitId;
+      const previousUniqueSkillId = getUmaUniqueSkillId(editorUma);
+      const isPreviousUniqueSkill = (skillId: string) =>
+        previousUniqueSkillId !== undefined &&
+        (findSkill(skillList, skillId)?.id ?? skillId) === String(previousUniqueSkillId);
+      const skills = changedUma
+        ? editorBuild.skills.filter((skillId) => !isPreviousUniqueSkill(skillId))
+        : editorBuild.skills;
+      const forcedSkillPositions = changedUma
+        ? Object.fromEntries(
+            Object.entries(editorBuild.forcedSkillPositions).filter(
+              ([skillId]) => !isPreviousUniqueSkill(skillId),
+            ),
+          )
+        : editorBuild.forcedSkillPositions;
       setEditingBuildDraft({
         slot: editingBuild,
         build: {
           ...editorBuild,
-          outfitId: uma ? String(uma.id) : "",
+          outfitId,
+          skills,
+          forcedSkillPositions,
           strategy: umaHasRunawaySkill(uma, skillList) ? runawayStrategy : editorBuild.strategy,
         },
-        name: editingBuildDraft?.slot === editingBuild
+        name: !changedUma && editingBuildDraft?.slot === editingBuild
           ? editingBuildDraft.name
-          : umas[`uma${editingBuild}BuildName`],
-        id: editingBuildDraft?.slot === editingBuild
+          : !changedUma ? umas[`uma${editingBuild}BuildName`] : "",
+        id: changedUma ? null : editingBuildDraft?.slot === editingBuild
           ? editingBuildDraft.id
           : umas[`uma${editingBuild}`],
       });

@@ -40,7 +40,12 @@ export default function UmaBuildToolbar({
   return <>
     <section className="uma-build__toolbar">
     <div className="uma-build__toolbar-main">
-      <label className="uma-build__plan-toggle" aria-label="Plan build">
+      <label
+        className="uma-build__plan-toggle"
+        aria-label="Plan build"
+        aria-description="Marks this as a planned build. It remains visible in the lineup but cannot be used for event results."
+        data-tooltip="Planned builds remain visible in the lineup but cannot be used for event results."
+      >
         <input
           type="checkbox"
           checked={value["build-type"] === "plan"}

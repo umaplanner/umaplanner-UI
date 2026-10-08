@@ -113,6 +113,40 @@
   transition: background-color 160ms ease, border-color 160ms ease;
 }
 
+.uma-build__plan-toggle {
+  position: relative;
+}
+
+.uma-build__plan-toggle::after {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2rem));
+  padding: 0.55rem 0.7rem;
+  color: var(--text-color);
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.45rem;
+  box-shadow: 0 0.35rem 1rem rgb(0 0 0 / 18%);
+  content: attr(data-tooltip);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.4;
+  white-space: normal;
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.uma-build__plan-toggle:hover::after,
+.uma-build__plan-toggle:focus-within::after,
+.uma-build__plan-toggle:active::after {
+  opacity: 1;
+  visibility: visible;
+}
+
 .uma-build__plan-toggle:hover,
 .uma-build__plan-toggle:focus-within,
 .uma-build-results__exclude:hover,
@@ -1781,6 +1815,7 @@
   }
 
   .uma-build__toolbar-main {
+    position: relative;
     display: grid;
     grid-template-columns: 1.15fr repeat(4, minmax(0, 1fr));
     gap: 0;
@@ -1865,6 +1900,10 @@
 
   .uma-build__toolbar-main > .uma-build__save-control {
     display: flex;
+  }
+
+  .uma-build__toolbar-main > .uma-build__save-control {
+    position: static;
   }
 
   .uma-build__toolbar-main > .uma-build__save-control > button {
@@ -1953,9 +1992,10 @@
   }
 
   .uma-build__save-menu {
-    right: 0;
-    left: auto;
-    width: min(22rem, calc(100vw - 2rem));
+    top: calc(100% + 0.35rem);
+    right: auto;
+    left: 0;
+    width: 100%;
   }
 
   .uma-build__skill-backdrop {

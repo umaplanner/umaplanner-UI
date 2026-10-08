@@ -673,6 +673,15 @@ export function useTeam(selectedEvent: string | null) {
     const event = selectedEvent;
     const id = buildId ?? crypto.randomUUID();
     try {
+      const existingBuilds = await buildRepository.getAll();
+      const normalizedName = name.trim().toLowerCase();
+      if (existingBuilds.some((existingBuild) =>
+        existingBuild.event === event &&
+        existingBuild.id !== id &&
+        existingBuild.name.trim().toLowerCase() === normalizedName
+      )) {
+        return null;
+      }
       const storedBuild: StoredUmaBuild = {
         ...build,
         uniqueLv: typeof build.uniqueLv === "number" &&

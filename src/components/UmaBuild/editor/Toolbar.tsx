@@ -12,11 +12,14 @@ interface Props {
   onNewBuild: () => void;
   onSaveBuild?: (build: UmaBuildData, name: string) => void | Promise<void>;
   onSelectSavedBuild?: (buildId: string) => void | Promise<void>;
+  onCopySavedBuild?: (buildId: string) => void | Promise<void>;
   isBuildCopied: boolean;
   isBuildLoaded: boolean;
   draftBuildName: string;
   setDraftBuildName: (name: string) => void;
+  isSavedBuild: boolean;
   willOverrideBuild: boolean;
+  hasDuplicateName: boolean;
   saveMenuRef: React.RefObject<HTMLSpanElement | null>;
   isSaveMenuOpen: boolean;
   setIsSaveMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -25,13 +28,13 @@ interface Props {
 }
 
 export default function UmaBuildToolbar({
-  teamNumber, value, onTogglePlan, savedBuilds, umaList, onNewBuild, onSaveBuild, onSelectSavedBuild,
+  teamNumber, value, onTogglePlan, savedBuilds, umaList, onNewBuild, onSaveBuild, onSelectSavedBuild, onCopySavedBuild,
   isBuildCopied, isBuildLoaded, draftBuildName, setDraftBuildName,
-  willOverrideBuild, saveMenuRef, isSaveMenuOpen, setIsSaveMenuOpen,
+  isSavedBuild, willOverrideBuild, hasDuplicateName, saveMenuRef, isSaveMenuOpen, setIsSaveMenuOpen,
   copyBuildJson, loadBuildJson,
 }: Props) {
   const [isMoreOptionsOpen, setIsMoreOptionsOpen] = useState(false);
-  const [isLoadBuildDialogOpen, setIsLoadBuildDialogOpen] = useState(false);
+  const [savedBuildDialogMode, setSavedBuildDialogMode] = useState<"load" | "copy" | null>(null);
   const moreOptionsId = useId();
 
   return <>
@@ -49,22 +52,40 @@ export default function UmaBuildToolbar({
       {onSaveBuild ? <span className="uma-build__save-control" ref={saveMenuRef}>
         <button type="button" onClick={() => setIsSaveMenuOpen((open) => !open)} disabled={value.outfitId === ""}>Save</button>
         {isSaveMenuOpen ? <span className="uma-build__save-menu">
-          <input aria-label="Build name" placeholder="Build name" value={draftBuildName} onChange={(event) => setDraftBuildName(event.target.value)} />
-          <button type="button" disabled={value.outfitId === "" || draftBuildName.trim() === ""} onClick={() => {
+          <input
+            aria-label="Build name"
+            placeholder={umaList.find((uma) => String(uma.id) === value.outfitId)?.baseCharacterName ?? "Build name"}
+            value={draftBuildName}
+            disabled={isSavedBuild}
+            onChange={(event) => setDraftBuildName(event.target.value)}
+          />
+          {hasDuplicateName ? <small className="uma-build__duplicate-name-error" role="alert">already exists</small> : null}
+          <button type="button" disabled={value.outfitId === "" || hasDuplicateName} onClick={() => {
             void onSaveBuild(value, draftBuildName.trim());
             setIsSaveMenuOpen(false);
           }}>{willOverrideBuild ? "Override" : "Submit"}</button>
         </span> : null}
       </span> : null}
-      {onSelectSavedBuild && savedBuilds.length > 0 ? <button
-        className="uma-build__swap-button uma-build__saved-build-button"
-        type="button"
-        aria-haspopup="dialog"
-        aria-expanded={isLoadBuildDialogOpen}
-        onClick={() => setIsLoadBuildDialogOpen(true)}
-      >
-        Load
-      </button> : null}
+      {onSelectSavedBuild && savedBuilds.length > 0 ? <>
+        <button
+          className="uma-build__swap-button uma-build__saved-build-button"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={savedBuildDialogMode === "load"}
+          onClick={() => setSavedBuildDialogMode("load")}
+        >
+          Load
+        </button>
+        {onCopySavedBuild ? <button
+          className="uma-build__swap-button uma-build__saved-build-button"
+          type="button"
+          aria-haspopup="dialog"
+          aria-expanded={savedBuildDialogMode === "copy"}
+          onClick={() => setSavedBuildDialogMode("copy")}
+        >
+          Copy
+        </button> : null}
+      </> : null}
     </div>
     <button
       className="uma-build__toolbar-options-toggle"
@@ -87,17 +108,22 @@ export default function UmaBuildToolbar({
       <button type="button" onClick={() => void loadBuildJson()}>{isBuildLoaded ? "Loaded" : "Load JSON"}</button>
     </div>
     </section>
-    {isLoadBuildDialogOpen && onSelectSavedBuild ? (
+    {savedBuildDialogMode !== null && onSelectSavedBuild ? (
       <UmaBuildSavedBuildDialog
         teamNumber={teamNumber}
         builds={savedBuilds}
         umaList={umaList}
         canClear={false}
-        title="Load a saved build"
+        title={savedBuildDialogMode === "copy" ? "Copy a saved build" : "Load a saved build"}
         onSelect={(buildId) => {
-          if (buildId) void onSelectSavedBuild(buildId);
+          if (!buildId) return;
+          if (savedBuildDialogMode === "copy") {
+            void onCopySavedBuild?.(buildId);
+          } else {
+            void onSelectSavedBuild(buildId);
+          }
         }}
-        onClose={() => setIsLoadBuildDialogOpen(false)}
+        onClose={() => setSavedBuildDialogMode(null)}
       />
     ) : null}
   </>;

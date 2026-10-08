@@ -91,6 +91,33 @@ describe("useTeam build sync", () => {
     );
   });
 
+  it("keeps build names unique within an event while allowing UUID overrides", async () => {
+    const { result } = renderHook(() => useTeam("CM unique name test"));
+    let savedId: string | null = null;
+    let duplicateId: string | null = "not-null";
+    let overrideId: string | null = null;
+
+    await act(async () => {
+      savedId = await result.current.saveBuild(
+        createDefaultBuild("123"),
+        "Named build",
+      );
+      duplicateId = await result.current.saveBuild(
+        createDefaultBuild("456"),
+        " named build ",
+      );
+      overrideId = await result.current.saveBuild(
+        createDefaultBuild("123"),
+        "Named build",
+        savedId,
+      );
+    });
+
+    expect(savedId).not.toBeNull();
+    expect(duplicateId).toBeNull();
+    expect(overrideId).toBe(savedId);
+  });
+
   it("stores builds returned by the backend in IndexedDB", async () => {
     const remoteBuild: StoredUmaBuild = {
       ...createDefaultBuild("123"),

@@ -175,7 +175,11 @@ describe("Planner build mode", () => {
         uma2BuildName: "",
         uma3BuildName: "",
       },
-      allBuilds: [savedBuild],
+      allBuilds: [
+        savedBuild,
+        { ...savedBuild, id: "build-old-uma", name: "Old Uma" },
+        { ...savedBuild, id: "build-old-uma-2", name: "Old Uma 2" },
+      ],
       eventResults: {},
       isTeamLoading: false,
       saveBuild,
@@ -196,6 +200,8 @@ describe("Planner build mode", () => {
     await user.click(screen.getByRole("button", { name: "Load" }));
     await user.click(screen.getByRole("button", { name: /Saved build/ }));
     await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("textbox", { name: "Build name" })).toBeDisabled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Override" }));
     expect(saveBuild).toHaveBeenNthCalledWith(
       1,
@@ -217,8 +223,23 @@ describe("Planner build mode", () => {
         skills: expect.arrayContaining([newUniqueSkill.id, ordinarySkill.id]),
       }),
       newUma.baseCharacterName,
-      null,
+      expect.stringMatching(/^[0-9a-f-]{36}$/i),
     );
     expect(saveBuild.mock.calls[1][0].skills).not.toContain(oldUniqueSkill.id);
+
+    await user.click(screen.getByRole("button", { name: "Copy" }));
+    await user.click(screen.getByRole("button", { name: /Saved build/ }));
+    expect(saveBuild).toHaveBeenCalledTimes(2);
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    const copiedNameInput = screen.getByRole("textbox", { name: "Build name" });
+    expect(copiedNameInput).toBeEnabled();
+    expect(copiedNameInput).toHaveValue("");
+    expect(copiedNameInput).toHaveAttribute("placeholder", "Old Uma");
+    await user.click(screen.getByRole("button", { name: "Submit" }));
+
+    expect(saveBuild).toHaveBeenCalledTimes(3);
+    expect(saveBuild.mock.calls[2][1]).toBe("Old Uma 3");
+    expect(saveBuild.mock.calls[2][2]).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(saveBuild.mock.calls[2][2]).not.toBe(savedBuild.id);
   });
 });

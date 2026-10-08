@@ -152,6 +152,46 @@
   white-space: nowrap;
 }
 
+.build-card__name,
+.build-card__name-input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  font: inherit;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.build-card__name {
+  cursor: text;
+}
+
+.build-card__name:hover,
+.build-card__name:focus-visible {
+  color: var(--accent-color);
+  outline: none;
+}
+
+.build-card__name-input:focus {
+  border-bottom: 1px solid var(--accent-color);
+  outline: none;
+}
+
+.build-card__name-error {
+  display: block;
+  margin-top: 0.2rem;
+  color: #ef8888;
+  font-size: 0.7rem;
+  white-space: normal;
+}
+
 .build-card__main p {
   margin: 0.2rem 0 0;
   overflow: hidden;

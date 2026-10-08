@@ -1,18 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { ImportedUmaBuild, StoredUmaBuild } from "../../types/UmaBuild";
 import { getImportedSkillIds } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type { SkillEntry } from "../../types/SkillEntry";
-import UmaImage from "../../components/UmaImage";
-import UmaBuildDisplay from "../../components/UmaBuild/display/Display";
+import BuildCard from "../../components/UmaBuild/list/BuildCard";
+import EditableBuildName from "../../components/UmaBuild/list/EditableBuildName";
 import {
   getAptitudeRank,
-  getAptitudeRankImage,
-  getStatRank,
+  getUniqueBuildNameForEvent,
   hasRunawaySkill,
   runawayStrategy,
   runningStyleNames,
-  strategyIcons,
 } from "../../components/UmaBuild/utils";
 
 interface ImportedBuildCardProps {
@@ -23,7 +21,11 @@ interface ImportedBuildCardProps {
   skillList: SkillEntry[];
   currentEvent: string;
   savedBuilds: StoredUmaBuild[];
-  onSaveBuild: (build: StoredUmaBuild, name: string) => Promise<string | null>;
+  onSaveBuild: (
+    build: StoredUmaBuild,
+    name: string,
+    buildId?: string | null,
+  ) => Promise<string | null>;
   onRemoveBuild: (buildId: string) => Promise<boolean>;
 }
 
@@ -51,10 +53,8 @@ export default function ImportedBuildCard({
   onSaveBuild,
   onRemoveBuild,
 }: ImportedBuildCardProps) {
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [savedBuildId, setSavedBuildId] = useState<string | null>(null);
-  const detailsDialogRef = useRef<HTMLDialogElement | null>(null);
   const strategyName = runningStyleNames[build.running_style];
   const ground = groundType?.toLowerCase() === "dirt" ? "dirt" : "turf";
   const distance = {
@@ -71,8 +71,6 @@ export default function ImportedBuildCard({
   const groundRank = Number(build[`proper_ground_${ground}` as keyof ImportedUmaBuild]);
   const distanceRank = Number(build[`proper_distance_${distance}` as keyof ImportedUmaBuild]);
   const styleRank = Number(build[`proper_running_style_${style}` as keyof ImportedUmaBuild]);
-  const getRankImage = (rank: number) =>
-    `/icons/statrank/rank_${String(getAptitudeRankImage(rank)).padStart(2, "0")}.png`;
   const rawCreatedTime = build.created_time ?? build.create_time;
   const createdTime = rawCreatedTime === undefined
     ? null
@@ -85,7 +83,6 @@ export default function ImportedBuildCard({
   const strategy = hasRunawaySkill(skillList, importedSkillIds)
     ? runawayStrategy
     : strategyName ?? "";
-  const strategyIcon = strategyIcons[strategy];
   const displayBuild: StoredUmaBuild = {
     id: `imported-${build.card_id}`,
     event: "imported",
@@ -128,11 +125,12 @@ export default function ImportedBuildCard({
   );
 
   async function handleSaveBuild() {
-    const name = window.prompt("Enter a name for this build:", build.name ?? "")?.trim();
-    if (!name) {
-      return;
-    }
     setSaveError(null);
+    const eventBuilds = savedBuilds.filter((saved) => saved.event === currentEvent);
+    const name = getUniqueBuildNameForEvent(
+      uma?.baseCharacterName ?? `Uma ${build.card_id}`,
+      eventBuilds,
+    );
     const savedId = await onSaveBuild(displayBuild, name);
     if (savedId) setSavedBuildId(savedId);
     else setSaveError("Unable to save this build for the current CM.");
@@ -146,92 +144,50 @@ export default function ImportedBuildCard({
     else setSaveError("Unable to remove this build from the current CM.");
   }
 
-  useEffect(() => {
-    const dialog = detailsDialogRef.current;
-    if (!dialog || !isDetailsOpen) return;
-    dialog.showModal();
-    return () => {
-      if (dialog.open) dialog.close();
-    };
-  }, [isDetailsOpen]);
+  async function renameSavedBuild(name: string) {
+    if (!savedBuild) return "Unable to save build name.";
+    const normalizedName = name.trim().toLowerCase();
+    if (savedBuilds.some((entry) =>
+      entry.id !== savedBuild.id &&
+      entry.event === currentEvent &&
+      entry.name.trim().toLowerCase() === normalizedName
+    )) {
+      return "already exists";
+    }
+    const savedId = await onSaveBuild(displayBuild, name, savedBuild.id);
+    return savedId ? null : "Unable to save build name.";
+  }
 
   return (
-    <article className="build-card" data-testid="imported-build">
-      <div className="build-card__main">
-        {uma ? <UmaImage uma={uma} alt="" /> : null}
-        <div>
-          <h2>{displayName || uma?.outfitTitle || `Uma ${build.card_id}`}</h2>
-          {!displayName && build.name ? <p>{build.name}</p> : null}
-          {displayName ? <p>{uma?.outfitTitle}</p> : null}
-          {uma ? <p>{uma.baseCharacterName}</p> : null}
-        </div>
-        <div className="build-card__actions">
-          {createdTime && !Number.isNaN(createdTime.getTime()) ? (
-            <time className="build-card__created-time" dateTime={createdTime.toISOString()}>
-              <span>{createdTime.toLocaleDateString()}</span>
-              <span>{createdTime.toLocaleTimeString()}</span>
-            </time>
-          ) : null}
-          <button className="build-card__details-button" type="button" onClick={() => setIsDetailsOpen(true)}>
-            Details
+    <BuildCard
+      testId="imported-build"
+      build={displayBuild}
+      uma={uma}
+      skillList={skillList}
+      title={displayName
+        ? <EditableBuildName name={displayName} onRename={renameSavedBuild} />
+        : uma?.outfitTitle || `Uma ${build.card_id}`}
+      subtitleLines={[
+        ...(!displayName && build.name ? [build.name] : []),
+        ...(displayName && uma ? [uma.outfitTitle] : []),
+        ...(uma ? [uma.baseCharacterName] : []),
+      ]}
+      createdTime={createdTime && !Number.isNaN(createdTime.getTime()) ? createdTime : null}
+      footerAction={(
+        <div className="build-card__save">
+          <button
+            type="button"
+            disabled={!currentEvent}
+            onClick={() => void (isAlreadySaved ? handleRemoveBuild() : handleSaveBuild())}
+            className={isAlreadySaved ? "build-card__remove-button" : undefined}
+          >
+            {isAlreadySaved
+              ? `Remove ${displayName ?? build.name ?? "build"} from current event`
+              : "Save build to current event"}
           </button>
+          {saveError ? <span className="build-card__save-error" role="alert">{saveError}</span> : null}
         </div>
-      </div>
-      <div className="build-card__aptitudes" aria-label="Aptitudes">
-        <span><span>Surface</span><img src={getRankImage(groundRank)} alt={`Rank ${getAptitudeRank(groundRank)}`} /></span>
-        <span><span>Distance</span><img src={getRankImage(distanceRank)} alt={`Rank ${getAptitudeRank(distanceRank)}`} /></span>
-        <span>
-          <span>Style</span>
-          <img src={getRankImage(styleRank)} alt={`Rank ${getAptitudeRank(styleRank)}`} />
-          {strategyIcon ? <img src={`/icons/style/${strategyIcon}.webp`} alt={strategyName} /> : null}
-        </span>
-      </div>
-      <div className="build-card__stats" aria-label="Stats">
-        {[
-          ["Speed", build.speed],
-          ["Stamina", build.stamina],
-          ["Power", build.power],
-          ["Guts", build.guts],
-          ["Wisdom", build.wiz],
-        ].map(([label, value]) => (
-          <span key={label}>
-            {label}
-            <span className="build-card__stat-value">
-              <img src={`/icons/statrank/rank_${String(getStatRank(Number(value))).padStart(2, "0")}.png`} alt={`${label} rank`} />
-              <strong>{value}</strong>
-            </span>
-          </span>
-        ))}
-      </div>
-      <div className="build-card__save">
-        <button
-          type="button"
-          disabled={!currentEvent}
-          onClick={() => void (isAlreadySaved ? handleRemoveBuild() : handleSaveBuild())}
-          className={isAlreadySaved ? "build-card__remove-button" : undefined}
-        >
-          {isAlreadySaved
-            ? `Remove ${displayName ?? build.name ?? "build"} from current event`
-            : "Save build to current event"}
-        </button>
-        {saveError ? <span className="build-card__save-error" role="alert">{saveError}</span> : null}
-      </div>
-      {isDetailsOpen ? (
-        <dialog
-          ref={detailsDialogRef}
-          className="build-card__details-dialog"
-          onCancel={() => setIsDetailsOpen(false)}
-          onClose={() => setIsDetailsOpen(false)}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setIsDetailsOpen(false);
-            }
-          }}
-        >
-          <button className="build-card__details-close" type="button" aria-label="Close details" onClick={() => setIsDetailsOpen(false)}>×</button>
-          <UmaBuildDisplay teamNumber={1} build={displayBuild} availableBuilds={[]} umaList={uma ? [uma] : []} skillList={skillList} onSelectBuild={() => undefined} />
-        </dialog>
-      ) : null}
-    </article>
+      )}
+    />
   );
 }

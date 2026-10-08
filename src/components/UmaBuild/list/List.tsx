@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useEvent } from "../../../contexts/EventContext";
 import { useAuth } from "../../../contexts/AuthContext";
-import UmaImage from "../../UmaImage";
-import UmaBuildDisplay from "../display/Display";
-import type { StoredUmaBuild } from "../../../types/UmaBuild";
+import type { StoredUmaBuild, UmaBuild as UmaBuildData } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import { ensureDataLoaded, getCachedDataset } from "../../../lib/data";
@@ -14,18 +12,25 @@ import {
   normalizeStoredTeam,
 } from "../../../features/planner/plannerRepository";
 import { deleteBuild } from "../../../features/planner/buildApi";
+import SavedBuildCard from "./SavedBuildCard";
 import "../../../styles/Builds.css";
-import { aptitudeRankImages, getStatRank, normalizeStrategyName, sortBuildsNewestFirst, statFields, strategyIcons } from "../utils";
+import { sortBuildsNewestFirst } from "../utils";
 
-export default function Builds() {
+interface Props {
+  onSaveBuild: (
+    build: UmaBuildData,
+    name: string,
+    buildId: string | null,
+  ) => Promise<string | null>;
+}
+
+export default function Builds({ onSaveBuild }: Props) {
   const { selectedEvent } = useEvent();
   const { user } = useAuth();
   const [builds, setBuilds] = useState<StoredUmaBuild[]>([]);
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
   const [skillList, setSkillList] = useState<SkillEntry[]>([]);
   const [loadedEvent, setLoadedEvent] = useState<string | null>(null);
-  const [detailsBuild, setDetailsBuild] = useState<StoredUmaBuild | null>(null);
-  const detailsDialogRef = useRef<HTMLDialogElement | null>(null);
   const isLoading = Boolean(selectedEvent) && loadedEvent !== selectedEvent;
 
   async function handleDelete(build: StoredUmaBuild) {
@@ -54,10 +59,39 @@ export default function Builds() {
           await teamRepository.put(updatedTeam);
         }
       }
+
       await createBuildRepository().deleteByKey([build.event, build.id]);
       setBuilds((current) => current.filter((entry) => entry.id !== build.id));
     } catch (error) {
       console.error("Error deleting saved build:", error);
+    }
+  }
+
+  async function saveBuildName(build: StoredUmaBuild, nextName: string) {
+    const name = nextName.trim();
+    if (!name) {
+      return "Build name cannot be empty.";
+    }
+    if (builds.some((entry) =>
+      entry.id !== build.id &&
+      entry.name.trim().toLowerCase() === name.toLowerCase()
+    )) {
+      return "already exists";
+    }
+    if (name === build.name) return null;
+    try {
+      const savedId = await onSaveBuild(build, name, build.id);
+      if (!savedId) {
+        return "Unable to save build name.";
+      }
+      const updatedBuild = { ...build, name, lastUpdate: Date.now() };
+      setBuilds((current) => current.map((entry) =>
+        entry.id === build.id ? updatedBuild : entry,
+      ));
+      return null;
+    } catch (error) {
+      console.error("Error renaming saved build:", error);
+      return "Unable to save build name.";
     }
   }
 
@@ -123,15 +157,6 @@ export default function Builds() {
     return Number.isNaN(date.getTime()) ? null : date;
   }
 
-  useEffect(() => {
-    const dialog = detailsDialogRef.current;
-    if (!dialog || !detailsBuild) return;
-    dialog.showModal();
-    return () => {
-      if (dialog.open) dialog.close();
-    };
-  }, [detailsBuild]);
-
   return (
     <section className="builds-page">
       <header className="builds-page__header">
@@ -154,90 +179,20 @@ export default function Builds() {
             const uma = umaList.find(
               (entry) => String(entry.id) === build.outfitId,
             );
-            const createdTime = getCreateTime(build);
             return (
-              <article className="build-card" key={build.id}>
-                <button
-                  className="build-card__delete"
-                  type="button"
-                  aria-label={`Delete ${build.name || "Unnamed build"}`}
-                  onClick={() => void handleDelete(build)}
-                >
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" />
-                  </svg>
-                </button>
-                <div className="build-card__main">
-                  {uma ? <UmaImage uma={uma} alt="" /> : null}
-                  <div>
-                    <h2>{build.name || "Unnamed build"}</h2>
-                    {uma ? <p>{uma.outfitTitle}</p> : null}
-                    {uma ? <p>{uma.baseCharacterName}</p> : null}
-                  </div>
-                  <div className="build-card__actions">
-                    {createdTime ? (
-                      <time className="build-card__created-time build-card__created-time--saved" dateTime={createdTime.toISOString()}>
-                        <span>{createdTime.toLocaleDateString()}</span>
-                        <span>{createdTime.toLocaleTimeString()}</span>
-                      </time>
-                    ) : null}
-                    <button className="build-card__details-button" type="button" onClick={() => setDetailsBuild(build)}>
-                      Details
-                    </button>
-                  </div>
-                </div>
-                <div className="build-card__aptitudes" aria-label="Aptitudes">
-                  <span>
-                    <span>Surface</span>
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.surfaceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.surfaceAptitude}`} />
-                  </span>
-                  <span>
-                    <span>Distance</span>
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.distanceAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.distanceAptitude}`} />
-                  </span>
-                  <span>
-                    <span>Style</span>
-                    <img src={`/icons/statrank/rank_${String(aptitudeRankImages[build.strategyAptitude]).padStart(2, "0")}.png`} alt={`Rank ${build.strategyAptitude}`} />
-                    {strategyIcons[normalizeStrategyName(build.strategy)] ? <img src={`/icons/style/${strategyIcons[normalizeStrategyName(build.strategy)]}.webp`} alt={normalizeStrategyName(build.strategy)} /> : null}
-                  </span>
-                </div>
-                <div className="build-card__stats" aria-label="Stats">
-                  {statFields.map((field) => (
-                    <span key={field}>
-                      {field}
-                      <span className="build-card__stat-value">
-                        <img src={`/icons/statrank/rank_${String(getStatRank(build[field])).padStart(2, "0")}.png`} alt={`${field} rank`} />
-                        <strong>{build[field]}</strong>
-                      </span>
-                    </span>
-                  ))}
-                </div>
-              </article>
+              <SavedBuildCard
+                key={build.id}
+                build={build}
+                uma={uma}
+                skillList={skillList}
+                createdTime={getCreateTime(build)}
+                onDelete={() => void handleDelete(build)}
+                onRename={(name) => saveBuildName(build, name)}
+              />
             );
           })}
         </div>
       )}
-      {detailsBuild ? (
-        <dialog
-          ref={detailsDialogRef}
-          className="build-card__details-dialog"
-          onCancel={() => setDetailsBuild(null)}
-          onClose={() => setDetailsBuild(null)}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setDetailsBuild(null);
-          }}
-        >
-          <button className="build-card__details-close" type="button" aria-label="Close details" onClick={() => setDetailsBuild(null)}>×</button>
-          <UmaBuildDisplay
-            teamNumber={1}
-            build={detailsBuild}
-            availableBuilds={[]}
-            umaList={umaList}
-            skillList={skillList}
-            onSelectBuild={() => undefined}
-          />
-        </dialog>
-      ) : null}
     </section>
   );
 }

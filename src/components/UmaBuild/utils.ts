@@ -108,3 +108,20 @@ export function sortBuildsNewestFirst(builds: StoredUmaBuild[]) {
     right.id.localeCompare(left.id)
   );
 }
+
+export function getUniqueBuildNameForEvent(
+  umaName: string,
+  builds: Pick<StoredUmaBuild, "name">[],
+) {
+  const baseName = umaName.trim() || "Uma";
+  const existingNames = new Set(
+    builds.map((build) => build.name.trim().toLowerCase()),
+  );
+  if (!existingNames.has(baseName.toLowerCase())) return baseName;
+
+  let suffix = 2;
+  while (existingNames.has(`${baseName} ${suffix}`.toLowerCase())) {
+    suffix += 1;
+  }
+  return `${baseName} ${suffix}`;
+}

@@ -13,6 +13,7 @@ import "../../../styles/UmaBuild.css";
 interface UmaBuildProps {
   teamNumber: number;
   buildId?: string | null;
+  isSavedBuild?: boolean;
   value: UmaBuildData;
   onChange: (value: UmaBuildData) => void;
   umaList: UmaEntry[];
@@ -23,28 +24,29 @@ interface UmaBuildProps {
   savedBuilds?: StoredUmaBuild[];
   buildName?: string;
   onSelectSavedBuild?: (buildId: string) => void | Promise<void>;
+  onCopySavedBuild?: (buildId: string) => void | Promise<void>;
   onSaveBuild?: (build: UmaBuildData, name: string) => void | Promise<void>;
   onNewBuild?: () => void;
   onBuildLoaded?: (build: UmaBuildData) => void;
 }
 
 export default function UmaBuild({
-  teamNumber, buildId = null, value, onChange, umaList, selectedUma, onSelectUma,
+  teamNumber, buildId = null, isSavedBuild, value, onChange, umaList, selectedUma, onSelectUma,
   skillList, uniqueSkillId, savedBuilds = [], buildName = "", onSelectSavedBuild,
-  onSaveBuild, onNewBuild,
+  onCopySavedBuild, onSaveBuild, onNewBuild,
   onBuildLoaded,
 }: UmaBuildProps) {
   const [isSaveMenuOpen, setIsSaveMenuOpen] = useState(false);
   const saveMenuRef = useRef<HTMLSpanElement | null>(null);
   const aptitudesRef = useRef<HTMLDivElement | null>(null);
-  const defaultBuildName = buildName || selectedUma?.baseCharacterName || "";
   const editor = useUmaBuildEditor({
     value,
     onChange,
     skillList,
     uniqueSkillId,
-    buildName: defaultBuildName,
+    buildName,
     buildId,
+    isSavedBuild,
     savedBuilds,
     onNewBuild,
     onBuildLoaded,
@@ -100,11 +102,14 @@ export default function UmaBuild({
         onNewBuild={editor.startNewBuild}
         onSaveBuild={onSaveBuild}
         onSelectSavedBuild={onSelectSavedBuild}
+        onCopySavedBuild={onCopySavedBuild}
         isBuildCopied={editor.isBuildCopied}
         isBuildLoaded={editor.isBuildLoaded}
         draftBuildName={editor.draftBuildName}
         setDraftBuildName={editor.setDraftBuildName}
+        isSavedBuild={isSavedBuild ?? buildId !== null}
         willOverrideBuild={editor.willOverrideBuild}
+        hasDuplicateName={editor.hasDuplicateName}
         saveMenuRef={saveMenuRef}
         isSaveMenuOpen={isSaveMenuOpen}
         setIsSaveMenuOpen={setIsSaveMenuOpen}

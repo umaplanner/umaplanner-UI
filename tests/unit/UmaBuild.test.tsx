@@ -148,6 +148,86 @@ describe("UmaBuild aptitude selectors", () => {
     expect(onSelectSavedBuild).toHaveBeenCalledWith("build-1");
   });
 
+  it("copies a saved build from the editor toolbar", async () => {
+    const user = userEvent.setup();
+    const onCopySavedBuild = vi.fn();
+    const savedBuild = {
+      ...createDefaultBuild("100101"),
+      id: "build-1",
+      event: "CM 42",
+      name: "Build 1",
+      lastUpdate: 1,
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={createDefaultBuild()}
+        onChange={vi.fn()}
+        umaList={[
+          {
+            id: 100101,
+            charaId: 1,
+            outfitTitle: "Classic",
+            baseCharacterName: "Special Week",
+          },
+        ]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        savedBuilds={[savedBuild]}
+        onSelectSavedBuild={vi.fn()}
+        onCopySavedBuild={onCopySavedBuild}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Copy" }));
+    expect(screen.getByRole("heading", { name: "Copy a saved build" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Build 1/ }));
+
+    expect(onCopySavedBuild).toHaveBeenCalledWith("build-1");
+  });
+
+  it("shows an inline duplicate-name error for a new build", async () => {
+    const user = userEvent.setup();
+    const savedBuild = {
+      ...createDefaultBuild("100101"),
+      id: "build-1",
+      event: "CM 42",
+      name: "Existing build",
+      lastUpdate: 1,
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={createDefaultBuild("100101")}
+        onChange={vi.fn()}
+        umaList={[]}
+        selectedUma={{
+          id: 100101,
+          charaId: 1,
+          outfitTitle: "Classic",
+          baseCharacterName: "Special Week",
+        }}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        savedBuilds={[savedBuild]}
+        onSaveBuild={vi.fn()}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    const nameInput = screen.getByRole("textbox", { name: "Build name" });
+    await user.clear(nameInput);
+    await user.type(nameInput, savedBuild.name);
+
+    const duplicateError = screen.getByRole("alert");
+    expect(duplicateError).toHaveTextContent("already exists");
+    expect(nameInput.nextElementSibling).toBe(duplicateError);
+    expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
+  });
+
   it("shows a plan label in the Uma display box for plan builds", () => {
     const build = {
       ...createDefaultBuild(),

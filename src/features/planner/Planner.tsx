@@ -15,7 +15,13 @@ import {
   type InitialTeamBuildIds,
   type UmaSlot,
 } from "./plannerTypes";
-import { findSkill, getUmaUniqueSkillId, runawayStrategy, umaHasRunawaySkill } from "../../components/UmaBuild/utils";
+import {
+  findSkill,
+  getUmaUniqueSkillId,
+  getUniqueBuildNameForEvent,
+  runawayStrategy,
+  umaHasRunawaySkill,
+} from "../../components/UmaBuild/utils";
 import {
   getNextResultOpeningAt,
   getResultAvailability,
@@ -32,6 +38,7 @@ export default function Planner() {
     build: UmaBuildData;
     name: string;
     id: string | null;
+    isSavedBuild: boolean;
   } | null>(null);
   const [displayBuildIds, setDisplayBuildIds] = useState<Array<string | null>>([
     null,
@@ -141,11 +148,16 @@ export default function Planner() {
   const editorUma = editorBuild.outfitId === ""
     ? null
     : umaList.find((uma) => String(uma.id) === editorBuild.outfitId) ?? null;
+  const editorBuildId = editingBuildDraft?.slot === editingBuild
+    ? editingBuildDraft.id
+    : umas[`uma${editingBuild}`];
+  const editorBuildIsSaved = editingBuildDraft?.slot === editingBuild
+    ? editingBuildDraft.isSavedBuild
+    : editorBuildId !== null;
   const editProps = {
     teamNumber: editingBuild,
-    buildId: editingBuildDraft?.slot === editingBuild
-      ? editingBuildDraft.id
-      : umas[`uma${editingBuild}`],
+    buildId: editorBuildId,
+    isSavedBuild: editorBuildIsSaved,
     value: editorBuild,
     umaList,
     selectedUma: editorUma,
@@ -180,9 +192,10 @@ export default function Planner() {
         name: !changedUma && editingBuildDraft?.slot === editingBuild
           ? editingBuildDraft.name
           : !changedUma ? umas[`uma${editingBuild}BuildName`] : "",
-        id: changedUma ? null : editingBuildDraft?.slot === editingBuild
+        id: changedUma ? crypto.randomUUID() : editingBuildDraft?.slot === editingBuild
           ? editingBuildDraft.id
           : umas[`uma${editingBuild}`],
+        isSavedBuild: !changedUma && editorBuildIsSaved,
       });
     },
     buildName: editingBuildDraft?.slot === editingBuild
@@ -198,6 +211,7 @@ export default function Planner() {
         id: editingBuildDraft?.slot === editingBuild
           ? editingBuildDraft.id
           : umas[`uma${editingBuild}`],
+        isSavedBuild: editorBuildIsSaved,
       });
     },
     onNewBuild: () => {
@@ -206,6 +220,7 @@ export default function Planner() {
         build: createDefaultBuild(),
         name: "",
         id: null,
+        isSavedBuild: false,
       });
     },
     onBuildLoaded: (build: UmaBuildData) => {
@@ -214,6 +229,7 @@ export default function Planner() {
         build,
         name: "",
         id: crypto.randomUUID(),
+        isSavedBuild: false,
       });
     },
     savedBuilds: allBuilds,
@@ -225,31 +241,44 @@ export default function Planner() {
           build: savedBuild,
           name: savedBuild.name,
           id: savedBuild.id,
+          isSavedBuild: true,
+        });
+      }
+    },
+    onCopySavedBuild: (buildId: string) => {
+      const savedBuild = allBuilds.find((build) => build.id === buildId);
+      if (savedBuild) {
+        setEditingBuildDraft({
+          slot: editingBuild,
+          build: savedBuild,
+          name: "",
+          id: crypto.randomUUID(),
+          isSavedBuild: false,
         });
       }
     },
     onSaveBuild: async (build: UmaBuildData, name: string) => {
-      const currentBuildId = editingBuildDraft?.slot === editingBuild
-        ? editingBuildDraft.id
-        : umas[`uma${editingBuild}`];
-      const duplicate = allBuilds.find(
-        (savedBuild) =>
-          savedBuild.name === name &&
-          savedBuild.id !== currentBuildId,
+      const requestedName = name.trim();
+      const umaName = umaList.find((uma) => String(uma.id) === build.outfitId)?.baseCharacterName ?? "Uma";
+      const saveName = requestedName || getUniqueBuildNameForEvent(umaName, allBuilds);
+      const existingNames = new Set(
+        allBuilds.map((savedBuild) => savedBuild.name.trim().toLowerCase()),
       );
-      const id = duplicate?.id ??
-        currentBuildId;
+      if (!editorBuildIsSaved && requestedName && existingNames.has(requestedName.toLowerCase())) {
+        return;
+      }
       const savedId = await saveBuild(
         build,
-        name,
-        id,
+        saveName,
+        editorBuildId,
       );
       if (savedId) {
         setEditingBuildDraft({
           slot: editingBuild,
           build,
-          name,
+          name: saveName,
           id: savedId,
+          isSavedBuild: true,
         });
       }
     },
@@ -304,7 +333,7 @@ export default function Planner() {
             </div>
           </div>
         ) : buildMode === "builds" ? (
-          <UmaBuildList />
+          <UmaBuildList onSaveBuild={saveBuild} />
         ) : buildMode === "results" ? (
           <UmaBuildResults
             key={selectedEvent}

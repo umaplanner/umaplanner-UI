@@ -129,7 +129,9 @@ export default function UmaImport() {
               skillList={skillList}
               currentEvent={selectedEvent}
               savedBuilds={allBuilds}
-              onSaveBuild={(storedBuild, name) => saveBuild(storedBuild, name)}
+              onSaveBuild={(storedBuild, name, buildId) =>
+                saveBuild(storedBuild, name, buildId)
+              }
               onRemoveBuild={removeBuild}
             />
           ))}

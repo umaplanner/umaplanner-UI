@@ -18,6 +18,7 @@ interface Options {
   uniqueSkillId?: number;
   buildName: string;
   buildId: string | null;
+  isSavedBuild?: boolean;
   savedBuilds: { id: string; name: string }[];
   onNewBuild?: () => void;
   onBuildLoaded?: (build: UmaBuildData) => void;
@@ -49,6 +50,7 @@ export default function useUmaBuildEditor({
   uniqueSkillId,
   buildName,
   buildId,
+  isSavedBuild = buildId !== null,
   savedBuilds,
   onNewBuild,
   onBuildLoaded,
@@ -360,8 +362,11 @@ async function loadBuildJson() {
     draftBuildName,
     setDraftBuildName,
     saveName: draftBuildName.trim(),
-    willOverrideBuild: buildId !== null ||
-      savedBuilds.some((build) => build.name === draftBuildName.trim() && build.id !== buildId),
+    willOverrideBuild: isSavedBuild,
+    hasDuplicateName: !isSavedBuild && draftBuildName.trim() !== "" &&
+      savedBuilds.some(
+        (build) => build.name.trim().toLowerCase() === draftBuildName.trim().toLowerCase(),
+      ),
     updateField,
     startNewBuild,
     getSkillId,

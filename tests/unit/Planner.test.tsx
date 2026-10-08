@@ -20,10 +20,14 @@ vi.mock("../../src/features/planner/useTeam", () => ({
   useTeam: mocks.useTeam,
 }));
 
-vi.mock("../../src/features/planner/resultSchedule", () => ({
-  getResultAvailability: mocks.getResultAvailability,
-  getNextResultOpeningAt: mocks.getNextResultOpeningAt,
-}));
+vi.mock("../../src/features/planner/resultSchedule", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../src/features/planner/resultSchedule")>();
+  return {
+    ...actual,
+    getResultAvailability: mocks.getResultAvailability,
+    getNextResultOpeningAt: mocks.getNextResultOpeningAt,
+  };
+});
 
 vi.mock("../../src/components/RaceDisplay", () => ({
   default: () => null,

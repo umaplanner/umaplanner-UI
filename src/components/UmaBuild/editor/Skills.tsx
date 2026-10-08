@@ -56,21 +56,21 @@ export default function UmaBuildSkills({
       <div className="uma-build__skill-list">{sortSkillsByDisplayOrderWithIndex(value.skills, skillList).map(({ skill, index }, displayIndex) => {
         const entry = getEntry(skill);
         const special = entry ? !entry.isGeneralSkill && entry.id.startsWith("1") : false;
+        const forced = isForcedSkill(skill);
         return <div className="uma-build__skill-row" key={`${skill}-${index}`}>
           <button 
             className={`uma-build__skill-value${special ? " uma-build__skill-value--special" : ""}`} 
             type="button" 
-            onClick={() => { if (!isForcedSkill(skill)) openSkillPicker(index); }}
+            onClick={() => { if (!forced) openSkillPicker(index); }}
           >
             {entry ? <img src={`/icons/skills/${entry.iconId || 0}.png`} alt="" /> : null}{entry?.name ?? skill}
           </button>
-          <button 
+          {!forced ? <button
             className="uma-build__remove-skill" 
             type="button" 
             aria-label={`Remove skill ${displayIndex + 1}`}
-            disabled={isForcedSkill(skill)} 
             onClick={() => removeSkill(index)}
-          >×</button>
+          >×</button> : null}
         </div>;
       })}
       </div>

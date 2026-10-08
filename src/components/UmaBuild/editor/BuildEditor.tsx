@@ -71,7 +71,10 @@ export default function UmaBuild({
     if (openAptitude === null && openChoice === null) return;
 
     const handlePointerDown = (event: PointerEvent) => {
-      if (!aptitudesRef.current?.contains(event.target as Node)) {
+      const openSelector = aptitudesRef.current?.querySelector('[aria-expanded="true"]')
+        ?.closest(".uma-build__aptitude-selector, .uma-build__choice-selector");
+
+      if (!openSelector?.contains(event.target as Node)) {
         setOpenAptitude(null);
         setOpenChoice(null);
       }
@@ -89,9 +92,11 @@ export default function UmaBuild({
   return (
     <section className="uma-build" aria-label={`Build Uma ${teamNumber}`}>
       <UmaBuildToolbar
+        teamNumber={teamNumber}
         value={value}
         onTogglePlan={(isPlan) => editor.updateField("build-type", isPlan ? "plan" : "standard")}
         savedBuilds={savedBuilds}
+        umaList={umaList}
         onNewBuild={editor.startNewBuild}
         onSaveBuild={onSaveBuild}
         onSelectSavedBuild={onSelectSavedBuild}

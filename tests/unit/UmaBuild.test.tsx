@@ -33,6 +33,33 @@ describe("UmaBuild aptitude selectors", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("closes an aptitude selector when clicking elsewhere in the aptitude panel", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={createDefaultBuild()}
+        onChange={vi.fn()}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Surface aptitude A" }));
+    expect(
+      screen.getByRole("group", { name: "Surface aptitude options" }),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByText("Distance"));
+
+    expect(
+      screen.queryByRole("group", { name: "Surface aptitude options" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("closes the strategy selector when clicking outside it", async () => {
     const user = userEvent.setup();
 
@@ -74,12 +101,51 @@ describe("UmaBuild aptitude selectors", () => {
 
     const planCheckbox = screen.getByRole("checkbox", { name: "Plan build" });
     expect(planCheckbox.closest("label")?.firstElementChild).toBe(planCheckbox);
-    expect(planCheckbox.closest("label")).toHaveTextContent("plan");
+    expect(planCheckbox.closest("label")).toHaveTextContent("Plan");
     await user.click(planCheckbox);
 
     expect(onChange).toHaveBeenCalledWith(
       expect.objectContaining({ "build-type": "plan" }),
     );
+  });
+
+  it("opens the saved-build picker from the editor toolbar", async () => {
+    const user = userEvent.setup();
+    const onSelectSavedBuild = vi.fn();
+    const savedBuild = {
+      ...createDefaultBuild("100101"),
+      id: "build-1",
+      event: "CM 42",
+      name: "Build 1",
+      lastUpdate: 1,
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={createDefaultBuild()}
+        onChange={vi.fn()}
+        umaList={[
+          {
+            id: 100101,
+            charaId: 1,
+            outfitTitle: "Classic",
+            baseCharacterName: "Special Week",
+          },
+        ]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        savedBuilds={[savedBuild]}
+        onSelectSavedBuild={onSelectSavedBuild}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Load" }));
+    expect(screen.getByRole("heading", { name: "Load a saved build" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Build 1/ }));
+
+    expect(onSelectSavedBuild).toHaveBeenCalledWith("build-1");
   });
 
   it("shows a plan label in the Uma display box for plan builds", () => {

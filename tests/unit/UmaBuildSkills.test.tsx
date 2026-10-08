@@ -76,4 +76,32 @@ describe("UmaBuildSkills", () => {
 
     expect(removeSkill).toHaveBeenCalledWith(1);
   });
+
+  it("does not render a remove button for a forced unique skill", () => {
+    render(
+      <UmaBuildSkills
+        value={value}
+        skillList={skillList}
+        skillPickerIndex={null}
+        isSkillPickerOpen={false}
+        skillSearch=""
+        skillSort="rarity"
+        setSkillSort={vi.fn()}
+        skillSortAscending={false}
+        setSkillSortAscending={vi.fn()}
+        filteredSkills={[]}
+        getSkillId={(skill) => skill}
+        isForcedSkill={(skill) => skill === "30001"}
+        isUnavailableSkill={() => false}
+        setSkillSearch={vi.fn()}
+        openSkillPicker={vi.fn()}
+        closeSkillPicker={vi.fn()}
+        selectSkill={vi.fn()}
+        removeSkill={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Remove skill 1" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Remove skill 2" })).not.toBeInTheDocument();
+  });
 });

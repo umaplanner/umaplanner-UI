@@ -164,13 +164,13 @@ export default function Overview({
 
   return (
     <section className="overview-page">
-      <h1>Overview</h1>
+      {/* <h1>Overview</h1> */}
       {!selectedEvent ? (
         <p>Select an event to view its overview.</p>
       ) : (
         <>
-          <h2>{selectedEvent}</h2>
-          {isLoading && <p role="status">Loading overview data...</p>}
+          {/* <h2>{selectedEvent}</h2> */}
+          {/* {isLoading && <p role="status">Loading overview data...</p>} */}
           {error && <p role="alert">Unable to fully load overview data: {error}</p>}
           {!isLoading && data !== undefined && !hasSupportedData && (
             <p role="alert">Overview data must include outfits or team setups.</p>

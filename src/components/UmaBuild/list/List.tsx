@@ -13,6 +13,7 @@ import {
 } from "../../../features/planner/plannerRepository";
 import { deleteBuild } from "../../../features/planner/buildApi";
 import SavedBuildCard from "./SavedBuildCard";
+import VirtualizedBuildGrid from "../../VirtualizedBuildGrid";
 import "../../../styles/Builds.css";
 import { sortBuildsNewestFirst } from "../utils";
 
@@ -108,7 +109,7 @@ export default function Builds({ onSaveBuild }: Props) {
 
       try {
         const [storedBuilds, cachedOutfits, cachedSkills] = await Promise.all([
-          createBuildRepository().getAll(),
+          createBuildRepository().getAllFromIndex("event", event),
           getCachedDataset<UmaEntry[]>("outfits"),
           getCachedDataset<unknown>("skills"),
         ]);
@@ -117,7 +118,7 @@ export default function Builds({ onSaveBuild }: Props) {
         }
 
         setBuilds(sortBuildsNewestFirst(storedBuilds.filter(
-          (build) => build.event === event && build.outfitId !== "",
+          (build) => build.outfitId !== "",
         )));
         setUmaList(cachedOutfits ?? []);
         setSkillList(normalizeSkillData(cachedSkills));
@@ -174,8 +175,11 @@ export default function Builds({ onSaveBuild }: Props) {
       ) : builds.length === 0 ? (
         <p className="builds-page__empty">No saved builds available.</p>
       ) : (
-        <div className="builds-grid">
-          {builds.map((build) => {
+        <VirtualizedBuildGrid
+          items={builds}
+          resetKey={selectedEvent}
+          getKey={(build) => build.id}
+          renderItem={(build) => {
             const uma = umaList.find(
               (entry) => String(entry.id) === build.outfitId,
             );
@@ -190,8 +194,8 @@ export default function Builds({ onSaveBuild }: Props) {
                 onRename={(name) => saveBuildName(build, name)}
               />
             );
-          })}
-        </div>
+          }}
+        />
       )}
     </section>
   );

@@ -235,7 +235,7 @@ export function useTeam(selectedEvent: string | null) {
   }, [buildRepository]);
 
   const refreshBuilds = useCallback(async (event: string) => {
-    const builds = await buildRepository.getAll();
+    const builds = await buildRepository.getAllFromIndex("event", event);
     const normalizedBuilds: StoredUmaBuild[] = [];
     for (const build of builds) {
       const strategy = normalizeStrategyName(build.strategy);
@@ -278,8 +278,8 @@ export function useTeam(selectedEvent: string | null) {
       for (const deletedId of deletedIds) {
         await buildRepository.deleteByKey([event, deletedId]);
       }
-      const localBuilds = (await buildRepository.getAll())
-        .filter((build) => build.event === event && build.outfitId !== "")
+      const localBuilds = (await buildRepository.getAllFromIndex("event", event))
+        .filter((build) => build.outfitId !== "")
         .map((build) => ({
           ...build,
           lastUpdate: Number.isFinite(build.lastUpdate) ? build.lastUpdate : 0,
@@ -608,10 +608,10 @@ export function useTeam(selectedEvent: string | null) {
         }
 
         if (storedTeam) {
-          const storedBuilds = await buildRepository.getAll();
+          const storedBuilds = await buildRepository.getAllFromIndex("event", event);
           await Promise.all(
             storedBuilds
-              .filter((build) => build.event === event && build.outfitId === "")
+              .filter((build) => build.outfitId === "")
               .map((build) => buildRepository.deleteByKey([build.event, build.id])),
           );
         }
@@ -673,10 +673,9 @@ export function useTeam(selectedEvent: string | null) {
     const event = selectedEvent;
     const id = buildId ?? crypto.randomUUID();
     try {
-      const existingBuilds = await buildRepository.getAll();
+      const existingBuilds = await buildRepository.getAllFromIndex("event", event);
       const normalizedName = name.trim().toLowerCase();
       if (existingBuilds.some((existingBuild) =>
-        existingBuild.event === event &&
         existingBuild.id !== id &&
         existingBuild.name.trim().toLowerCase() === normalizedName
       )) {

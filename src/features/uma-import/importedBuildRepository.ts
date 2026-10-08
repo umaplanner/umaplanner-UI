@@ -12,10 +12,7 @@ const importedBuildRepository = new IndexedDbRepository<StoredImportedUmaBuild>(
 });
 
 export async function clearImportedBuilds() {
-  const storedBuilds = await importedBuildRepository.getAll();
-  await Promise.all(
-    storedBuilds.map((build) => importedBuildRepository.deleteByKey(build.id)),
-  );
+  await importedBuildRepository.clear();
 }
 
 export async function loadStoredBuilds(): Promise<ImportedUmaBuild[]> {
@@ -32,8 +29,15 @@ export async function loadStoredBuilds(): Promise<ImportedUmaBuild[]> {
       isImportedUmaBuild(build),
   );
   if (validBuilds.length !== storedBuilds.length) {
-    await clearImportedBuilds();
-    await importedBuildRepository.addMany(validBuilds);
+    const validBuildIds = new Set(validBuilds.map((build) => build.id));
+    const invalidBuilds = storedBuilds.filter(
+      (build) => !validBuildIds.has(build.id),
+    );
+    await Promise.all(
+      invalidBuilds.map((build) =>
+        importedBuildRepository.deleteByKey(build.id)
+      ),
+    );
   }
 
   return validBuilds;

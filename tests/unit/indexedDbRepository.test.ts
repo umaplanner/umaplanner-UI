@@ -7,6 +7,11 @@ type Team = {
   uma1: number | null;
 };
 
+type Build = {
+  id: string;
+  event: string;
+};
+
 function createRepository(databaseName: string) {
   return new IndexedDbRepository<Team>({
     databaseName,
@@ -53,6 +58,29 @@ describe("IndexedDbRepository", () => {
       { event: "CM 41", uma1: null },
       { event: "CM 42", uma1: 103 },
     ]);
+  });
+
+  it("loads records by index and clears a store", async () => {
+    const repository = new IndexedDbRepository<Build>({
+      databaseName: "BuildDB-index-clear",
+      version: 1,
+      storeName: "builds",
+      keyPath: "id",
+      indexes: [{ name: "event" }],
+    });
+    await repository.addMany([
+      { id: "build-41", event: "CM 41" },
+      { id: "build-42-a", event: "CM 42" },
+      { id: "build-42-b", event: "CM 42" },
+    ]);
+
+    await expect(repository.getAllFromIndex("event", "CM 42")).resolves.toEqual([
+      { id: "build-42-a", event: "CM 42" },
+      { id: "build-42-b", event: "CM 42" },
+    ]);
+
+    await repository.clear();
+    await expect(repository.getAll()).resolves.toEqual([]);
   });
 
   it("adds missing indexes when an existing database is upgraded", async () => {

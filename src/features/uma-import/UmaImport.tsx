@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ChangeEvent } from "react";
 import { useEvent } from "../../contexts/EventContext";
 import { ensureDataLoaded } from "../../lib/data";
@@ -9,6 +9,7 @@ import { normalizeSkillData } from "../planner/skillData";
 import { usePlannerData } from "../planner/usePlannerData";
 import { useTeam } from "../planner/useTeam";
 import ImportedBuildCard from "./ImportedBuildCard";
+import VirtualizedBuildGrid from "../../components/VirtualizedBuildGrid";
 import { loadStoredBuilds, saveImportedBuilds } from "./importedBuildRepository";
 import "../../styles/Builds.css";
 
@@ -83,14 +84,24 @@ export default function UmaImport() {
     }
   }
 
-  const sortedBuilds = [...builds].sort((left, right) => getBuildDate(right) - getBuildDate(left));
+  const umaById = useMemo(
+    () => new Map(umaList.map((uma) => [uma.id, uma])),
+    [umaList],
+  );
+  const sortedBuilds = useMemo(
+    () => [...builds].sort((left, right) => getBuildDate(right) - getBuildDate(left)),
+    [builds],
+  );
   const normalizedSearch = search.trim().toLowerCase();
-  const filteredBuilds = sortedBuilds.filter((build) => {
-    const uma = umaList.find((entry) => entry.id === build.card_id);
-    return `${build.name ?? ""} ${uma?.outfitTitle ?? ""} ${uma?.baseCharacterName ?? ""}`
-      .toLowerCase()
-      .includes(normalizedSearch);
-  });
+  const filteredBuilds = useMemo(
+    () => sortedBuilds.filter((build) => {
+      const uma = umaById.get(build.card_id);
+      return `${build.name ?? ""} ${uma?.outfitTitle ?? ""} ${uma?.baseCharacterName ?? ""}`
+        .toLowerCase()
+        .includes(normalizedSearch);
+    }),
+    [sortedBuilds, umaById, normalizedSearch],
+  );
 
   return (
     <section className="builds-page">
@@ -118,12 +129,14 @@ export default function UmaImport() {
       ) : filteredBuilds.length === 0 ? (
         <p className="builds-page__empty">No imported builds match your search.</p>
       ) : (
-        <div className="builds-grid">
-          {filteredBuilds.map((build, index) => (
+        <VirtualizedBuildGrid
+          items={filteredBuilds}
+          resetKey={normalizedSearch}
+          getKey={(build, index) => `${build.card_id}-${index}`}
+          renderItem={(build) => (
             <ImportedBuildCard
-              key={`${build.card_id}-${index}`}
               build={build}
-              uma={umaList.find((entry) => entry.id === build.card_id)}
+              uma={umaById.get(build.card_id)}
               groundType={raceEntry?.groundType}
               distanceType={raceEntry?.distanceType}
               skillList={skillList}
@@ -134,8 +147,8 @@ export default function UmaImport() {
               }
               onRemoveBuild={removeBuild}
             />
-          ))}
-        </div>
+          )}
+        />
       )}
     </section>
   );

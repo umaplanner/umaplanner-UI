@@ -80,6 +80,19 @@ export class IndexedDbRepository<T extends object> {
     return database.getAll(this.config.storeName) as Promise<T[]>;
   }
 
+  async getAllFromIndex<K extends keyof T>(
+    column: K,
+    key: T[K],
+  ): Promise<T[]> {
+    const database = await this.databasePromise;
+
+    return database.getAllFromIndex(
+      this.config.storeName,
+      column as string,
+      key as IDBValidKey,
+    ) as Promise<T[]>;
+  }
+
   async put(entry: T): Promise<IDBValidKey> {
     const database = await this.databasePromise;
 
@@ -96,6 +109,12 @@ export class IndexedDbRepository<T extends object> {
       this.config.storeName,
       key as IDBValidKey,
     );
+  }
+
+  async clear(): Promise<void> {
+    const database = await this.databasePromise;
+
+    await database.clear(this.config.storeName);
   }
 
   async addMany(entries: T[]): Promise<void> {

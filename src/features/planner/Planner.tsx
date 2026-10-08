@@ -317,22 +317,13 @@ export default function Planner() {
           Builds
         </button>
       </div>
-      <section className="uma-build-area" aria-label="Build selected Uma">
-        {isTeamLoading && buildMode !== "builds" ? (
-          <div className="uma-build-loading" role="status" aria-label="Loading saved team">
-            <span>Loading saved team...</span>
-            <div className="uma-build-loading__grid" aria-hidden="true">
-              {[1, 2, 3].map((slot) => (
-                <div className="uma-build-loading__card" key={slot}>
-                  <div className="uma-build-loading__uma" />
-                  <div className="uma-build-loading__section uma-build-loading__section--stats" />
-                  <div className="uma-build-loading__section uma-build-loading__section--skills" />
-                </div>
-              ))}
-              <div className="uma-build-loading__details" />
-            </div>
-          </div>
-        ) : buildMode === "builds" ? (
+      <section
+        className="uma-build-area"
+        aria-label="Build selected Uma"
+        aria-busy={isTeamLoading && buildMode !== "builds"}
+        inert={isTeamLoading && buildMode !== "builds"}
+      >
+        {buildMode === "builds" ? (
           <UmaBuildList onSaveBuild={saveBuild} />
         ) : buildMode === "results" ? (
           <UmaBuildResults

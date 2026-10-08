@@ -85,6 +85,11 @@ describe("Planner build mode", () => {
 
   it("does not switch to Results when the selected event changes", async () => {
     localStorage.setItem("selectedEvent", "CM 42");
+    const teamState = mocks.useTeam();
+    mocks.useTeam.mockImplementation((event: string | null) => ({
+      ...teamState,
+      isTeamLoading: event === "CM 43",
+    }));
     const user = userEvent.setup();
 
     render(
@@ -100,6 +105,11 @@ describe("Planner build mode", () => {
     );
     await user.click(screen.getByRole("button", { name: "Switch event" }));
 
+    const buildArea = screen.getByRole("region", { name: "Build selected Uma" });
+    expect(buildArea).toHaveAttribute("aria-busy", "true");
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Show support cards")).toBeInTheDocument();
+    expect(buildArea).toHaveAttribute("inert");
     expect(screen.getByRole("button", { name: "Results" })).toHaveAttribute(
       "aria-pressed",
       "false",

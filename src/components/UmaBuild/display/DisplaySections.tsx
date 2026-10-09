@@ -41,8 +41,22 @@ export default function UmaBuildDisplaySections({ build, uniqueSkill, skillList,
           <div className="uma-build__support-card-list">
             {build.supportCards.map((card) => (
               <div className="uma-build__support-card" key={card.position}>
-                <SupportCardImage card={card} />
-                <small>LB {card.limit_break_count}</small>
+                <SupportCardImage cardId={card.support_card_id} />
+                <div
+                  className="uma-build__support-card-limit-break-display"
+                  role="img"
+                  aria-label={card.limit_break_count === 4
+                    ? "MLB"
+                    : `${card.limit_break_count} LB`}
+                >
+                  {[1, 2, 3, 4].map((level) => (
+                    <img
+                      key={level}
+                      src={`/icons/support-card/lb_${card.limit_break_count >= level ? "full" : "empty"}.png`}
+                      alt=""
+                    />
+                  ))}
+                </div>
               </div>
             ))}
           </div>

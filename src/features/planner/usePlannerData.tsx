@@ -8,15 +8,55 @@ import { createRaceRepository } from "./plannerRepository";
 import { normalizeSkillData } from "./skillData";
 
 function normalizeSupportCardList(rawSupportCards: unknown): SupportCardEntry[] {
-  return Array.isArray(rawSupportCards)
-    ? rawSupportCards.flatMap((entry) => {
-      if (!entry || typeof entry !== "object") return [];
-      const record = entry as Record<string, unknown>;
-      const id = Number(record.id ?? record.support_card_id ?? record.card_id);
-      return Number.isFinite(id)
-        ? [{ id, name: typeof record.name === "string" ? record.name : undefined }]
-        : [];
-    })
+  if (Array.isArray(rawSupportCards)) {
+    return rawSupportCards.flatMap((entry) => normalizeSupportCard(entry));
+  }
+  if (!rawSupportCards || typeof rawSupportCards !== "object") return [];
+
+  const rawRecord = rawSupportCards as Record<string, unknown>;
+  if (
+    "id" in rawRecord ||
+    "support_card_id" in rawRecord ||
+    "card_id" in rawRecord
+  ) {
+    return normalizeSupportCard(rawRecord);
+  }
+  if (
+    "data" in rawRecord &&
+    rawRecord.data &&
+    typeof rawRecord.data === "object"
+  ) {
+    return normalizeSupportCardList(rawRecord.data);
+  }
+
+  return Object.entries(rawRecord).flatMap(([key, entry]) => {
+    if (
+      entry &&
+      typeof entry === "object" &&
+      !Array.isArray(entry) &&
+      ("id" in entry || "support_card_id" in entry || "card_id" in entry)
+    ) {
+      return normalizeSupportCard(entry, key);
+    }
+    return normalizeSupportCardList(entry);
+  });
+}
+
+function normalizeSupportCard(
+  entry: unknown,
+  key?: string,
+): SupportCardEntry[] {
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) return [];
+  const record = entry as Record<string, unknown>;
+  const id = Number(record.id ?? record.support_card_id ?? record.card_id ?? key);
+  return Number.isFinite(id) &&
+      typeof record.title === "string" &&
+      typeof record.uma === "string"
+    ? [{
+        id,
+        title: record.title,
+        uma: record.uma,
+      }]
     : [];
 }
 
@@ -90,8 +130,7 @@ export function usePlannerData(selectedEvent: string | null) {
         const loadedData = await ensureDataLoaded();
         const data = (loadedData.outfits as UmaEntry[] | undefined) ?? [];
         const skills = normalizeSkillData(loadedData.skills);
-        const rawSupportCards = loadedData.supportCards ?? loadedData.support_cards;
-        const supportCards = normalizeSupportCardList(rawSupportCards);
+        const supportCards = normalizeSupportCardList(loadedData);
 
         if (!cancelled) {
           setUmaList(data);

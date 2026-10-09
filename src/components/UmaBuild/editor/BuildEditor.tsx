@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../../types/UmaBuild";
+import type { UmaBuild as UmaBuildData, StoredUmaBuild, SupportCardEntry } from "../../../types/UmaBuild";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import UmaSelect from "../../UmaSelect";
@@ -7,6 +7,7 @@ import UmaBuildAptitudes from "./Aptitudes";
 import UmaBuildSkills from "./Skills";
 import UmaBuildStats from "./Stats";
 import UmaBuildToolbar from "./Toolbar";
+import UmaBuildSupportCards from "./SupportCards";
 import useUmaBuildEditor from "./useBuildEditor";
 import "../../../styles/UmaBuild.css";
 
@@ -20,6 +21,7 @@ interface UmaBuildProps {
   selectedUma: UmaEntry | null;
   onSelectUma: (uma: UmaEntry | null) => void | Promise<void>;
   skillList: SkillEntry[];
+  supportCardList?: SupportCardEntry[];
   uniqueSkillId?: number;
   savedBuilds?: StoredUmaBuild[];
   buildName?: string;
@@ -32,7 +34,7 @@ interface UmaBuildProps {
 
 export default function UmaBuild({
   teamNumber, buildId = null, isSavedBuild, value, onChange, umaList, selectedUma, onSelectUma,
-  skillList, uniqueSkillId, savedBuilds = [], buildName = "", onSelectSavedBuild,
+  skillList, supportCardList = [], uniqueSkillId, savedBuilds = [], buildName = "", onSelectSavedBuild,
   onCopySavedBuild, onSaveBuild, onNewBuild,
   onBuildLoaded,
 }: UmaBuildProps) {
@@ -169,6 +171,11 @@ export default function UmaBuild({
         closeSkillPicker={editor.closeSkillPicker}
         selectSkill={editor.selectSkill}
         removeSkill={editor.removeSkill}
+      />
+      <UmaBuildSupportCards
+        value={value}
+        supportCardList={supportCardList}
+        onChange={onChange}
       />
     </section>
   );

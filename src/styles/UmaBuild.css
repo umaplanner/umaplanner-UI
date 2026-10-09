@@ -1114,6 +1114,20 @@
   border-radius: 0.25rem;
 }
 
+.uma-build__support-card-limit-break-display {
+  display: flex;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.uma-build__support-card-limit-break-display img {
+  width: 0.8rem;
+  height: 0.8rem;
+  aspect-ratio: auto;
+  object-fit: contain;
+  border-radius: 0;
+}
+
 .uma-build__support-card small {
   color: #8f9aaa;
 }
@@ -1136,11 +1150,28 @@
   grid-column: 1 / -1;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.5rem;
-  padding: 0.5rem 0;
+  padding: 0.5rem 0.75rem;
+}
+
+.uma-build__support-cards-editor {
+  grid-column: 1 / -1;
+}
+
+.uma-build__support-card-editor-item {
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  gap: 0.25rem;
+  color: var(--muted-text-color);
+  font-size: 0.72rem;
 }
 
 .uma-build__support-card-editor-slot {
+  display: grid;
+  width: 100%;
   min-width: 0;
+  min-height: 6rem;
+  place-items: center;
   padding: 0;
   color: var(--muted-text-color);
   background: #171d28;
@@ -1160,12 +1191,47 @@
 .uma-build__support-card-editor-slot img {
   display: block;
   width: 100%;
-  aspect-ratio: 0.72;
-  object-fit: cover;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.uma-build__support-card-slot-label {
+  text-align: center;
+}
+
+.uma-build__support-card-limit-break {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.uma-build__support-card-limit-break-button {
+  display: grid;
+  width: 1.45rem;
+  height: 1.45rem;
+  place-items: center;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.uma-build__support-card-limit-break-button img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .uma-build__support-card-icon {
   object-fit: contain !important;
+}
+
+.uma-build__support-card-editor-slot img.uma-build__support-card-full {
+  width: 90%;
+  aspect-ratio: 0.72;
+  object-fit: cover;
 }
 
 .uma-build__support-cards-button:hover,
@@ -1176,6 +1242,8 @@
 }
 
 .uma-build__support-cards-dialog {
+  display: flex;
+  flex-direction: column;
   width: min(92vw, 54rem);
   max-height: 90vh;
   padding: 0;
@@ -1185,7 +1253,13 @@
   border-radius: 0.65rem;
 }
 
-.uma-build__support-cards-dialog::backdrop {
+.uma-build__support-cards-dialog-backdrop {
+  display: grid;
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  place-items: center;
+  padding: 1rem;
   background: rgb(0 0 0 / 65%);
 }
 
@@ -1210,6 +1284,106 @@
   border: 0;
   cursor: pointer;
   font-size: 1.3rem;
+}
+
+.uma-build__support-card-search {
+  min-height: 2.5rem;
+  margin: 0.75rem 1rem 0;
+  padding: 0.4rem 0.6rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  font: inherit;
+}
+
+.uma-build__support-card-clear {
+  align-self: flex-start;
+  margin: 0.5rem 1rem 0;
+  padding: 0.35rem 0.55rem;
+  color: var(--text-color);
+  background: rgba(105, 183, 255, 0.08);
+  border: 1px solid rgba(105, 183, 255, 0.22);
+  border-radius: 0.4rem;
+  cursor: pointer;
+}
+
+.uma-build__support-card-picker {
+  display: grid;
+  overflow-y: auto;
+  min-height: 0;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.6rem;
+  padding: 1rem;
+}
+
+.uma-build__support-card-picker-option {
+  display: grid;
+  min-width: 0;
+  justify-items: center;
+  align-content: start;
+  gap: 0.35rem;
+  padding: 0.4rem;
+  color: var(--text-color);
+  background: #171d28;
+  border: 1px solid #27303e;
+  border-radius: 0.35rem;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.uma-build__support-card-picker-option:hover,
+.uma-build__support-card-picker-option:focus-visible {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build__support-card-picker-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.uma-build__support-card-picker-empty-icon {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--muted-text-color);
+  border: 1px dashed #536174;
+  border-radius: 0.35rem;
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.uma-build__support-card-picker-option img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: contain;
+}
+
+.uma-build__support-card-picker-option small {
+  color: var(--muted-text-color);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.uma-build__support-card-picker-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.uma-build__support-card-picker-title {
+  font-size: 0.66rem;
+}
+
+.uma-build__support-card-picker > p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted-text-color);
+  text-align: center;
 }
 
 .uma-build__support-card-editor {
@@ -1314,6 +1488,7 @@
 
 .uma-build__skill-row {
   position: relative;
+  min-width: 0;
 }
 
 .uma-build:not(.uma-build--display) .uma-build__skill-list {
@@ -1332,9 +1507,20 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
   padding: 0.65rem 2.75rem 0.65rem 0.75rem;
   text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build__skill-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1806,6 +1992,47 @@
 
   .uma-build:not(.uma-build--display) .uma-build__aptitudes {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .uma-build__support-card-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.65rem;
+    row-gap: 1rem;
+  }
+
+  .uma-build__support-card-editor-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.65rem;
+    row-gap: 1rem;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .uma-build__support-card-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .uma-build__skills {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .uma-build:not(.uma-build--display) .uma-build__skill-list {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .uma-build__support-card-limit-break {
+    width: 100%;
+    gap: 0.05rem;
+  }
+
+  .uma-build__support-card-limit-break-button {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
   }
 }
 

@@ -6,19 +6,7 @@ import type { UmaEntry } from "../../types/UmaEntry";
 import type { SupportCardEntry } from "../../types/UmaBuild";
 import { createRaceRepository } from "./plannerRepository";
 import { normalizeSkillData } from "./skillData";
-
-function normalizeSupportCardList(rawSupportCards: unknown): SupportCardEntry[] {
-  return Array.isArray(rawSupportCards)
-    ? rawSupportCards.flatMap((entry) => {
-      if (!entry || typeof entry !== "object") return [];
-      const record = entry as Record<string, unknown>;
-      const id = Number(record.id ?? record.support_card_id ?? record.card_id);
-      return Number.isFinite(id)
-        ? [{ id, name: typeof record.name === "string" ? record.name : undefined }]
-        : [];
-    })
-    : [];
-}
+import { normalizeSupportCardList } from "./supportCardData";
 
 export function usePlannerData(selectedEvent: string | null) {
   const [raceEntry, setRaceEntry] = useState<RaceEntry>();
@@ -90,8 +78,7 @@ export function usePlannerData(selectedEvent: string | null) {
         const loadedData = await ensureDataLoaded();
         const data = (loadedData.outfits as UmaEntry[] | undefined) ?? [];
         const skills = normalizeSkillData(loadedData.skills);
-        const rawSupportCards = loadedData.supportCards ?? loadedData.support_cards;
-        const supportCards = normalizeSupportCardList(rawSupportCards);
+        const supportCards = normalizeSupportCardList(loadedData);
 
         if (!cancelled) {
           setUmaList(data);

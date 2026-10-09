@@ -50,7 +50,7 @@ export default function Planner() {
   const { selectedEvent } = useEvent();
   const initialEvent = useRef(selectedEvent);
   const hasInitializedBuildMode = useRef(false);
-  const { raceEntry, umaList, skillList } = usePlannerData(selectedEvent);
+  const { raceEntry, umaList, skillList, supportCardList } = usePlannerData(selectedEvent);
   const activeRaceEntry = raceEntry?.eventTitle === selectedEvent
     ? raceEntry
     : undefined;
@@ -162,6 +162,7 @@ export default function Planner() {
     umaList,
     selectedUma: editorUma,
     skillList,
+    supportCardList,
     uniqueSkillId: getUmaUniqueSkillId(editorUma),
     onSelectUma: (uma: typeof selectedUma) => {
       const outfitId = uma ? String(uma.id) : "";

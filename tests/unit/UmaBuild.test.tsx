@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import UmaBuild from "../../src/components/UmaBuild/editor/BuildEditor";
@@ -6,6 +6,311 @@ import UmaBuildDisplay from "../../src/components/UmaBuild/display/Display";
 import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
 
 describe("UmaBuild aptitude selectors", () => {
+  it("selects a support card with maximum limit break by default", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={createDefaultBuild()}
+        onChange={onChange}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={[{ id: 101, title: "Speed Support", uma: "Special Week" }]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select support card for slot 1 (Empty)" }));
+    expect(screen.getByRole("dialog", { name: "Select support card for slot 1" })).toBeInTheDocument();
+    expect(screen.getByRole("dialog").querySelector("img")).toHaveAttribute(
+      "src",
+      expect.stringContaining("/images/support_cards/icon/101.png"),
+    );
+    expect(screen.getByText("Special Week")).toBeInTheDocument();
+    expect(screen.getByText("Speed Support")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /Special Week/ }));
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        supportCards: [{ position: 0, support_card_id: 101, limit_break_count: 4 }],
+      }),
+    );
+  });
+
+  it("shows the full image outside the picker and reverses picker data order", async () => {
+    const user = userEvent.setup();
+    const supportCardList = [
+      { id: 101, title: "First Card", uma: "Uma One" },
+      { id: 202, title: "Second Card", uma: "Uma Two" },
+      { id: 303, title: "Last Card", uma: "Uma Three" },
+    ];
+    const build = {
+      ...createDefaultBuild(),
+      supportCards: [{ position: 0, support_card_id: 101, limit_break_count: 0 }],
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={build}
+        onChange={vi.fn()}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={supportCardList}
+      />,
+    );
+
+    const selectedCardImage = screen.getByRole("button", {
+      name: "Select support card for slot 1 (First Card)",
+    }).querySelector("img");
+    expect(selectedCardImage).toHaveAttribute(
+      "src",
+      expect.stringContaining("/images/support_cards/full/101.png"),
+    );
+
+    await user.click(screen.getByRole("button", {
+      name: "Select support card for slot 1 (First Card)",
+    }));
+
+    const picker = screen.getByRole("dialog");
+    const optionImages = [...picker.querySelectorAll("button img")];
+    expect(optionImages.map((image) => image.getAttribute("src"))).toEqual([
+      expect.stringContaining("/images/support_cards/icon/303.png"),
+      expect.stringContaining("/images/support_cards/icon/202.png"),
+      expect.stringContaining("/images/support_cards/icon/101.png"),
+    ]);
+  });
+
+  it("replaces a previously selected card when choosing another card for the same Uma", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const supportCardList = [
+      { id: 101, title: "First Special Week Card", uma: "Special Week" },
+      { id: 102, title: "Second Special Week Card", uma: "Special Week" },
+      { id: 201, title: "Silence Suzuka Card", uma: "Silence Suzuka" },
+    ];
+    const build = {
+      ...createDefaultBuild(),
+      supportCards: [
+        { position: 0, support_card_id: 101, limit_break_count: 4 },
+        { position: 1, support_card_id: 201, limit_break_count: 3 },
+      ],
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={build}
+        onChange={onChange}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={supportCardList}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select support card for slot 3 (Empty)" }));
+    const selector = within(screen.getByRole("dialog"));
+    expect(selector.getByRole("button", { name: /Second Special Week Card/ })).toBeEnabled();
+    expect(selector.getByRole("button", { name: /Silence Suzuka Card/ })).toBeEnabled();
+
+    await user.click(selector.getByRole("button", { name: /Second Special Week Card/ }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        supportCards: [
+          { position: 0, support_card_id: 102, limit_break_count: 4 },
+          { position: 1, support_card_id: 201, limit_break_count: 3 },
+        ],
+      }),
+    );
+  });
+
+  it("limits a build to two copies of the same support card", async () => {
+    const user = userEvent.setup();
+    const build = {
+      ...createDefaultBuild(),
+      supportCards: [
+        { position: 0, support_card_id: 101, limit_break_count: 4 },
+        { position: 1, support_card_id: 101, limit_break_count: 4 },
+      ],
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={build}
+        onChange={vi.fn()}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={[
+          { id: 101, title: "First Special Week Card", uma: "Special Week" },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select support card for slot 3 (Empty)" }));
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: /First Special Week Card/,
+      }),
+    ).toBeDisabled();
+  });
+
+  it("puts an empty option first in the selector and clears the selected card", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const build = {
+      ...createDefaultBuild(),
+      supportCards: [{ position: 0, support_card_id: 101, limit_break_count: 4 }],
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={build}
+        onChange={onChange}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={[
+          { id: 101, title: "Special Week Card", uma: "Special Week" },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", {
+      name: "Select support card for slot 1 (Special Week Card)",
+    }));
+    const picker = screen.getByRole("dialog").querySelector(
+      ".uma-build__support-card-picker",
+    );
+    expect(picker?.firstElementChild).toHaveClass(
+      "uma-build__support-card-picker-empty",
+    );
+    await user.click(screen.getByRole("button", { name: "Clear support card slot 1" }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ supportCards: [] }),
+    );
+  });
+
+  it("locks page scrolling while the support card selector is open", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={createDefaultBuild()}
+        onChange={vi.fn()}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={[{ id: 101, title: "Support Card", uma: "Special Week" }]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select support card for slot 1 (Empty)" }));
+    expect(document.documentElement.style.overflow).toBe("hidden");
+    expect(document.body.style.overflow).toBe("hidden");
+
+    await user.keyboard("{Escape}");
+    expect(document.documentElement.style.overflow).toBe("");
+    expect(document.body.style.overflow).toBe("");
+  });
+
+  it("updates limit breaks by clicking the four image indicators", async () => {
+    const user = userEvent.setup();
+    let currentBuild = createDefaultBuild();
+    currentBuild.supportCards = [
+      { position: 0, support_card_id: 101, limit_break_count: 4 },
+    ];
+    const onChange = vi.fn((nextBuild: typeof currentBuild) => {
+      currentBuild = nextBuild;
+    });
+    const renderEditor = () => (
+      <UmaBuild
+        teamNumber={1}
+        value={currentBuild}
+        onChange={onChange}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+      />
+    );
+    const { rerender } = render(renderEditor());
+    const group = screen.getByRole("group", {
+      name: "Limit break count for support card slot 1",
+    });
+
+    expect([...group.querySelectorAll("img")].map((image) => image.getAttribute("src")))
+      .toEqual([
+        "/icons/support-card/lb_full.png",
+        "/icons/support-card/lb_full.png",
+        "/icons/support-card/lb_full.png",
+        "/icons/support-card/lb_full.png",
+      ]);
+    expect(screen.queryByText("Slot 1")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: /Limit break icon 1/ }));
+    rerender(renderEditor());
+    expect(currentBuild.supportCards?.[0].limit_break_count).toBe(1);
+
+    await user.click(screen.getByRole("button", { name: /Limit break icon 1/ }));
+    rerender(renderEditor());
+    expect(currentBuild.supportCards?.[0].limit_break_count).toBe(0);
+
+    await user.click(screen.getByRole("button", { name: /Limit break icon 2/ }));
+    rerender(renderEditor());
+    expect(currentBuild.supportCards?.[0].limit_break_count).toBe(2);
+
+    await user.click(screen.getByRole("button", { name: /Limit break icon 2/ }));
+    rerender(renderEditor());
+    expect(currentBuild.supportCards?.[0].limit_break_count).toBe(1);
+  });
+
+  it("displays limit break icons without controls in the team display", () => {
+    const build = {
+      ...createDefaultBuild("100101"),
+      supportCards: [{ position: 0, support_card_id: 101, limit_break_count: 3 }],
+      id: "build-1",
+      event: "CM 42",
+      name: "Build 1",
+      lastUpdate: 1,
+    };
+
+    render(
+      <UmaBuildDisplay
+        teamNumber={1}
+        build={build}
+        availableBuilds={[build]}
+        umaList={[]}
+        skillList={[]}
+        onSelectBuild={vi.fn()}
+      />,
+    );
+
+    const limitBreakDisplay = screen.getByRole("img", { name: "3 LB" });
+    expect([...limitBreakDisplay.querySelectorAll("img")].map((image) =>
+      image.getAttribute("src"),
+    )).toEqual([
+      "/icons/support-card/lb_full.png",
+      "/icons/support-card/lb_full.png",
+      "/icons/support-card/lb_full.png",
+      "/icons/support-card/lb_empty.png",
+    ]);
+    expect(limitBreakDisplay.querySelector("button")).toBeNull();
+  });
+
   it("closes the aptitude selector when clicking outside it", async () => {
     const user = userEvent.setup();
 

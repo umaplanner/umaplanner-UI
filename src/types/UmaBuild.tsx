@@ -35,7 +35,8 @@ export interface SupportCardBuild {
 
 export interface SupportCardEntry {
   id: number;
-  name?: string;
+  title?: string;
+  uma?: string;
 }
 
 export interface ImportedUmaBuild {

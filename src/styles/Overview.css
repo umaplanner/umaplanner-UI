@@ -205,9 +205,11 @@
 }
 
 .overview-popup {
+  display: flex;
+  flex-direction: column;
   width: min(56rem, 100%);
   max-height: min(88vh, 54rem);
-  overflow-y: auto;
+  overflow: hidden;
   padding: 1rem;
   color: var(--text-color);
   background: var(--surface-color);
@@ -226,6 +228,14 @@
 
 .overview-popup__heading h3 {
   margin: 0;
+}
+
+.overview-popup__list-viewport {
+  min-height: 0;
+  max-height: min(68vh, 42rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .overview-popup__close {
@@ -648,9 +658,11 @@
     max-height: 80vh;
     max-height: 80dvh;
     margin: 0 auto;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
+  }
+
+  .overview-popup__list-viewport {
+    max-height: 65vh;
+    max-height: 65dvh;
   }
 
   .overview-popup__close {
@@ -658,10 +670,6 @@
     height: 2.75rem;
     flex: 0 0 auto;
     touch-action: manipulation;
-  }
-
-  .overview-popup .overview-support-card-list {
-    grid-template-columns: 1fr;
   }
 
   .overview-popup .overview-style-support-card .overview-style-item__image {

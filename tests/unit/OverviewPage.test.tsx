@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import OverviewPage from "../../src/pages/OverviewPage";
 import { EventProvider } from "../../src/contexts/EventContext";
 import { getCachedOverview } from "../../src/lib/data";
@@ -21,6 +21,10 @@ describe("OverviewPage", () => {
       },
     };
     vi.stubEnv("VITE_R2_BASE_URL", "https://cdn.example.com");
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockImplementation(function () {
+      return this.classList.contains("overview-popup__list-viewport") ? 420 : 80;
+    });
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(800);
     vi.stubGlobal(
       "fetch",
       vi.fn().mockImplementation(async (input: RequestInfo | URL) => {
@@ -86,6 +90,10 @@ describe("OverviewPage", () => {
         return { ok: true, json: async () => body } as Response;
       }),
     );
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("caches event data and displays outfits and team setups with instance counts", async () => {

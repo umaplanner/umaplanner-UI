@@ -27,6 +27,7 @@ export default function OutfitsAndTeams({
           title="Outfits"
           titleId="overview-outfits"
           headingLevel="h3"
+          previewLimit={5}
           emptyMessage={!isLoading ? "No outfit data available." : undefined}
         >
           {outfits.map(({ id, count }) => {

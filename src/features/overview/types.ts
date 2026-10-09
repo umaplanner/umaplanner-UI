@@ -10,6 +10,7 @@ export type OverviewProps = {
   supportCardList: SupportCardEntry[];
   isLoading: boolean;
   error?: string;
+  onRefresh: () => void;
 };
 
 export type CountedOutfit = {

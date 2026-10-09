@@ -2,12 +2,14 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import OverviewPage from "../../src/pages/OverviewPage";
 import { EventProvider } from "../../src/contexts/EventContext";
-import { getCachedOverview } from "../../src/lib/data";
+import { fetchAndCacheOverview, getCachedOverview } from "../../src/lib/data";
 
 describe("OverviewPage", () => {
   let overviewPayload: unknown;
+  let overviewNextUpdate: string | undefined;
 
   beforeEach(() => {
+    overviewNextUpdate = undefined;
     localStorage.setItem("selectedEvent", "CM 42/Final");
     overviewPayload = {
       userCount: 10,
@@ -15,6 +17,9 @@ describe("OverviewPage", () => {
         "1": 3,
         "2": 2,
         "3": 1,
+        "4": 4,
+        "5": 5,
+        "6": 6,
       },
       runningStyleCombinations: {
         "Nige,Nige,Nige": 1,
@@ -52,6 +57,7 @@ describe("OverviewPage", () => {
           : url.includes("/data/overview/")
             ? {
               sha256: "overview",
+              ...(overviewNextUpdate ? { nextUpdate: overviewNextUpdate } : {}),
               data: overviewPayload,
             }
             : url.includes("/data/skills.json")
@@ -106,9 +112,17 @@ describe("OverviewPage", () => {
     expect(await screen.findAllByText("Classic")).not.toHaveLength(0);
     expect(screen.getByRole("heading", { name: "Outfits", level: 3 })).toBeInTheDocument();
     expect(screen.getByText("Team setups")).toBeInTheDocument();
+    const outfitList = screen.getByRole("list", { name: "Outfits" });
+    expect(within(outfitList).getAllByRole("listitem")).toHaveLength(5);
+    expect(within(outfitList).queryByText("Wedding")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Expand" }));
+    const outfitDialog = screen.getByRole("dialog", { name: "Outfits" });
+    const allOutfits = within(outfitDialog).getByRole("list", { name: "Outfits all" });
+    expect(allOutfits.querySelectorAll("li")).toHaveLength(6);
+    fireEvent.click(within(outfitDialog).getByRole("button", { name: "Close" }));
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
-    expect(screen.getAllByText("1")).toHaveLength(2);
+    expect(screen.getAllByText("1")).toHaveLength(1);
     expect(screen.queryByText("Running style")).not.toBeInTheDocument();
     expect(screen.getAllByAltText("Nige")).toHaveLength(3);
     const stylePanel = screen.getByRole("heading", { name: "Style-specific stats" }).closest("section");
@@ -126,7 +140,14 @@ describe("OverviewPage", () => {
       .toBeInTheDocument();
     expect(await getCachedOverview("CM 42/Final")).toEqual({
       userCount: 10,
-      outfits: { "1": 3, "2": 2, "3": 1 },
+      outfits: {
+        "1": 3,
+        "2": 2,
+        "3": 1,
+        "4": 4,
+        "5": 5,
+        "6": 6,
+      },
       runningStyleCombinations: { "Nige,Nige,Nige": 1 },
     });
     expect(fetch).toHaveBeenCalledWith(
@@ -135,7 +156,34 @@ describe("OverviewPage", () => {
     );
   });
 
+  it("expires cached overview data at its nextUpdate timestamp", async () => {
+    const event = "Cache expiry test";
+    const now = Date.now();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now);
+    const payload = {
+      outfits: { "1": 1 },
+    };
+    overviewPayload = payload;
+    overviewNextUpdate = new Date(now + 60_000).toISOString();
+    const expectedData = { ...payload, nextUpdate: overviewNextUpdate };
+
+    try {
+      await fetchAndCacheOverview(event);
+      expect(await getCachedOverview(event)).toEqual(expectedData);
+
+      vi.setSystemTime(now + 60_001);
+      expect(await getCachedOverview(event)).toBeUndefined();
+
+      vi.setSystemTime(now + 59_999);
+      expect(await getCachedOverview(event)).toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("shows total build usage and interactive style-specific statistics", async () => {
+    const nextUpdate = new Date(Date.now() + 60_000).toISOString();
     overviewPayload = {
       userCount: 1,
       outfits: {
@@ -232,6 +280,7 @@ describe("OverviewPage", () => {
         "Oikomi,Oonige,Senkou": 1,
       },
     };
+    overviewNextUpdate = nextUpdate;
 
     render(
       <EventProvider>
@@ -240,6 +289,12 @@ describe("OverviewPage", () => {
     );
 
     expect(await screen.findByText("1 user · 3 builds taken into account")).toBeInTheDocument();
+    expect(await getCachedOverview("CM 42/Final"))
+      .toEqual(expect.objectContaining({ nextUpdate }));
+    const summaryRow = screen.getByText("1 user · 3 builds taken into account").parentElement;
+    expect(summaryRow).toHaveClass("overview-summary-row");
+    expect(within(summaryRow as HTMLElement).getByRole("timer"))
+      .toHaveTextContent("Next update in");
     expect(screen.getByRole("heading", { name: "Support card usage" })).toBeInTheDocument();
     const infoButton = screen.getByRole("button", {
       name: "Support card percentage information",

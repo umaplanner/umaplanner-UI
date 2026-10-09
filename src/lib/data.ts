@@ -175,7 +175,18 @@ export async function getCachedDataset<T>(name: string): Promise<T | null> {
 
 export async function getCachedOverview(event: string): Promise<unknown | undefined> {
   const overview = await overviewRepository.getByKey(event);
-  return unwrapOverviewPayload(overview?.data);
+  if (!overview) {
+    return undefined;
+  }
+
+  const data = unwrapOverviewPayload(overview.data);
+  const expiresAt = getOverviewExpiry(data);
+  if (expiresAt !== undefined && (expiresAt === null || expiresAt <= Date.now())) {
+    await overviewRepository.deleteByKey(event);
+    return undefined;
+  }
+
+  return data;
 }
 
 export async function fetchAndCacheOverview(event: string): Promise<unknown> {
@@ -193,8 +204,27 @@ export async function fetchAndCacheOverview(event: string): Promise<unknown> {
   }
 
   const data: unknown = unwrapOverviewPayload(await response.json());
-  await overviewRepository.put({ event, data });
+  const expiresAt = getOverviewExpiry(data);
+  if (expiresAt === undefined || (expiresAt !== null && expiresAt > Date.now())) {
+    await overviewRepository.put({ event, data });
+  } else {
+    await overviewRepository.deleteByKey(event);
+  }
   return data;
+}
+
+function getOverviewExpiry(data: unknown): number | null | undefined {
+  if (!data || typeof data !== "object" || Array.isArray(data) || !("nextUpdate" in data)) {
+    return undefined;
+  }
+
+  const nextUpdate = data.nextUpdate;
+  if (typeof nextUpdate !== "string") {
+    return null;
+  }
+
+  const expiresAt = Date.parse(nextUpdate);
+  return Number.isFinite(expiresAt) ? expiresAt : null;
 }
 
 function unwrapOverviewPayload(payload: unknown): unknown {
@@ -205,7 +235,17 @@ function unwrapOverviewPayload(payload: unknown): unknown {
     "data" in payload &&
     "sha256" in payload
   ) {
-    return payload.data;
+    const data = payload.data;
+    if (
+      "nextUpdate" in payload &&
+      payload.nextUpdate !== undefined &&
+      data &&
+      typeof data === "object" &&
+      !Array.isArray(data)
+    ) {
+      return { ...data, nextUpdate: payload.nextUpdate };
+    }
+    return data;
   }
   return payload;
 }

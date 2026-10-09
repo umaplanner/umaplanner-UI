@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useEvent } from "../contexts/EventContext";
 import Overview from "../features/overview/Overview";
 import {
@@ -20,6 +20,35 @@ export default function OverviewPage() {
   const [supportCardList, setSupportCardList] = useState<SupportCardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
+  const selectedEventRef = useRef(selectedEvent);
+  selectedEventRef.current = selectedEvent;
+  const refreshRequestRef = useRef(0);
+
+  const refreshOverview = useCallback(async () => {
+    const event = selectedEvent;
+    const requestId = ++refreshRequestRef.current;
+
+    try {
+      const refreshedData = await fetchAndCacheOverview(event);
+      if (
+        requestId === refreshRequestRef.current &&
+        selectedEventRef.current === event
+      ) {
+        setData(refreshedData);
+      }
+    } catch (loadError) {
+      if (
+        requestId === refreshRequestRef.current &&
+        selectedEventRef.current === event
+      ) {
+        setError(
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to refresh overview data",
+        );
+      }
+    }
+  }, [selectedEvent]);
 
   useEffect(() => {
     if (!selectedEvent) {
@@ -108,6 +137,7 @@ export default function OverviewPage() {
 
     return () => {
       cancelled = true;
+      refreshRequestRef.current += 1;
     };
   }, [selectedEvent]);
 
@@ -120,6 +150,7 @@ export default function OverviewPage() {
       supportCardList={supportCardList}
       isLoading={isLoading}
       error={error}
+      onRefresh={() => void refreshOverview()}
     />
   );
 }

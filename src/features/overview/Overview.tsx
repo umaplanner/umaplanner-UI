@@ -5,6 +5,7 @@ import type { OverviewProps } from "./types";
 import GlobalUsage from "./sections/GlobalUsage";
 import OutfitsAndTeams from "./sections/OutfitsAndTeams";
 import RunningStyle from "./sections/RunningStyle";
+import NextUpdateCountdown from "./NextUpdateCountdown";
 import {
   asRecord,
   formatBuildCount,
@@ -24,10 +25,14 @@ export default function Overview({
   supportCardList,
   isLoading,
   error,
+  onRefresh,
 }: OverviewProps) {
   const [selectedStyle, setSelectedStyle] = useState("Oonige");
   const { outfits, teams } = getOverviewRows(data);
   const dataRecord = asRecord(data);
+  const nextUpdate = typeof dataRecord?.nextUpdate === "string"
+    ? dataRecord.nextUpdate
+    : undefined;
   const runningStyles = getRunningStyles(data);
   const selectedRunningStyle: RunningStyleOverview = runningStyles.find(
     (style) => normalizeStrategyName(style.style) === selectedStyle,
@@ -79,14 +84,25 @@ export default function Overview({
           {!isLoading && data !== undefined && !hasSupportedData && (
             <p role="alert">Overview data must include outfits or team setups.</p>
           )}
-          {userCount !== undefined || totalRunningBuilds > 0 ? (
-            <p className="overview-build-summary">
-              {userCount !== undefined
-                ? `${formatCount(userCount)} ${userCount === 1 ? "user" : "users"}`
-                : null}
-              {userCount !== undefined && totalRunningBuilds > 0 ? " · " : null}
-              {totalRunningBuilds > 0 ? formatBuildCount(totalRunningBuilds) : null}
-            </p>
+          {userCount !== undefined || totalRunningBuilds > 0 || nextUpdate ? (
+            <div className="overview-summary-row">
+              {userCount !== undefined || totalRunningBuilds > 0 ? (
+                <p className="overview-build-summary">
+                  {userCount !== undefined
+                    ? `${formatCount(userCount)} ${userCount === 1 ? "user" : "users"}`
+                    : null}
+                  {userCount !== undefined && totalRunningBuilds > 0 ? " · " : null}
+                  {totalRunningBuilds > 0 ? formatBuildCount(totalRunningBuilds) : null}
+                </p>
+              ) : null}
+              {nextUpdate && (
+                <NextUpdateCountdown
+                  event={selectedEvent}
+                  nextUpdate={nextUpdate}
+                  onRefresh={onRefresh}
+                />
+              )}
+            </div>
           ) : null}
           <OutfitsAndTeams
             outfits={sortedOutfits}

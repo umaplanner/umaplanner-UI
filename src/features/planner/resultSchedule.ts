@@ -2,11 +2,11 @@ import type { RaceEntry } from "../../types/RaceEntry";
 import type { TeamResultRow } from "./plannerTypes";
 
 export const resultDayOffsets: Record<TeamResultRow, number> = {
-  round1Day1: 3,
-  round1Day2: 4,
-  round2Day1: 5,
-  round2Day2: 6,
-  finals: 7,
+  round1Day1: 4,
+  round1Day2: 5,
+  round2Day1: 6,
+  round2Day2: 7,
+  finals: 9,
 };
 
 export function getResultOpenAt(

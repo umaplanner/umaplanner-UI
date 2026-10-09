@@ -6,12 +6,18 @@ import {
   fetchAndCacheOverview,
   getCachedOverview,
 } from "../lib/data";
+import { normalizeSkillData } from "../features/planner/skillData";
+import { normalizeSupportCardList } from "../features/planner/supportCardData";
+import type { SkillEntry } from "../types/SkillEntry";
 import type { UmaEntry } from "../types/UmaEntry";
+import type { SupportCardEntry } from "../types/UmaBuild";
 
 export default function OverviewPage() {
   const { selectedEvent } = useEvent();
   const [data, setData] = useState<unknown>();
   const [umaList, setUmaList] = useState<UmaEntry[]>([]);
+  const [skillList, setSkillList] = useState<SkillEntry[]>([]);
+  const [supportCardList, setSupportCardList] = useState<SupportCardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>();
 
@@ -19,6 +25,8 @@ export default function OverviewPage() {
     if (!selectedEvent) {
       setData(undefined);
       setUmaList([]);
+      setSkillList([]);
+      setSupportCardList([]);
       setIsLoading(false);
       setError(undefined);
       return;
@@ -27,6 +35,8 @@ export default function OverviewPage() {
     let cancelled = false;
     setData(undefined);
     setUmaList([]);
+    setSkillList([]);
+    setSupportCardList([]);
 
     async function loadOverview() {
       setError(undefined);
@@ -67,7 +77,10 @@ export default function OverviewPage() {
 
       if (datasetsResult.status === "fulfilled") {
         const outfits = datasetsResult.value.outfits;
+        const skills = datasetsResult.value.skills;
         setUmaList(Array.isArray(outfits) ? outfits as UmaEntry[] : []);
+        setSkillList(normalizeSkillData(skills));
+        setSupportCardList(normalizeSupportCardList(datasetsResult.value));
       } else {
         errors.push(
           datasetsResult.reason instanceof Error
@@ -103,6 +116,8 @@ export default function OverviewPage() {
       selectedEvent={selectedEvent}
       data={data}
       umaList={umaList}
+      skillList={skillList}
+      supportCardList={supportCardList}
       isLoading={isLoading}
       error={error}
     />

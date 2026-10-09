@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import UmaBuild from "../../src/components/UmaBuild/editor/BuildEditor";
@@ -84,6 +84,122 @@ describe("UmaBuild aptitude selectors", () => {
       expect.stringContaining("/images/support_cards/icon/202.png"),
       expect.stringContaining("/images/support_cards/icon/101.png"),
     ]);
+  });
+
+  it("replaces a previously selected card when choosing another card for the same Uma", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const supportCardList = [
+      { id: 101, title: "First Special Week Card", uma: "Special Week" },
+      { id: 102, title: "Second Special Week Card", uma: "Special Week" },
+      { id: 201, title: "Silence Suzuka Card", uma: "Silence Suzuka" },
+    ];
+    const build = {
+      ...createDefaultBuild(),
+      supportCards: [
+        { position: 0, support_card_id: 101, limit_break_count: 4 },
+        { position: 1, support_card_id: 201, limit_break_count: 3 },
+      ],
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={build}
+        onChange={onChange}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={supportCardList}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select support card for slot 3 (Empty)" }));
+    const selector = within(screen.getByRole("dialog"));
+    expect(selector.getByRole("button", { name: /Second Special Week Card/ })).toBeEnabled();
+    expect(selector.getByRole("button", { name: /Silence Suzuka Card/ })).toBeEnabled();
+
+    await user.click(selector.getByRole("button", { name: /Second Special Week Card/ }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        supportCards: [
+          { position: 0, support_card_id: 102, limit_break_count: 4 },
+          { position: 1, support_card_id: 201, limit_break_count: 3 },
+        ],
+      }),
+    );
+  });
+
+  it("limits a build to two copies of the same support card", async () => {
+    const user = userEvent.setup();
+    const build = {
+      ...createDefaultBuild(),
+      supportCards: [
+        { position: 0, support_card_id: 101, limit_break_count: 4 },
+        { position: 1, support_card_id: 101, limit_break_count: 4 },
+      ],
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={build}
+        onChange={vi.fn()}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={[
+          { id: 101, title: "First Special Week Card", uma: "Special Week" },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Select support card for slot 3 (Empty)" }));
+    expect(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: /First Special Week Card/,
+      }),
+    ).toBeDisabled();
+  });
+
+  it("puts an empty option first in the selector and clears the selected card", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    const build = {
+      ...createDefaultBuild(),
+      supportCards: [{ position: 0, support_card_id: 101, limit_break_count: 4 }],
+    };
+
+    render(
+      <UmaBuild
+        teamNumber={1}
+        value={build}
+        onChange={onChange}
+        umaList={[]}
+        selectedUma={null}
+        onSelectUma={vi.fn()}
+        skillList={[]}
+        supportCardList={[
+          { id: 101, title: "Special Week Card", uma: "Special Week" },
+        ]}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", {
+      name: "Select support card for slot 1 (Special Week Card)",
+    }));
+    const picker = screen.getByRole("dialog").querySelector(
+      ".uma-build__support-card-picker",
+    );
+    expect(picker?.firstElementChild).toHaveClass(
+      "uma-build__support-card-picker-empty",
+    );
+    await user.click(screen.getByRole("button", { name: "Clear support card slot 1" }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({ supportCards: [] }),
+    );
   });
 
   it("locks page scrolling while the support card selector is open", async () => {

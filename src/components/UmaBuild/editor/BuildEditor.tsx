@@ -152,11 +152,6 @@ export default function UmaBuild({
           />
         </div>
       </section>
-      <UmaBuildSupportCards
-        value={value}
-        supportCardList={supportCardList}
-        onChange={onChange}
-      />
       <UmaBuildSkills
         value={value}
         skillList={skillList}
@@ -176,6 +171,11 @@ export default function UmaBuild({
         closeSkillPicker={editor.closeSkillPicker}
         selectSkill={editor.selectSkill}
         removeSkill={editor.removeSkill}
+      />
+      <UmaBuildSupportCards
+        value={value}
+        supportCardList={supportCardList}
+        onChange={onChange}
       />
     </section>
   );

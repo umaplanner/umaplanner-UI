@@ -63,7 +63,8 @@ export default function UmaBuildSkills({
             type="button" 
             onClick={() => { if (!forced) openSkillPicker(index); }}
           >
-            {entry ? <img src={`/icons/skills/${entry.iconId || 0}.png`} alt="" /> : null}{entry?.name ?? skill}
+            {entry ? <img src={`/icons/skills/${entry.iconId || 0}.png`} alt="" /> : null}
+            <span className="uma-build__skill-label">{entry?.name ?? skill}</span>
           </button>
           {!forced ? <button
             className="uma-build__remove-skill" 

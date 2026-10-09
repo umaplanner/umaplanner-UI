@@ -1339,6 +1339,23 @@
   outline: none;
 }
 
+.uma-build__support-card-picker-option:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.uma-build__support-card-picker-empty-icon {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 1;
+  place-items: center;
+  color: var(--muted-text-color);
+  border: 1px dashed #536174;
+  border-radius: 0.35rem;
+  font-size: 3rem;
+  line-height: 1;
+}
+
 .uma-build__support-card-picker-option img {
   width: 100%;
   aspect-ratio: 1;
@@ -1471,6 +1488,7 @@
 
 .uma-build__skill-row {
   position: relative;
+  min-width: 0;
 }
 
 .uma-build:not(.uma-build--display) .uma-build__skill-list {
@@ -1489,9 +1507,20 @@
   align-items: center;
   gap: 0.5rem;
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   overflow: hidden;
   padding: 0.65rem 2.75rem 0.65rem 0.75rem;
   text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.uma-build__skill-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1963,6 +1992,47 @@
 
   .uma-build:not(.uma-build--display) .uma-build__aptitudes {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .uma-build__support-card-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.65rem;
+    row-gap: 1rem;
+  }
+
+  .uma-build__support-card-editor-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 0.65rem;
+    row-gap: 1rem;
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+  }
+
+  .uma-build__support-card-picker {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .uma-build__skills {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    height: auto;
+  }
+
+  .uma-build:not(.uma-build--display) .uma-build__skill-list {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .uma-build__support-card-limit-break {
+    width: 100%;
+    gap: 0.05rem;
+  }
+
+  .uma-build__support-card-limit-break-button {
+    width: 1.1rem;
+    height: 1.1rem;
+    flex: 0 0 auto;
   }
 }
 

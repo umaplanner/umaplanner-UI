@@ -64,14 +64,39 @@ export default function UmaBuildSupportCards({
   function selectSupportCard(cardId: number) {
     if (activePosition === null) return;
 
-    const previousCard = supportCards.find((card) => card.position === activePosition);
+    const candidate = supportCardList.find((entry) => entry.id === cardId);
+    const candidateUma = candidate?.uma?.trim().toLowerCase();
+    const matchingUmaCards = candidateUma
+      ? supportCards.filter((card) =>
+          supportCardList
+            .find((entry) => entry.id === card.support_card_id)
+            ?.uma?.trim()
+            .toLowerCase() === candidateUma,
+        )
+      : [];
+    const isReplacingSameUma = matchingUmaCards.some(
+      (card) => card.support_card_id !== cardId,
+    );
+    const replacedUmaCards = isReplacingSameUma ? matchingUmaCards : [];
+    const replacedUmaCard = replacedUmaCards.find(
+      (card) => card.position === activePosition,
+    ) ?? replacedUmaCards[0];
+    const targetPosition = replacedUmaCard?.position ?? activePosition;
+    const previousCard = supportCards.find(
+      (card) => card.position === targetPosition,
+    );
     const nextCard: SupportCardBuild = {
-      position: activePosition,
+      position: targetPosition,
       support_card_id: cardId,
-      limit_break_count: previousCard?.limit_break_count ?? 4,
+      limit_break_count: previousCard?.support_card_id === cardId
+        ? previousCard.limit_break_count
+        : 4,
     };
     updateSupportCards([
-      ...supportCards.filter((card) => card.position !== activePosition),
+      ...supportCards.filter((card) =>
+        card.position !== targetPosition &&
+        !replacedUmaCards.some((conflict) => conflict.position === card.position),
+      ),
       nextCard,
     ].sort((left, right) => left.position - right.position));
     closePicker();
@@ -84,8 +109,19 @@ export default function UmaBuildSupportCards({
   }
 
   function clearSlot(position: number) {
+    if (!supportCards.some((card) => card.position === position)) {
+      closePicker();
+      return;
+    }
     updateSupportCards(supportCards.filter((card) => card.position !== position));
     closePicker();
+  }
+
+  function exceedsDuplicateCardLimit(candidate: SupportCardEntry): boolean {
+    const otherCards = supportCards.filter(
+      (card) => card.position !== activePosition,
+    );
+    return otherCards.filter((card) => card.support_card_id === candidate.id).length >= 2;
   }
 
   return (
@@ -193,27 +229,45 @@ export default function UmaBuildSupportCards({
               </button>
             ) : null}
             <div className="uma-build__support-card-picker">
-              {displayedCards.map((card) => (
-                <button
-                  className="uma-build__support-card-picker-option"
-                  type="button"
-                  key={card.id}
-                  onClick={() => selectSupportCard(card.id)}
-                >
-                  <SupportCardImage
-                    cardId={card.id}
-                    variant="icon"
-                    alt=""
-                    loading="lazy"
-                  />
-                  {card.uma ? (
-                    <span className="uma-build__support-card-picker-name">{card.uma}</span>
-                  ) : null}
-                  {card.title ? (
-                    <small className="uma-build__support-card-picker-title">{card.title}</small>
-                  ) : null}
-                </button>
-              ))}
+              <button
+                className="uma-build__support-card-picker-option uma-build__support-card-picker-empty"
+                type="button"
+                aria-label={`Clear support card slot ${activePosition + 1}`}
+                onClick={() => clearSlot(activePosition)}
+              >
+                <span className="uma-build__support-card-picker-empty-icon" aria-hidden="true">
+                  ×
+                </span>
+                <span className="uma-build__support-card-picker-name">Empty</span>
+              </button>
+              {displayedCards.map((card) => {
+                const isUnavailable = exceedsDuplicateCardLimit(card);
+                return (
+                  <button
+                    className="uma-build__support-card-picker-option"
+                    type="button"
+                    key={card.id}
+                    disabled={isUnavailable}
+                    title={isUnavailable
+                      ? "A build can include at most two copies of the same card."
+                      : undefined}
+                    onClick={() => selectSupportCard(card.id)}
+                  >
+                    <SupportCardImage
+                      cardId={card.id}
+                      variant="icon"
+                      alt=""
+                      loading="lazy"
+                    />
+                    {card.uma ? (
+                      <span className="uma-build__support-card-picker-name">{card.uma}</span>
+                    ) : null}
+                    {card.title ? (
+                      <small className="uma-build__support-card-picker-title">{card.title}</small>
+                    ) : null}
+                  </button>
+                );
+              })}
               {filteredCards.length === 0 ? (
                 <p>{supportCardList.length === 0 ? "No support cards available." : "No matching support cards."}</p>
               ) : null}

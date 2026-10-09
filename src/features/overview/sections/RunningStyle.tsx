@@ -118,7 +118,8 @@ export default function RunningStyle({
                     <UmaImage uma={uma} className="overview-style-item__image" alt="" lazy />
                   ) : null}
                   <span className="overview-style-item__label">
-                    {uma?.outfitTitle ?? `Outfit ${id}`}
+                    <strong>{uma?.outfitTitle ?? `Outfit ${id}`}</strong>
+                    <small>{uma?.baseCharacterName ?? "Unknown character"}</small>
                   </span>
                   <strong>{formatCount(count)}</strong>
                 </li>

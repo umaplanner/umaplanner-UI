@@ -90,6 +90,9 @@ describe("OverviewPage", () => {
                 { id: 1, charaId: 10, outfitTitle: "Classic", baseCharacterName: "Special Week" },
                 { id: 2, charaId: 20, outfitTitle: "Uniform", baseCharacterName: "Silence Suzuka" },
                 { id: 3, charaId: 30, outfitTitle: "Wedding", baseCharacterName: "Grass Wonder" },
+                { id: 100201, charaId: 10, outfitTitle: "Crimson Runner", baseCharacterName: "Special Week" },
+                { id: 100501, charaId: 20, outfitTitle: "Skyline", baseCharacterName: "Silence Suzuka" },
+                { id: 102101, charaId: 30, outfitTitle: "Moonlight", baseCharacterName: "Grass Wonder" },
               ],
             };
 
@@ -377,6 +380,13 @@ describe("OverviewPage", () => {
     expect(screen.getByText("1 build taken into account").parentElement)
       .toHaveClass("overview-style-panel__heading");
     expect(screen.getByRole("button", { name: "Runaway" })).toHaveAttribute("aria-pressed", "true");
+    const styleOutfitsList = within(
+      within(stylePanel as HTMLElement)
+        .getByRole("heading", { name: "Outfits" })
+        .closest("section") as HTMLElement,
+    ).getByRole("list", { name: "Style outfits" });
+    const styleOutfit = within(styleOutfitsList).getByText("Crimson Runner").closest("li");
+    expect(styleOutfit).toHaveTextContent("Special Week");
     const supportCardsPanel = within(stylePanel as HTMLElement)
       .getByRole("heading", { name: "Support cards" })
       .closest("section");

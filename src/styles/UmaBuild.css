@@ -1204,6 +1204,7 @@
   align-items: center;
   justify-content: center;
   gap: 0.15rem;
+  margin-bottom: 0.25rem;
 }
 
 .uma-build__support-card-limit-break-button {
@@ -1229,9 +1230,10 @@
 }
 
 .uma-build__support-card-editor-slot img.uma-build__support-card-full {
-  width: 90%;
+  width: 100%;
   aspect-ratio: 0.72;
   object-fit: cover;
+  border-radius: inherit;
 }
 
 .uma-build__support-cards-button:hover,

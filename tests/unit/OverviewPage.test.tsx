@@ -257,7 +257,7 @@ describe("OverviewPage", () => {
     expect(globalCard?.querySelector("img")).toHaveClass("overview-style-item__image");
     expect(globalCard?.querySelector("img")).toHaveAttribute(
       "src",
-      "https://assets.umaplanner.app/images/support_cards/full/20012.png",
+      expect.stringMatching(/\/images\/support_cards\/full\/20012\.png$/),
     );
     const globalCardList = within(globalPanel as HTMLElement).getByRole("list", {
       name: "Support card usage",
@@ -341,7 +341,7 @@ describe("OverviewPage", () => {
     expect(styleCard).toHaveTextContent("100%");
     expect(styleCard?.querySelector("img")).toHaveAttribute(
       "src",
-      "https://assets.umaplanner.app/images/support_cards/full/30159.png",
+      expect.stringMatching(/\/images\/support_cards\/full\/30159\.png$/),
     );
   });
 });

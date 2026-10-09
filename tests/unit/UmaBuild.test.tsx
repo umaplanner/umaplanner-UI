@@ -42,6 +42,7 @@ describe("UmaBuild aptitude selectors", () => {
 
   it("shows the full image outside the picker and reverses picker data order", async () => {
     const user = userEvent.setup();
+    const onChange = vi.fn();
     const supportCardList = [
       { id: 101, title: "First Card", uma: "Uma One" },
       { id: 202, title: "Second Card", uma: "Uma Two" },
@@ -49,14 +50,18 @@ describe("UmaBuild aptitude selectors", () => {
     ];
     const build = {
       ...createDefaultBuild(),
-      supportCards: [{ position: 0, support_card_id: 101, limit_break_count: 0 }],
+      create_time: 1_700_000_000,
+      supportCards: [
+        { position: 1, support_card_id: 101, limit_break_count: 0 },
+        { position: 6, support_card_id: 303, limit_break_count: 4 },
+      ],
     };
 
     render(
       <UmaBuild
         teamNumber={1}
         value={build}
-        onChange={vi.fn()}
+        onChange={onChange}
         umaList={[]}
         selectedUma={null}
         onSelectUma={vi.fn()}
@@ -72,6 +77,11 @@ describe("UmaBuild aptitude selectors", () => {
       "src",
       expect.stringContaining("/images/support_cards/full/101.png"),
     );
+    expect(
+      screen.getByRole("button", {
+        name: "Select support card for slot 6 (Last Card)",
+      }).querySelector("img"),
+    ).toHaveAttribute("src", expect.stringContaining("/images/support_cards/full/303.png"));
 
     await user.click(screen.getByRole("button", {
       name: "Select support card for slot 1 (First Card)",
@@ -84,6 +94,21 @@ describe("UmaBuild aptitude selectors", () => {
       expect.stringContaining("/images/support_cards/icon/202.png"),
       expect.stringContaining("/images/support_cards/icon/101.png"),
     ]);
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", {
+      name: "Select support card for slot 2 (Empty)",
+    }));
+    await user.click(screen.getByRole("button", { name: /Second Card/ }));
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        supportCards: [
+          { position: 1, support_card_id: 101, limit_break_count: 0 },
+          { position: 2, support_card_id: 202, limit_break_count: 4 },
+          { position: 6, support_card_id: 303, limit_break_count: 4 },
+        ],
+      }),
+    );
   });
 
   it("replaces a previously selected card when choosing another card for the same Uma", async () => {

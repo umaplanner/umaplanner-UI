@@ -18,6 +18,10 @@ export default function UmaBuildSupportCards({
   const [activePosition, setActivePosition] = useState<number | null>(null);
   const [search, setSearch] = useState("");
   const supportCards = value.supportCards ?? [];
+  const positionOffset = value.create_time !== undefined ||
+      supportCards.some((card) => card.position === supportCardSlots)
+    ? 1
+    : 0;
   const activeCard = supportCards.find((card) => card.position === activePosition);
   const normalizedSearch = search.trim().toLowerCase();
   const filteredCards = supportCardList.filter((card) =>
@@ -130,7 +134,9 @@ export default function UmaBuildSupportCards({
         <h4 id="support-cards-editor-heading">Support Cards</h4>
       </div>
       <div className="uma-build__support-card-editor-row">
-        {Array.from({ length: supportCardSlots }, (_, position) => {
+        {Array.from({ length: supportCardSlots }, (_, slotIndex) => {
+          const position = slotIndex + positionOffset;
+          const slotNumber = slotIndex + 1;
           const card = supportCards.find((entry) => entry.position === position);
           const cardEntry = card
             ? supportCardList.find((entry) => entry.id === card.support_card_id)
@@ -142,7 +148,7 @@ export default function UmaBuildSupportCards({
               <button
                 className="uma-build__support-card-editor-slot"
                 type="button"
-                aria-label={`Select support card for slot ${position + 1} (${label})`}
+                aria-label={`Select support card for slot ${slotNumber} (${label})`}
                 onClick={() => {
                   setActivePosition(position);
                   setSearch("");
@@ -162,7 +168,7 @@ export default function UmaBuildSupportCards({
                 <div
                   className="uma-build__support-card-limit-break"
                   role="group"
-                  aria-label={`Limit break count for support card slot ${position + 1}`}
+                  aria-label={`Limit break count for support card slot ${slotNumber}`}
                 >
                   {[1, 2, 3, 4].map((level) => {
                     const isFull = card.limit_break_count >= level;
@@ -174,7 +180,7 @@ export default function UmaBuildSupportCards({
                         className="uma-build__support-card-limit-break-button"
                         type="button"
                         key={level}
-                        aria-label={`Limit break icon ${level} for support card slot ${position + 1}, set to ${nextCount} LB`}
+                        aria-label={`Limit break icon ${level} for support card slot ${slotNumber}, set to ${nextCount} LB`}
                         aria-pressed={isFull}
                         onClick={() => updateLimitBreakCount(position, nextCount)}
                       >
@@ -203,7 +209,7 @@ export default function UmaBuildSupportCards({
           <section
             className="uma-build__support-cards-dialog"
             role="dialog"
-            aria-label={`Select support card for slot ${activePosition + 1}`}
+            aria-label={`Select support card for slot ${activePosition - positionOffset + 1}`}
           >
             <header>
               <h3>Select a support card</h3>
@@ -232,7 +238,7 @@ export default function UmaBuildSupportCards({
               <button
                 className="uma-build__support-card-picker-option uma-build__support-card-picker-empty"
                 type="button"
-                aria-label={`Clear support card slot ${activePosition + 1}`}
+                aria-label={`Clear support card slot ${activePosition - positionOffset + 1}`}
                 onClick={() => clearSlot(activePosition)}
               >
                 <span className="uma-build__support-card-picker-empty-icon" aria-hidden="true">

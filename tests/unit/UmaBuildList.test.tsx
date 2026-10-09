@@ -38,6 +38,10 @@ describe("saved build names", () => {
       </EventProvider>,
     );
 
+    expect(screen.getByRole("button", { name: "Build name editing information" }))
+      .toHaveAttribute("aria-describedby", "build-name-editing-info");
+    expect(screen.getByRole("tooltip"))
+      .toHaveTextContent("Click a build name to change it.");
     await user.click(await screen.findByRole("button", { name: "Rename Original name" }));
     const nameInput = screen.getByRole("textbox", { name: "Build name Original name" });
     await user.clear(nameInput);

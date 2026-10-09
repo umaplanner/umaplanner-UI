@@ -162,11 +162,23 @@ export default function Builds({ onSaveBuild }: Props) {
     <section className="builds-page">
       <header className="builds-page__header">
         <h1>Saved builds</h1>
-        <p>
-          {selectedEvent
-            ? `Builds for ${selectedEvent}`
-            : "Select an event to view builds."}
-        </p>
+        <span className="builds-page__name-info">
+          <button
+            className="builds-page__name-info-button"
+            type="button"
+            aria-label="Build name editing information"
+            aria-describedby="build-name-editing-info"
+          >
+            <span aria-hidden="true">i</span>
+          </button>
+          <span
+            className="builds-page__name-info-tooltip"
+            id="build-name-editing-info"
+            role="tooltip"
+          >
+            Click a build name to change it.
+          </span>
+        </span>
       </header>
       {isLoading ? (
         <p className="builds-page__empty" role="status">

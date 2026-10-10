@@ -38,8 +38,8 @@ describe("result schedule", () => {
   });
 
   it("keeps results closed until their opening day and advances the next opening", () => {
-    const beforeRound1Day1 = new Date(2026, 8, 3, 23, 59);
-    const round1Day1 = new Date(2026, 8, 4);
+    const beforeRound1Day1 = new Date(2026, 8, 4, 23, 59);
+    const round1Day1 = new Date(2026, 8, 5);
     expect(getResultAvailability(raceEntry, beforeRound1Day1)).toMatchObject({
       round1Day1: false,
       round1Day2: false,
@@ -48,7 +48,7 @@ describe("result schedule", () => {
       finals: false,
     });
     expect(getResultAvailability(raceEntry, round1Day1).round1Day1).toBe(true);
-    expect(getNextResultOpeningAt(raceEntry, round1Day1)?.getDate()).toBe(5);
+    expect(getNextResultOpeningAt(raceEntry, round1Day1)?.getDate()).toBe(6);
   });
 
   it("requires a confirmed official start date", () => {

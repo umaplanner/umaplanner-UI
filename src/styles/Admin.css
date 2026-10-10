@@ -1,0 +1,202 @@
+.admin-page {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-panel {
+  min-width: 0;
+  padding: 1.25rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+}
+
+.admin-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.admin-period-info {
+  min-width: 0;
+}
+
+.admin-stat-sections {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.admin-stat-section {
+  min-width: 0;
+}
+
+.admin-stat-section + .admin-stat-section {
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.admin-stat-section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.admin-period {
+  margin: 0;
+}
+
+.admin-period-controls {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  margin: 0;
+}
+
+.admin-period-controls span {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-period-controls select {
+  min-width: 12rem;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  color: var(--text-color);
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.375rem;
+  font: inherit;
+}
+
+.admin-period-controls select:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.admin-daily-counts {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.admin-daily-card {
+  min-width: 0;
+  padding: 0.875rem;
+  background: var(--surface-raised-color, var(--surface-color));
+  border: 1px solid var(--border-color);
+  border-radius: 0.625rem;
+}
+
+.admin-daily-date {
+  margin: 0 0 0.75rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.admin-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.625rem;
+}
+
+.admin-metric {
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+.admin-metric-label {
+  display: block;
+  margin-bottom: 0.375rem;
+  color: var(--text-muted-color, var(--text-color));
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-metric-values {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.admin-metric-count {
+  font-size: 1.5rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-change {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-change-positive {
+  color: #bbf7d0;
+  background: #14532d;
+}
+
+.admin-change-negative {
+  color: #fecaca;
+  background: #7f1d1d;
+}
+
+.admin-change-neutral {
+  color: var(--text-color);
+  background: var(--border-color);
+}
+
+.admin-empty {
+  margin: 0;
+}
+
+.admin-response-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.625rem;
+  margin: 0;
+}
+
+.admin-response-field {
+  min-width: 0;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+}
+
+.admin-response-field dt {
+  margin-bottom: 0.375rem;
+  color: var(--text-muted-color, var(--text-color));
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-response-field dd {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+@media (max-width: 600px) {
+  .admin-panel-header {
+    flex-direction: column;
+  }
+
+  .admin-metric-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-error {
+  color: #ff9696;
+}

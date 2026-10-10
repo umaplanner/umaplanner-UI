@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { NavLink } from "react-router";
+import { routes } from "../app/routes";
 import { config } from "../lib/config";
 import { useAuth } from "../contexts/AuthContext";
+import { isAdminUser } from "../lib/userAccess";
 
 export default function UserMenu() {
   const { user: authenticatedUser, isLoading } = useAuth();
@@ -68,6 +71,15 @@ export default function UserMenu() {
       </button>
       {isUserMenuOpen && (
         <div className="user-menu-dropdown" role="menu">
+          {isAdminUser(authenticatedUser) && (
+            <NavLink
+              to={routes.admin}
+              role="menuitem"
+              onClick={() => setIsUserMenuOpen(false)}
+            >
+              Admin
+            </NavLink>
+          )}
           <button type="button" role="menuitem" disabled>
             Settings
           </button>

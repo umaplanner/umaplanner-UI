@@ -3,4 +3,5 @@ export const routes = {
   plannerLegacy: "/planner",
   overview: "/overview",
   umaImport: "/import",
+  admin: "/admin",
 } as const;

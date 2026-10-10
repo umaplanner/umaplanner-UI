@@ -5,6 +5,7 @@ import { config } from "../lib/config";
 export type AuthenticatedUser = {
   username: string;
   avatarUrl: string;
+  isAdmin?: boolean;
 };
 
 type AuthContextValue = {

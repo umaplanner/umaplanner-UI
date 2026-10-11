@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import UmaBuild from "../../src/components/UmaBuild/editor/BuildEditor";
-import UmaBuildDisplay from "../../src/components/UmaBuild/display/Display";
+import UmaBuildTeam from "../../src/components/UmaBuild/team/Team";
 import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
 
 describe("UmaBuild aptitude selectors", () => {
@@ -314,7 +314,7 @@ describe("UmaBuild aptitude selectors", () => {
     };
 
     render(
-      <UmaBuildDisplay
+      <UmaBuildTeam
         teamNumber={1}
         build={build}
         availableBuilds={[build]}
@@ -569,7 +569,7 @@ describe("UmaBuild aptitude selectors", () => {
     };
 
     render(
-      <UmaBuildDisplay
+      <UmaBuildTeam
         teamNumber={1}
         build={build}
         availableBuilds={[]}
@@ -593,7 +593,7 @@ describe("UmaBuild aptitude selectors", () => {
     };
 
     render(
-      <UmaBuildDisplay
+      <UmaBuildTeam
         teamNumber={1}
         build={build}
         availableBuilds={[build]}
@@ -630,7 +630,7 @@ describe("UmaBuild aptitude selectors", () => {
 
     try {
       render(
-        <UmaBuildDisplay
+        <UmaBuildTeam
           teamNumber={1}
           build={build}
           availableBuilds={[build]}
@@ -668,7 +668,7 @@ describe("UmaBuild aptitude selectors", () => {
     };
 
     render(
-      <UmaBuildDisplay
+      <UmaBuildTeam
         teamNumber={1}
         build={build}
         availableBuilds={[build]}
@@ -696,7 +696,7 @@ describe("UmaBuild aptitude selectors", () => {
     };
 
     render(
-      <UmaBuildDisplay
+      <UmaBuildTeam
         teamNumber={1}
         build={null}
         availableBuilds={[build]}
@@ -721,7 +721,7 @@ describe("UmaBuild aptitude selectors", () => {
 
   it("selects a mobile team build for details without copy or swap controls", async () => {
     const user = userEvent.setup();
-    const onToggleMobileDetails = vi.fn();
+    const onToggleMobileTeamDetails = vi.fn();
     const build = {
       ...createDefaultBuild("100101"),
       id: "build-1",
@@ -731,7 +731,7 @@ describe("UmaBuild aptitude selectors", () => {
     };
 
     render(
-      <UmaBuildDisplay
+      <UmaBuildTeam
         teamNumber={1}
         build={build}
         availableBuilds={[build]}
@@ -740,15 +740,15 @@ describe("UmaBuild aptitude selectors", () => {
         onSelectBuild={vi.fn()}
         showCopyButton={false}
         showSwapButton={false}
-        mobileSummary
-        onToggleMobileDetails={onToggleMobileDetails}
+        mobileTeamSummary
+        onToggleMobileTeamDetails={onToggleMobileTeamDetails}
       />,
     );
 
     const teamBuild = screen.getByRole("button", { name: "Build Uma 1" });
     await user.click(teamBuild);
 
-    expect(onToggleMobileDetails).toHaveBeenCalledOnce();
+    expect(onToggleMobileTeamDetails).toHaveBeenCalledOnce();
     expect(screen.queryByRole("button", { name: "Swap" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Copy build JSON" })).not.toBeInTheDocument();
   });

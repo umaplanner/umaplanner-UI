@@ -3,7 +3,7 @@ import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import { useEvent } from "../../contexts/EventContext";
 import { useAuth } from "../../contexts/AuthContext";
 import UmaBuild from "../../components/UmaBuild/editor/BuildEditor";
-import UmaBuildDisplay from "../../components/UmaBuild/display/Display";
+import TeamPanel from "../../components/UmaBuild/team/TeamPanel";
 import UmaBuildList from "../../components/UmaBuild/list/List";
 import UmaBuildResults from "../../components/UmaBuild/results/Results";
 import RaceDisplay from "../../components/RaceDisplay";
@@ -12,7 +12,6 @@ import { usePlannerData } from "./usePlannerData";
 import { useTeam } from "./useTeam";
 import {
   createDefaultBuild,
-  hasDuplicateBaseUmaIds,
   type InitialTeamBuildIds,
   type UmaSlot,
 } from "./plannerTypes";
@@ -30,7 +29,7 @@ import {
 } from "./resultSchedule";
 
 export default function Planner() {
-  const [buildMode, setBuildMode] = useState<"display" | "edit" | "builds" | "results">("display");
+  const [buildMode, setBuildMode] = useState<"team" | "edit" | "builds" | "results">("team");
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const [showSupportCards, setShowSupportCards] = useState(true);
   const [editingBuild] = useState<UmaSlot>(1);
@@ -41,13 +40,11 @@ export default function Planner() {
     id: string | null;
     isSavedBuild: boolean;
   } | null>(null);
-  const [displayBuildIds, setDisplayBuildIds] = useState<Array<string | null>>([
+  const [teamBuildIds, setTeamBuildIds] = useState<Array<string | null>>([
     null,
     null,
     null,
   ]);
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
-  const [focusedTeamSlot, setFocusedTeamSlot] = useState<UmaSlot | null>(1);
   const { selectedEvent } = useEvent();
   const { user } = useAuth();
   const initialEvent = useRef(selectedEvent);
@@ -91,54 +88,24 @@ export default function Planner() {
       return;
     }
 
-    setBuildMode(resultAvailability.round1Day1 ? "results" : "display");
+    setBuildMode(resultAvailability.round1Day1 ? "results" : "team");
     hasInitializedBuildMode.current = true;
   }, [activeRaceEntry, resultAvailability.round1Day1, selectedEvent]);
   useEffect(() => {
-    setDisplayBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
+    setTeamBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
   }, [umas]);
-  useEffect(() => {
-    if (typeof window.matchMedia !== "function") {
-      return;
-    }
-
-    const mobileQuery = window.matchMedia("(max-width: 760px)");
-    const updateViewport = () => {
-      setIsMobileViewport(mobileQuery.matches);
-      if (mobileQuery.matches) {
-        setFocusedTeamSlot((focused) => focused ?? 1);
-      } else {
-        setFocusedTeamSlot(null);
-      }
-    };
-    updateViewport();
-    mobileQuery.addEventListener("change", updateViewport);
-    return () => mobileQuery.removeEventListener("change", updateViewport);
-  }, []);
-  useEffect(() => {
-    setFocusedTeamSlot(1);
-  }, [selectedEvent]);
-  const displayBuilds = displayBuildIds.map((buildId, index) => ({
+  const teamBuilds = teamBuildIds.map((buildId, index) => ({
     teamNumber: (index + 1) as UmaSlot,
     build: allBuilds.find((entry) => entry.id === buildId) ?? null,
   }));
-  const focusedTeamBuild = displayBuilds.find(
-    ({ teamNumber }) => teamNumber === focusedTeamSlot,
-  );
   const selectTeamBuild = (teamNumber: UmaSlot, buildId: string | null) => {
-    const nextIds = [...displayBuildIds] as InitialTeamBuildIds;
+    const nextIds = [...teamBuildIds] as InitialTeamBuildIds;
     nextIds[teamNumber - 1] = buildId;
-    setDisplayBuildIds(nextIds);
-    if (buildId === null) {
-      setFocusedTeamSlot((focused) => focused === teamNumber ? null : focused);
-    }
+    setTeamBuildIds(nextIds);
     void swapTeamBuild(nextIds).catch((error) => {
       console.error("Error swapping team build:", error);
     });
   };
-  const hasDuplicateDisplayedUmas = hasDuplicateBaseUmaIds(
-    displayBuilds.map(({ build }) => build),
-  );
   const selectedBuild = umas[`uma${editingBuild}Build`];
   const selectedUma = selectedBuild.outfitId === ""
     ? null
@@ -305,8 +272,8 @@ export default function Planner() {
         </button>
         <button
           type="button"
-          aria-pressed={buildMode === "display"}
-          onClick={() => setBuildMode("display")}
+          aria-pressed={buildMode === "team"}
+          onClick={() => setBuildMode("team")}
         >
           Team
         </button>
@@ -354,69 +321,17 @@ export default function Planner() {
             onRemoveTicket={removeTicketResult}
             onSaveFinals={saveFinalsResult}
           />
-        ) : buildMode === "display" ? (
-          <div className="uma-build-display">
-            <label className="uma-build-display__support-toggle">
-              <input
-                type="checkbox"
-                checked={showSupportCards}
-                onChange={(event) => setShowSupportCards(event.target.checked)}
-              />
-              Show support cards
-            </label>
-            {hasDuplicateDisplayedUmas ? (
-              <p className="uma-build-display__duplicate-warning" role="alert">
-                This team cannot be saved while it contains multiple builds for
-                the same Uma.
-              </p>
-            ) : null}
-            <div className="uma-build-display-grid">
-              {displayBuilds.map(({ teamNumber, build }) => (
-                <UmaBuildDisplay
-                  key={teamNumber}
-                  teamNumber={teamNumber}
-                  build={build}
-                  availableBuilds={allBuilds}
-                  umaList={umaList}
-                  skillList={skillList}
-                  showSupportCards={showSupportCards}
-                  compactText
-                  showCopyButton={false}
-                  showSwapButton={!isMobileViewport}
-                  mobileSummary={isMobileViewport}
-                  mobileDetailsFocused={isMobileViewport && focusedTeamSlot === teamNumber}
-                  onToggleMobileDetails={isMobileViewport ? () => {
-                    setFocusedTeamSlot((focused) =>
-                      focused === teamNumber ? null : teamNumber
-                    );
-                  } : undefined}
-                  onSelectBuild={(buildId) => selectTeamBuild(teamNumber, buildId)}
-                />
-              ))}
-            </div>
-            {isMobileViewport && focusedTeamBuild ? (
-              <section
-                className="uma-build-display__focused-details"
-                aria-label={`Uma ${focusedTeamBuild.teamNumber} build details`}
-                aria-live="polite"
-              >
-                <UmaBuildDisplay
-                  key={focusedTeamBuild.teamNumber}
-                  teamNumber={focusedTeamBuild.teamNumber}
-                  build={focusedTeamBuild.build}
-                  availableBuilds={allBuilds}
-                  umaList={umaList}
-                  skillList={skillList}
-                  showSupportCards={showSupportCards}
-                  compactText
-                  canClearBuild
-                  onSelectBuild={(buildId) =>
-                    selectTeamBuild(focusedTeamBuild.teamNumber, buildId)
-                  }
-                />
-              </section>
-            ) : null}
-          </div>
+        ) : buildMode === "team" ? (
+          <TeamPanel
+            event={selectedEvent}
+            builds={teamBuilds}
+            availableBuilds={allBuilds}
+            umaList={umaList}
+            skillList={skillList}
+            showSupportCards={showSupportCards}
+            onShowSupportCardsChange={setShowSupportCards}
+            onSelectBuild={selectTeamBuild}
+          />
         ) : <UmaBuild {...editProps} teamNumber={editingBuild} />}
       </section>
     </div>

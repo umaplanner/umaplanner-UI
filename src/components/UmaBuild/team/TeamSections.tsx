@@ -13,7 +13,7 @@ interface Props {
   showSupportCards: boolean;
 }
 
-export default function UmaBuildDisplaySections({ build, uniqueSkill, skillList, teamNumber, showSupportCards }: Props) {
+export default function UmaBuildTeamSections({ build, uniqueSkill, skillList, teamNumber, showSupportCards }: Props) {
   return (
     <>
       <section className="uma-build__panel uma-build__stats-panel" aria-labelledby={`stats-heading-${teamNumber}`}>

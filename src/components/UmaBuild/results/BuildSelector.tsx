@@ -3,7 +3,7 @@ import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import type { UmaSlot } from "../../../features/planner/plannerTypes";
 import UmaImage from "../../UmaImage";
-import UmaBuildSavedBuildDialog from "../display/SavedBuildDialog";
+import UmaBuildSavedBuildDialog from "../team/SavedBuildDialog";
 
 interface Props {
   slot: UmaSlot;

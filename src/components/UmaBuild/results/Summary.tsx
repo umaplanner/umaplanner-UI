@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type {
   TeamFinalBuildPlacements,
   TeamFinalPlacement,
@@ -8,7 +9,7 @@ import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import UmaImage from "../../UmaImage";
-import UmaBuildDisplay from "../display/Display";
+import UmaBuildTeam from "../team/Team";
 import type { ResultBuildSummary } from "./types";
 import {
   formatResultOpeningDate,
@@ -17,6 +18,7 @@ import {
 } from "./utils";
 
 interface Props {
+  imageActions?: ReactNode;
   finalPlacement: TeamFinalPlacement | null;
   finalBuildPlacements: TeamFinalBuildPlacements;
   finalBuilds: [StoredUmaBuild | undefined, StoredUmaBuild | undefined, StoredUmaBuild | undefined];
@@ -35,6 +37,7 @@ interface Props {
 }
 
 export default function Summary({
+  imageActions,
   finalPlacement,
   finalBuildPlacements,
   finalBuilds,
@@ -73,7 +76,10 @@ export default function Summary({
         className="uma-build-results__summary"
         aria-labelledby="uma-build-results-summary-heading"
       >
-        <h2 id="uma-build-results-summary-heading">Summary</h2>
+        <div className="uma-build-results__summary-heading">
+          <h2 id="uma-build-results-summary-heading">Summary</h2>
+          {imageActions}
+        </div>
         <div className="uma-build-results__summary-finals">
           <div className="uma-build-results__summary-placement">
             <strong
@@ -243,7 +249,7 @@ export default function Summary({
           >
             {summaryDetails.title}
           </h2>
-          <UmaBuildDisplay
+          <UmaBuildTeam
             teamNumber={summaryDetails.slot}
             build={summaryDetails.build}
             availableBuilds={[]}

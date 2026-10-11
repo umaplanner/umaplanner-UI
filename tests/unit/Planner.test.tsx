@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EventProvider, useEvent } from "../../src/contexts/EventContext";
@@ -8,6 +8,7 @@ import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
 const mocks = vi.hoisted(() => ({
   usePlannerData: vi.fn(),
   useTeam: vi.fn(),
+  copyElementAsPng: vi.fn(),
   getResultAvailability: vi.fn(),
   getNextResultOpeningAt: vi.fn(),
 }));
@@ -41,6 +42,10 @@ vi.mock("../../src/components/UmaBuild/results/Results", () => ({
   default: () => null,
 }));
 
+vi.mock("../../src/lib/copyElementAsPng", () => ({
+  copyElementAsPng: mocks.copyElementAsPng,
+}));
+
 function SwitchEventButton() {
   const { setSelectedEvent } = useEvent();
   return (
@@ -53,6 +58,7 @@ function SwitchEventButton() {
 describe("Planner build mode", () => {
   beforeEach(() => {
     const emptyBuild = createDefaultBuild();
+    mocks.copyElementAsPng.mockResolvedValue("copied");
     mocks.usePlannerData.mockImplementation((event: string) => ({
       raceEntry: event ? { eventTitle: event } : undefined,
       umaList: [],
@@ -122,6 +128,107 @@ describe("Planner build mode", () => {
       "aria-pressed",
       "true",
     );
+  });
+
+  it("copies an image of the selected three-build team beside the support-card toggle", async () => {
+    localStorage.setItem("selectedEvent", "CM 42");
+    const builds = [1, 2, 3].map((slot) => ({
+      ...createDefaultBuild(String(slot)),
+      id: `team-build-${slot}`,
+      event: "CM 42",
+      name: `Build ${slot}`,
+      lastUpdate: slot,
+    }));
+    builds[0].skills = ["skill-1"];
+    builds[0].supportCards = [{
+      position: 1,
+      support_card_id: 123,
+      limit_break_count: 4,
+    }];
+    const umas = builds.map((_, index) => ({
+      id: index + 1,
+      charaId: index + 1,
+      baseCharacterName: `Character ${index + 1}`,
+      outfitTitle: `Outfit ${index + 1}`,
+    }));
+    mocks.usePlannerData.mockReturnValue({
+      raceEntry: { eventTitle: "CM 42" },
+      umaList: umas,
+      skillList: [{
+        id: "skill-1",
+        name: "Test skill",
+        groupId: null,
+        iconId: 456,
+        isGeneralSkill: true,
+        displayOrder: 0,
+        rarity: 1,
+      }],
+    });
+    const teamState = mocks.useTeam();
+    mocks.useTeam.mockReturnValue({
+      ...teamState,
+      umas: {
+        ...teamState.umas,
+        uma1: builds[0].id,
+        uma2: builds[1].id,
+        uma3: builds[2].id,
+      },
+      allBuilds: builds,
+    });
+
+    const { container } = render(
+      <EventProvider>
+        <Planner />
+      </EventProvider>,
+    );
+
+    const imageUma = await screen.findByText("Outfit 1", {
+      selector: ".result-image__team .uma-build__team-header strong",
+    });
+    const toolbar = container.querySelector(".uma-build-team__toolbar");
+    const buttonGroup = toolbar?.firstElementChild as HTMLElement;
+    const copyButton = within(buttonGroup).getByRole("button", {
+      name: "Copy team as image",
+    });
+    const supportToggle = screen.getByLabelText("Show support cards");
+    expect(buttonGroup.firstElementChild).toBe(copyButton);
+    expect(toolbar?.lastElementChild).toBe(supportToggle.parentElement);
+    const imageTeam = container.querySelector(".result-image__team");
+    expect(imageTeam?.querySelectorAll(".uma-build")).toHaveLength(3);
+    expect(imageUma).toBeInTheDocument();
+    expect(imageTeam?.querySelectorAll(".uma-build__stats img")).toHaveLength(15);
+    expect(imageTeam?.querySelectorAll(".uma-build__aptitudes img")).toHaveLength(12);
+    expect(imageTeam?.querySelector('.uma-build__skill-row img[src="/icons/skills/456.png"]'))
+      .toBeInTheDocument();
+    expect(imageTeam?.querySelector(".uma-build__support-card img"))
+      .toHaveAttribute("src", expect.stringContaining("/images/support_cards/full/123.png"));
+
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        fireEvent.click(copyButton);
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      const status = screen.getByRole("status");
+      expect(status).toHaveTextContent("Image copied to clipboard.");
+      expect(status.previousElementSibling).toBe(copyButton);
+      expect(mocks.copyElementAsPng).toHaveBeenCalledWith(
+        container.querySelector(".result-image"),
+        "umaplanner-cm-42-team.png",
+      );
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4999);
+      });
+      expect(status).toBeInTheDocument();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      expect(screen.queryByText("Image copied to clipboard.")).not.toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("saves a loaded build as an override until its Uma changes", async () => {

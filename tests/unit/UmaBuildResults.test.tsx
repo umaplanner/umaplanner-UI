@@ -1,15 +1,18 @@
 import { StrictMode } from "react";
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { toBlob } from "html-to-image";
 import UmaBuildResults from "../../src/components/UmaBuild/results/Results";
-import UmaBuildSavedBuildDialog from "../../src/components/UmaBuild/display/SavedBuildDialog";
+import UmaBuildSavedBuildDialog from "../../src/components/UmaBuild/team/SavedBuildDialog";
 import {
   createDefaultTicketCounts,
   createDefaultBuild,
   createDefaultTeamResults,
   setTeamResultRoundExcluded,
 } from "../../src/features/planner/plannerTypes";
+
+vi.mock("html-to-image", () => ({ toBlob: vi.fn() }));
 
 const dialogPrototype = HTMLDialogElement.prototype;
 const originalShowModal = Object.getOwnPropertyDescriptor(dialogPrototype, "showModal");
@@ -52,6 +55,242 @@ async function openSavedBuildPicker(
 }
 
 describe("UmaBuildResults", () => {
+  it("offers branded image exports containing only populated result days", () => {
+    const builds = [1, 2, 3, 4].map((slot) => ({
+      ...createDefaultBuild(String(slot)),
+      id: `build-${slot}`,
+      event: "CM 42",
+      name: `Build ${slot}`,
+      lastUpdate: 1,
+    }));
+    const { container } = render(
+      <UmaBuildResults
+        event="CM 42"
+        results={{
+          ...createDefaultTeamResults(),
+          round1Day1: [3, 2, 0, 0],
+        }}
+        buildAssignments={{}}
+        ticketBuildResults={{
+          round1Day1: {
+            1: [
+              { buildId: "build-1", slot: 1, wins: 1 },
+              { buildId: "build-2", slot: 2, wins: 1 },
+              { buildId: "build-3", slot: 3, wins: 1 },
+            ],
+            2: [
+              { buildId: "build-4", slot: 1, wins: 2 },
+              { buildId: "build-1", slot: 2, wins: 0 },
+              { buildId: "build-2", slot: 3, wins: 0 },
+            ],
+          },
+        }}
+        ticketCounts={{ ...createDefaultTicketCounts(), round1Day1: 2 }}
+        initialBuildIds={builds.map((build) => build.id) as [string, string, string]}
+        finalPlacement={2}
+        finalBuildPlacements={[1, 2, 3]}
+        availableBuilds={builds}
+        umaList={builds.map((_, index) => ({
+          id: index + 1,
+          charaId: index + 1,
+          baseCharacterName: `Character ${index + 1}`,
+          outfitTitle: `Uma ${index + 1}`,
+        }))}
+        skillList={[]}
+        showSupportCards={false}
+        onSaveTicket={vi.fn()}
+        onRemoveTicket={vi.fn()}
+        onSaveFinals={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Copy summary image" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Copy rounds and days image" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Copy Round 1 Day 1 as image" }))
+      .toBeEnabled();
+    expect(screen.getByRole("button", { name: "Copy Round 1 Day 2 as image" }))
+      .toBeDisabled();
+    const summaryHeading = container.querySelector(
+      ".uma-build-results__summary-heading",
+    );
+    const summaryActions = container.querySelector(
+      ".uma-build-results__image-actions",
+    );
+    expect(summaryHeading?.lastElementChild).toBe(summaryActions);
+    expect(summaryActions?.querySelectorAll(".copy-icon")).toHaveLength(2);
+
+    const imageStage = container.querySelector(".result-image-stage");
+    expect(imageStage).toHaveTextContent("Umaplanner.app");
+    expect(imageStage?.querySelectorAll(".result-image")).toHaveLength(3);
+    expect(imageStage).toHaveTextContent("Round 1");
+    expect(imageStage).not.toHaveTextContent("Day 2");
+    const imageCards = imageStage?.querySelectorAll(".result-image");
+    expect(imageCards?.[0]).toHaveTextContent("CM 42");
+    expect(imageCards?.[0]?.querySelector(".result-image__days"))
+      .not.toBeInTheDocument();
+    const summaryMetrics = imageCards?.[0]?.querySelectorAll(".result-image__metric");
+    expect(summaryMetrics).toHaveLength(3);
+    expect(summaryMetrics?.[0]).toHaveClass("result-image__metric--placement-2");
+    expect(summaryMetrics?.[0]).toHaveTextContent("2nd");
+    expect(imageCards?.[0]).not.toHaveTextContent("2nd overall");
+    expect(summaryMetrics?.[1]).toHaveTextContent("TOTAL WINS");
+    expect(summaryMetrics?.[2]).toHaveTextContent("TEAM WIN RATE");
+    expect(summaryMetrics?.[2]).not.toHaveClass("result-image__metric--featured");
+    const finalsLineup = imageCards?.[0]?.querySelector(".result-image__final-builds");
+    expect(finalsLineup?.children).toHaveLength(3);
+    expect(finalsLineup?.querySelectorAll(".result-image__portrait--final"))
+      .toHaveLength(3);
+    expect(finalsLineup?.querySelectorAll(".result-image__final-build--winner"))
+      .toHaveLength(1);
+    const summaryBuildGrid = imageCards?.[0]?.querySelector(".result-image__build-grid");
+    expect(summaryBuildGrid?.children).toHaveLength(4);
+    expect(summaryBuildGrid).toHaveStyle({
+      gridTemplateColumns: "repeat(3, 11rem)",
+    });
+    expect(imageCards?.[1]?.querySelector(".result-image__days"))
+      .toBeInTheDocument();
+    expect(imageCards?.[0]?.querySelector(".result-image__event"))
+      .toHaveTextContent("CM 42");
+    expect(imageCards?.[2]?.querySelector(".result-image__ticket-wins"))
+      .toHaveTextContent("T1 3");
+    expect(imageCards?.[2]?.querySelector(".result-image__ticket-wins"))
+      .toHaveTextContent("T2 2");
+    expect(imageCards?.[2]?.querySelector(".result-image__day-heading")?.children[1])
+      .toHaveClass("result-image__ticket-wins");
+    expect(imageCards?.[2]?.querySelector(".result-image__day-heading")?.children[2])
+      .toHaveClass("result-image__day-total");
+    expect(imageCards?.[2]?.querySelector(".result-image__ticket-wins"))
+      .not.toHaveTextContent("/5");
+    expect(imageCards?.[2]?.querySelector(".result-image__ticket"))
+      .not.toBeInTheDocument();
+    expect(imageCards?.[2]?.querySelector(".result-image__heading"))
+      .not.toBeInTheDocument();
+    expect(imageCards?.[2]?.querySelector(".result-image__day-builds > header"))
+      .not.toBeInTheDocument();
+    expect(imageCards?.[2]).toHaveStyle({ width: "609px" });
+    const dayBuildGrid = imageCards?.[2]?.querySelector(".result-image__day-build-grid");
+    expect(dayBuildGrid?.children).toHaveLength(4);
+    expect(dayBuildGrid).toHaveStyle({ gridTemplateColumns: "repeat(3, 11rem)" });
+    expect(imageStage?.querySelector(".result-image__build-stat img"))
+      .toHaveAttribute("alt", "Uma 1");
+    expect(imageStage?.querySelector(".result-image__day-build img"))
+      .toHaveAttribute("alt", "Uma 1");
+    expect(imageStage).not.toHaveTextContent("Build performance across tickets");
+    expect(imageStage).not.toHaveTextContent("1 BUILDS");
+    expect(imageCards?.[0]).toHaveTextContent("45.5%");
+    expect(imageCards?.[2]).toHaveTextContent("50%");
+    expect(imageCards?.[2]).toHaveTextContent("WIN RATE");
+    expect(imageCards?.[2]).toHaveTextContent("5 / 10");
+    expect(imageStage).toHaveTextContent("Tickets 1, 2");
+    expect(imageStage?.querySelector(".result-image__ticket-build"))
+      .not.toBeInTheDocument();
+    expect(imageStage).not.toHaveTextContent("PLAN · RACE · REPEAT");
+  });
+
+  it("copies the selected results layout as a PNG", async () => {
+    vi.useFakeTimers();
+    const originalClipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+    const originalClipboardItem = Object.getOwnPropertyDescriptor(window, "ClipboardItem");
+    const write = vi.fn().mockResolvedValue(undefined);
+    class TestClipboardItem {
+      constructor(_data: Record<string, Blob | Promise<Blob>>) {}
+    }
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { write },
+    });
+    Object.defineProperty(window, "ClipboardItem", {
+      configurable: true,
+      value: TestClipboardItem,
+    });
+    vi.mocked(toBlob).mockResolvedValue(new Blob(["image"], { type: "image/png" }));
+
+    try {
+      const { container, unmount } = render(
+        <UmaBuildResults
+          event="CM 42"
+          results={{
+            ...createDefaultTeamResults(),
+            round1Day1: [3, 0, 0, 0],
+          }}
+          buildAssignments={{}}
+          ticketBuildResults={{}}
+          ticketCounts={{ ...createDefaultTicketCounts(), round1Day1: 1 }}
+          initialBuildIds={[null, null, null]}
+          finalPlacement={null}
+          availableBuilds={[]}
+          umaList={[]}
+          skillList={[]}
+          showSupportCards={false}
+          onSaveTicket={vi.fn()}
+          onRemoveTicket={vi.fn()}
+          onSaveFinals={vi.fn()}
+        />,
+      );
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole("button", { name: "Copy rounds and days image" }));
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      const status = screen.getByRole("status");
+      expect(status).toHaveTextContent("Image copied to clipboard.");
+      const actionGroup = container.querySelector(".uma-build-results__image-actions");
+      expect(actionGroup?.firstElementChild).toBe(status);
+      expect(status.nextElementSibling).toBe(
+        screen.getByRole("button", { name: "Copy summary image" }),
+      );
+      expect(toBlob).toHaveBeenCalledTimes(1);
+      expect(write).toHaveBeenCalledTimes(1);
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4999);
+      });
+      expect(status).toBeInTheDocument();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      expect(screen.queryByText("Image copied to clipboard.")).not.toBeInTheDocument();
+
+      const dayButton = screen.getByRole("button", {
+        name: "Copy Round 1 Day 1 as image",
+      });
+      await act(async () => {
+        fireEvent.click(dayButton);
+        await Promise.resolve();
+        await Promise.resolve();
+        await Promise.resolve();
+      });
+      const dayStatus = screen.getByText("Image copied to clipboard.");
+      expect(dayButton.parentElement?.lastElementChild).toBe(dayStatus);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(4999);
+      });
+      expect(dayStatus).toBeInTheDocument();
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1);
+      });
+      expect(screen.queryByText("Image copied to clipboard.")).not.toBeInTheDocument();
+      expect(toBlob).toHaveBeenCalledTimes(2);
+      expect(write).toHaveBeenCalledTimes(2);
+      unmount();
+    } finally {
+      vi.useRealTimers();
+      if (originalClipboard) {
+        Object.defineProperty(navigator, "clipboard", originalClipboard);
+      } else {
+        Reflect.deleteProperty(navigator, "clipboard");
+      }
+      if (originalClipboardItem) {
+        Object.defineProperty(window, "ClipboardItem", originalClipboardItem);
+      } else {
+        Reflect.deleteProperty(window, "ClipboardItem");
+      }
+      vi.mocked(toBlob).mockReset();
+    }
+  });
+
   it("keeps a saved-build picker open through Strict Mode effect cleanup", () => {
     const onClose = vi.fn();
     Object.defineProperty(dialogPrototype, "close", {

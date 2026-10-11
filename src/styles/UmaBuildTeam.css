@@ -1,0 +1,276 @@
+.uma-build-team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.uma-build-team__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.uma-build-team__copy-image-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.uma-build-team__copy-image {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.6rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.uma-build-team__copy-image:hover:not(:disabled),
+.uma-build-team__copy-image:focus-visible {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build-team__copy-image:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.uma-build-team__copy-image .copy-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.uma-build-team__image-status {
+  color: var(--muted-text-color);
+  font-size: 0.75rem;
+}
+
+.uma-build-team__duplicate-warning {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  color: #f0a4a8;
+  background: rgba(184, 92, 104, 0.12);
+  border: 1px solid rgba(184, 92, 104, 0.45);
+  border-radius: 0.45rem;
+  font-size: 0.82rem;
+}
+
+.uma-build-team__support-toggle {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0;
+  color: #8f9aaa;
+  font-size: 0.72rem;
+}
+
+.uma-build-team__support-toggle input {
+  width: auto;
+  min-height: 0;
+}
+
+.uma-build-team__focused-details {
+  display: none;
+  min-width: 0;
+  gap: 0.5rem;
+}
+
+@media (max-width: 760px) {
+  .uma-build-team-grid {
+    gap: 0.35rem;
+  }
+
+  .uma-build-team__support-toggle {
+    justify-content: flex-start;
+    font-size: 0.65rem;
+  }
+
+  .uma-build-team-grid .uma-build--team {
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    gap: 0.2rem;
+    padding: 0.2rem;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-header {
+    min-width: 0;
+    height: 8rem;
+    min-height: 8rem;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.3rem;
+    padding: 0.35rem;
+    text-align: center;
+  }
+
+  .uma-build-team-grid .uma-build--team:not(.uma-build--team-empty) .uma-build__team-header {
+    padding: 0.35rem;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-header img {
+    width: 3.5rem;
+    height: 3.5rem;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-header span {
+    align-items: center;
+    width: 100%;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-actions {
+    position: static;
+    justify-content: center;
+    width: 100%;
+    margin: 0;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-actions button {
+    min-width: 0;
+    padding: 0.25rem 0.35rem;
+    font-size: 0.65rem;
+  }
+
+  .uma-build-team-grid .uma-build--team-summary .uma-build__panel {
+    display: none;
+  }
+
+  .uma-build-team-grid .uma-build--mobile-details-focused {
+    background: rgba(105, 183, 255, 0.1);
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
+  }
+
+  .uma-build-team-grid .uma-build--team-summary {
+    cursor: pointer;
+  }
+
+  .uma-build-team-grid .uma-build--team-summary:hover,
+  .uma-build-team-grid .uma-build--team-summary:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 1px;
+  }
+
+  .uma-build-team-grid .uma-build--team-summary .uma-build__team-header .uma-build__plan-label {
+    position: static;
+    align-self: center;
+    height: 0.75rem;
+    margin: 0;
+    line-height: 0.75rem;
+    transform: none;
+  }
+
+  .uma-build-team-grid .uma-build--team-summary .uma-build__uma-copy {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(0, auto);
+    min-width: 0;
+    width: 100%;
+    gap: 0.1rem;
+  }
+
+  .uma-build-team-grid .uma-build--team-summary .uma-build__uma-copy:not(:has(.uma-build__plan-label))::before {
+    height: 0.75rem;
+    content: "";
+  }
+
+  .uma-build-team-grid .uma-build--team-summary .uma-build__team-header strong,
+  .uma-build-team-grid .uma-build--team-summary .uma-build__team-header small,
+  .uma-build-team__focused-details .uma-build__team-header strong,
+  .uma-build-team__focused-details .uma-build__team-header small {
+    display: block;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .uma-build-team-grid .uma-build--team-summary .uma-build__uma-copy {
+    overflow: hidden;
+  }
+
+  .uma-build-team__focused-details {
+    display: grid;
+    width: 100%;
+  }
+
+  .uma-build-team-grid + .uma-build-team__focused-details {
+    margin-top: 0.5rem;
+  }
+
+  .uma-build-team__focused-details > .uma-build--team:not(.uma-build--team-empty) .uma-build__team-header {
+    padding-right: 4.5rem;
+  }
+
+  .uma-build-team__focused-details > .uma-build--team:not(.uma-build--team-empty) .uma-build__team-header img {
+    width: 3.75rem;
+    height: 3.75rem;
+  }
+
+  .uma-build-team__focused-details .uma-build__team-header {
+    min-width: 0;
+    height: 8rem;
+    min-height: 8rem;
+    overflow: hidden;
+  }
+
+  .uma-build-team__focused-details .uma-build__team-header .uma-build__plan-label {
+    position: static;
+    align-self: flex-start;
+    height: 0.75rem;
+    margin: 0;
+    line-height: 0.75rem;
+    transform: none;
+  }
+}
+
+@media (min-width: 761px) {
+  .uma-build-team-grid > .uma-build--team {
+    display: flex;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .uma-build-team-grid > .uma-build--team .uma-build__skills {
+    flex: 1;
+    min-height: max-content;
+  }
+}
+
+@media (max-width: 480px) {
+  .uma-build-team-grid .uma-build--team .uma-build__team-header img {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-header strong {
+    font-size: 0.65rem;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-header small {
+    font-size: 0.58rem;
+  }
+
+  .uma-build-team-grid .uma-build--team .uma-build__team-actions button {
+    padding: 0.2rem 0.25rem;
+    font-size: 0.58rem;
+  }
+}

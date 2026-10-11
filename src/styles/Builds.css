@@ -307,8 +307,10 @@
 }
 
 .build-card__details-dialog {
+  box-sizing: border-box;
   width: min(90vw, 48rem);
-  max-height: 90vh;
+  max-width: calc(100vw - 1rem);
+  max-height: calc(100dvh - 1rem);
   overflow: auto;
   overscroll-behavior: contain;
   padding: 0;
@@ -316,6 +318,66 @@
   background: var(--main-background-color);
   border: 1px solid var(--border-color);
   border-radius: 0.65rem;
+}
+
+.build-card__image-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  color: var(--muted-text-color);
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+
+.build-card__image-actions > span,
+.build-card__copy-image > span,
+.build-card__details-dialog .uma-build__copy-button > span {
+  width: auto;
+  white-space: nowrap;
+}
+
+.build-card__copy-image {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 1.85rem;
+  padding: 0.35rem 0.6rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.build-card__copy-image:hover:not(:disabled),
+.build-card__copy-image:focus-visible {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.build-card__copy-image:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.build-card__copy-image .copy-icon {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.build-card__details-dialog .uma-build--team:not(.uma-build--team-empty) .uma-build__team-actions {
+  right: 3rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  width: max-content;
 }
 
 .build-card__details-dialog::backdrop {
@@ -342,6 +404,95 @@
   max-height: 8rem;
   aspect-ratio: auto;
   object-fit: contain;
+}
+
+.build-card__details-dialog .uma-build__support-card-limit-break-display img {
+  width: 1.6rem;
+  height: 1.6rem;
+  max-height: none;
+}
+
+@media (max-width: 760px) {
+  .build-card__details-dialog .uma-build__support-card-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.5rem;
+  }
+
+  .build-card__details-dialog .uma-build__support-card-limit-break-display {
+    justify-content: center;
+    gap: 0.05rem;
+  }
+
+  .build-card__details-dialog .uma-build__support-card-limit-break-display img {
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .build-card__details-dialog {
+    position: fixed;
+    top: 10dvh;
+    left: 0.5rem;
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+    max-height: 80dvh;
+    margin: 0;
+  }
+
+  .build-card__details-dialog .uma-build--team {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .build-card__details-dialog .uma-build--team .uma-build__panel[aria-labelledby^="stats-heading"] {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .build-card__details-dialog .uma-build--team .uma-build__stats {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .build-card__details-dialog .uma-build__support-card img {
+    max-height: 6rem;
+  }
+
+  .build-card__details-dialog .uma-build--team .uma-build__aptitudes-section {
+    min-width: 0;
+  }
+
+  .build-card__details-dialog .uma-build--team:not(.uma-build--team-empty) .uma-build__team-header {
+    height: auto;
+    min-height: 0;
+    flex-wrap: wrap;
+    padding: 2.5rem 0.65rem 0.65rem;
+  }
+
+  .build-card__details-dialog .uma-build--team:not(.uma-build--team-empty) .uma-build__team-header > img {
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .build-card__details-dialog .uma-build--team:not(.uma-build--team-empty) .uma-build__team-header > .uma-build__uma-copy {
+    flex: 1 1 8rem;
+    width: auto;
+  }
+
+  .build-card__details-dialog .uma-build--team:not(.uma-build--team-empty) .uma-build__team-actions {
+    position: static;
+    justify-content: flex-end;
+    width: 100%;
+    margin: 0;
+  }
+
+  .build-card__details-dialog .build-card__image-actions {
+    gap: 0.2rem;
+    font-size: 0.58rem;
+  }
 }
 
 .build-card__stats {

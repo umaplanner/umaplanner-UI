@@ -173,6 +173,7 @@ export default function ImportedBuildCard({
         ...(uma ? [uma.baseCharacterName] : []),
       ]}
       createdTime={createdTime && !Number.isNaN(createdTime.getTime()) ? createdTime : null}
+      imageEvent={currentEvent || "Imported build"}
       footerAction={(
         <div className="build-card__save">
           <button

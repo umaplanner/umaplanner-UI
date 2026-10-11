@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import type { UmaBuild as UmaBuildData, StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
-import UmaBuildSavedBuildDialog from "../display/SavedBuildDialog";
+import UmaBuildSavedBuildDialog from "../team/SavedBuildDialog";
 
 interface Props {
   teamNumber: number;

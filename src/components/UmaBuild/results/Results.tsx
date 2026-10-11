@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { copyElementAsPng } from "../../../lib/copyElementAsPng";
+import CopyIcon from "../../CopyIcon";
 import {
   resolveResultBuildId,
   teamResultRows,
@@ -30,6 +32,12 @@ import type {
   ResolvedTicketBuildResult,
 } from "./types";
 import Summary from "./Summary";
+import ResultImage from "./ResultImage";
+import type {
+  ResultImageDayBuild,
+  ResultImageDay,
+  ResultImageSummary,
+} from "./ResultImage";
 import "../../../styles/Builds.css";
 import "../../../styles/UmaBuildResults.css";
 
@@ -110,7 +118,27 @@ export default function Results({
   const { collapsedGroups, setCollapsedGroups } =
     useResultCollapsePreferences(event);
   const [isFinalsEditorOpen, setIsFinalsEditorOpen] = useState(false);
+  const [isCopyingImage, setIsCopyingImage] = useState(false);
+  const [summaryCopyStatus, setSummaryCopyStatus] = useState("");
+  const [dayCopyStatus, setDayCopyStatus] = useState<{
+    row: TeamRaceResultRow;
+    message: string;
+  } | null>(null);
+  const fullImageRef = useRef<HTMLElement | null>(null);
+  const roundsImageRef = useRef<HTMLElement | null>(null);
+  const dayImageRefs = useRef(new Map<TeamRaceResultRow, HTMLElement>());
+  const summaryStatusTimeout = useRef<number | null>(null);
+  const dayStatusTimeout = useRef<number | null>(null);
   const lineupSource = { buildAssignments, ticketCounts, initialBuildIds };
+
+  useEffect(() => () => {
+    if (summaryStatusTimeout.current !== null) {
+      window.clearTimeout(summaryStatusTimeout.current);
+    }
+    if (dayStatusTimeout.current !== null) {
+      window.clearTimeout(dayStatusTimeout.current);
+    }
+  }, []);
 
   const getEffectiveBuildId: EffectiveResultBuildLookup = (row, ticket, slot) =>
     resolveResultBuildId(lineupSource, row, ticket, slot);
@@ -242,10 +270,218 @@ export default function Results({
   const finalBuilds = ([1, 2, 3] as const).map((slot) =>
     getBuild(getEffectiveBuildId("finals", 1, slot)),
   ) as [StoredUmaBuild | undefined, StoredUmaBuild | undefined, StoredUmaBuild | undefined];
+  const getUmaForBuild = (build: StoredUmaBuild | undefined) =>
+    build
+      ? umaList.find((entry) => String(entry.id) === build.outfitId) ?? null
+      : null;
+  const imageDays: ResultImageDay[] = resultGroups.flatMap((group) =>
+    group.rows.flatMap(({ row, label }) => {
+      const count = ticketCounts[row];
+      const counts = results[row];
+      if (!counts || count === 0) return [];
+
+      const wins = counts.slice(0, count).reduce((total, value) => total + value, 0);
+      const dayBuilds = new Map<string, {
+        id: string;
+        slot: 1 | 2 | 3;
+        name: string;
+        uma: ReturnType<typeof getUmaForBuild>;
+        wins: number;
+        appearances: number;
+        recordedWins: number;
+        ticketNumbers: Set<TeamTicket>;
+      }>();
+      const tickets = Array.from({ length: count }, (_, index) => {
+        const ticket = (index + 1) as TeamTicket;
+        const builds = getTicketBuildResults(row, ticket);
+        for (const build of builds) {
+          if (!build.buildId) continue;
+          const storedBuild = getBuild(build.buildId);
+          const aggregate = dayBuilds.get(build.buildId) ?? {
+            id: build.buildId,
+            slot: build.slot,
+            name: storedBuild?.name || `Uma ${build.slot}`,
+            uma: getUmaForBuild(storedBuild),
+            wins: 0,
+            appearances: 0,
+            recordedWins: 0,
+            ticketNumbers: new Set<TeamTicket>(),
+          };
+          aggregate.appearances += 1;
+          aggregate.ticketNumbers.add(ticket);
+          if (build.wins !== null) {
+            aggregate.wins += build.wins;
+            aggregate.recordedWins += 1;
+          }
+          dayBuilds.set(build.buildId, aggregate);
+        }
+        const allBuildWinsRecorded = builds.every((build) => build.wins !== null);
+        const ticketWins = allBuildWinsRecorded
+          ? builds.reduce((total, build) => total + (build.wins ?? 0), 0)
+          : counts[index];
+        return { number: ticket, wins: ticketWins };
+      });
+      const buildStats: ResultImageDayBuild[] = Array.from(dayBuilds.values(), (build) => {
+        const hasCompleteWinData = build.recordedWins === build.appearances;
+        const raceCount = build.appearances * 5;
+        return {
+          id: build.id,
+          slot: build.slot,
+          name: build.name,
+          uma: build.uma,
+          wins: build.wins,
+          raceCount,
+          winRate: hasCompleteWinData && raceCount > 0
+            ? (build.wins / raceCount) * 100
+            : null,
+          ticketNumbers: Array.from(build.ticketNumbers),
+          hasCompleteWinData,
+        };
+      });
+      return [{
+        row,
+        round: group.title,
+        label,
+        wins,
+        ticketCount: count,
+        winRate: (wins / (count * 5)) * 100,
+        tickets,
+        builds: buildStats,
+      }];
+    }),
+  );
+  const canCopyFullSummary = imageDays.length > 0 || hasFinalsData;
+  const imageSummary: ResultImageSummary = {
+    totalWins,
+    totalRaces,
+    totalWinRate,
+    finalPlacement,
+    finalsBuilds: hasFinalsData
+      ? ([1, 2, 3] as const).flatMap((slot, index) => {
+        const build = finalBuilds[index];
+        return build
+          ? [{
+            id: build.id,
+            slot,
+            name: build.name || "Unnamed build",
+            uma: getUmaForBuild(build),
+            placement: finalBuildPlacements[index],
+          }]
+          : [];
+      })
+      : [],
+    builds: summaryBuilds.map(({ build, wins, raceCount, slot }) => ({
+      id: build.id,
+      slot,
+      name: build.name || "Unnamed build",
+      wins,
+      raceCount,
+      uma: getUmaForBuild(build),
+    })),
+  };
+
+  function showCopyStatus(
+    target: "summary" | { row: TeamRaceResultRow },
+    message: string,
+  ) {
+    if (target === "summary") {
+      if (summaryStatusTimeout.current !== null) {
+        window.clearTimeout(summaryStatusTimeout.current);
+      }
+      setSummaryCopyStatus(message);
+      summaryStatusTimeout.current = window.setTimeout(() => {
+        setSummaryCopyStatus("");
+        summaryStatusTimeout.current = null;
+      }, 5000);
+      return;
+    }
+
+    if (dayStatusTimeout.current !== null) {
+      window.clearTimeout(dayStatusTimeout.current);
+    }
+    setDayCopyStatus({ row: target.row, message });
+    dayStatusTimeout.current = window.setTimeout(() => {
+      setDayCopyStatus(null);
+      dayStatusTimeout.current = null;
+    }, 5000);
+  }
+
+  function clearCopyStatus(target: "summary" | { row: TeamRaceResultRow }) {
+    if (target === "summary") {
+      if (summaryStatusTimeout.current !== null) {
+        window.clearTimeout(summaryStatusTimeout.current);
+        summaryStatusTimeout.current = null;
+      }
+      setSummaryCopyStatus("");
+      return;
+    }
+
+    if (dayStatusTimeout.current !== null) {
+      window.clearTimeout(dayStatusTimeout.current);
+      dayStatusTimeout.current = null;
+    }
+    setDayCopyStatus(null);
+  }
+
+  async function copyImage(
+    node: HTMLElement | null,
+    filename: string,
+    target: "summary" | { row: TeamRaceResultRow },
+  ) {
+    if (!node || isCopyingImage) return;
+    setIsCopyingImage(true);
+    clearCopyStatus(target);
+
+    try {
+      const result = await copyElementAsPng(node, filename);
+      showCopyStatus(target, result === "copied"
+        ? "Image copied to clipboard."
+        : result === "fallback-download"
+          ? "Clipboard unavailable; PNG downloaded instead."
+          : "PNG downloaded.");
+    } catch (error) {
+      showCopyStatus(
+        target,
+        `Could not create the image: ${error instanceof Error ? error.message : "Unknown error."}`,
+      );
+    } finally {
+      setIsCopyingImage(false);
+    }
+  }
+
+  const eventFileName = event.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || "results";
 
   return (
     <section className="uma-build-results" aria-label="Team results">
       <Summary
+        imageActions={
+          <div className="uma-build-results__image-actions" aria-label="Export summary images">
+            {summaryCopyStatus ? (
+              <span role="status" aria-live="polite">{summaryCopyStatus}</span>
+            ) : null}
+            <button
+              type="button"
+              aria-label="Copy summary image"
+              disabled={!canCopyFullSummary || isCopyingImage}
+              onClick={() =>
+                void copyImage(fullImageRef.current, `${eventFileName}-summary.png`, "summary")}
+            >
+              <span>Summary</span>
+              <CopyIcon />
+            </button>
+            <button
+              type="button"
+              aria-label="Copy rounds and days image"
+              disabled={imageDays.length === 0 || isCopyingImage}
+              onClick={() =>
+                void copyImage(roundsImageRef.current, `${eventFileName}-rounds-and-days.png`, "summary")}
+            >
+              <span>Rounds &amp; days</span>
+              <CopyIcon />
+            </button>
+          </div>
+        }
         finalPlacement={finalPlacement}
         finalBuildPlacements={finalBuildPlacements}
         finalBuilds={finalBuilds}
@@ -278,6 +514,20 @@ export default function Results({
               ...current,
               [title]: !(current[title] ?? false),
             }))}
+          onCopyDay={(row) => {
+            const day = imageDays.find((entry) => entry.row === row);
+            if (!day) return;
+            const dayFileName = `${eventFileName}-${day.round}-${day.label}`
+              .toLowerCase().replace(/[^a-z0-9]+/g, "-")
+              .replace(/^-|-$/g, "");
+            void copyImage(
+              dayImageRefs.current.get(row) ?? null,
+              `${dayFileName}.png`,
+              { row },
+            );
+          }}
+          dayCopyStatus={dayCopyStatus}
+          isCopyingImage={isCopyingImage}
           onAddTicket={addTicket}
           onRemoveTicket={onRemoveTicket}
           onSaveTicket={onSaveTicket}
@@ -303,6 +553,30 @@ export default function Results({
           onClose={() => setIsFinalsEditorOpen(false)}
         />
       ) : null}
+      <div className="result-image-stage" aria-hidden="true">
+        <ResultImage
+          ref={fullImageRef}
+          event={event}
+          days={[]}
+          summary={canCopyFullSummary ? imageSummary : undefined}
+        />
+        <ResultImage
+          ref={roundsImageRef}
+          event={event}
+          days={imageDays}
+        />
+        {imageDays.map((day) => (
+          <ResultImage
+            key={day.row}
+            ref={(node) => {
+              if (node) dayImageRefs.current.set(day.row, node);
+              else dayImageRefs.current.delete(day.row);
+            }}
+            event={event}
+            days={[day]}
+          />
+        ))}
+      </div>
     </section>
   );
 }

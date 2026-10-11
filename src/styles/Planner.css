@@ -116,22 +116,6 @@
   font-size: 0.75rem;
 }
 
-.uma-build-display-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.uma-build-display__duplicate-warning {
-  margin: 0;
-  padding: 0.55rem 0.75rem;
-  color: #f0a4a8;
-  background: rgba(184, 92, 104, 0.12);
-  border: 1px solid rgba(184, 92, 104, 0.45);
-  border-radius: 0.45rem;
-  font-size: 0.82rem;
-}
-
 .uma-build-mode {
   display: flex;
   justify-content: center;
@@ -172,11 +156,6 @@
 }
 
 @media (max-width: 760px) {
-  .uma-build-display-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.35rem;
-  }
-
   .uma-selection {
     padding: 0.6rem;
   }
@@ -185,11 +164,6 @@
     gap: 0.4rem;
   }
 
-  .uma-build-display__support-toggle {
-    justify-content: flex-start;
-    margin-bottom: 0.25rem;
-    font-size: 0.65rem;
-  }
 }
 
 @media (max-width: 560px) {

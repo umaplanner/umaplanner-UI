@@ -12,6 +12,7 @@ import type {
   ResolvedTicketBuildResult,
   ResultGroup,
 } from "./types";
+import CopyIcon from "../../CopyIcon";
 import BuildSelector from "./BuildSelector";
 import { formatResultOpeningDate, formatWinRate } from "./utils";
 
@@ -25,6 +26,9 @@ interface Props {
   umaList: UmaEntry[];
   availableBuilds: StoredUmaBuild[];
   onToggleCollapsed: (title: ResultGroup["title"]) => void;
+  onCopyDay: (row: TeamRaceResultRow) => void;
+  dayCopyStatus: { row: TeamRaceResultRow; message: string } | null;
+  isCopyingImage: boolean;
   onAddTicket: (row: TeamRaceResultRow) => void;
   onRemoveTicket: (row: TeamRaceResultRow, ticket: TeamTicket) => void;
   onSaveTicket: (
@@ -50,6 +54,9 @@ export default function Group({
   umaList,
   availableBuilds,
   onToggleCollapsed,
+  onCopyDay,
+  dayCopyStatus,
+  isCopyingImage,
   onAddTicket,
   onRemoveTicket,
   onSaveTicket,
@@ -101,7 +108,24 @@ export default function Group({
               >
                 <div className="uma-build-results__day-heading">
                   <div>
-                    <h3 id={headingId}>{label}</h3>
+                    <div className="uma-build-results__day-title">
+                      <h3 id={headingId}>{label}</h3>
+                      <button
+                        className="uma-build-results__copy-day"
+                        type="button"
+                        disabled={count === 0 || isCopyingImage}
+                        aria-label={`Copy ${title} ${label} as image`}
+                        onClick={() => onCopyDay(row)}
+                      >
+                        <span>Image</span>
+                        <CopyIcon />
+                      </button>
+                      {dayCopyStatus?.row === row ? (
+                        <span className="uma-build-results__copy-status" role="status" aria-live="polite">
+                          {dayCopyStatus.message}
+                        </span>
+                      ) : null}
+                    </div>
                     {!resultAvailability[row] ? (
                       <p className="uma-build-results__availability" role="status">
                         {openingDate

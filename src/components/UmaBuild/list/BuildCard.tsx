@@ -4,7 +4,10 @@ import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import UmaImage from "../../UmaImage";
-import UmaBuildDisplay from "../display/Display";
+import { copyElementAsPng } from "../../../lib/copyElementAsPng";
+import CopyIcon from "../../CopyIcon";
+import BuildImage from "../image/BuildImage";
+import UmaBuildTeam from "../team/Team";
 import {
   aptitudeRankImages,
   getStatRank,
@@ -23,6 +26,7 @@ interface Props {
   headerAction?: ReactNode;
   footerAction?: ReactNode;
   testId?: string;
+  imageEvent?: string;
 }
 
 export default function BuildCard({
@@ -35,10 +39,21 @@ export default function BuildCard({
   headerAction,
   footerAction,
   testId,
+  imageEvent = build.event,
 }: Props) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isCopyingImage, setIsCopyingImage] = useState(false);
+  const [imageStatus, setImageStatus] = useState("");
   const detailsDialogRef = useRef<HTMLDialogElement | null>(null);
+  const imageRef = useRef<HTMLElement | null>(null);
+  const imageStatusTimeout = useRef<number | null>(null);
   const strategyIcon = strategyIcons[normalizeStrategyName(build.strategy)];
+
+  useEffect(() => () => {
+    if (imageStatusTimeout.current !== null) {
+      window.clearTimeout(imageStatusTimeout.current);
+    }
+  }, []);
 
   useEffect(() => {
     const dialog = detailsDialogRef.current;
@@ -48,6 +63,54 @@ export default function BuildCard({
       if (dialog.open) dialog.close();
     };
   }, [isDetailsOpen]);
+
+  function clearImageStatus() {
+    if (imageStatusTimeout.current !== null) {
+      window.clearTimeout(imageStatusTimeout.current);
+      imageStatusTimeout.current = null;
+    }
+    setImageStatus("");
+  }
+
+  function showImageStatus(message: string) {
+    clearImageStatus();
+    setImageStatus(message);
+    imageStatusTimeout.current = window.setTimeout(() => {
+      setImageStatus("");
+      imageStatusTimeout.current = null;
+    }, 5000);
+  }
+
+  async function copyBuildImage() {
+    const node = imageRef.current;
+    if (!node || isCopyingImage) return;
+
+    setIsCopyingImage(true);
+    clearImageStatus();
+    const eventFileName = imageEvent.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "build";
+    const buildFileName = (build.name || `uma-${build.outfitId}`)
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "build";
+
+    try {
+      const result = await copyElementAsPng(
+        node,
+        `umaplanner-${eventFileName}-${buildFileName}.png`,
+      );
+      showImageStatus(result === "copied"
+        ? "Image copied to clipboard."
+        : result === "fallback-download"
+          ? "Clipboard unavailable; PNG downloaded instead."
+          : "PNG downloaded.");
+    } catch (error) {
+      showImageStatus(
+        `Could not create the image: ${error instanceof Error ? error.message : "Unknown error."}`,
+      );
+    } finally {
+      setIsCopyingImage(false);
+    }
+  }
 
   return (
     <article className="build-card" data-testid={testId}>
@@ -111,15 +174,43 @@ export default function BuildCard({
           }}
         >
           <button className="build-card__details-close" type="button" aria-label="Close details" onClick={() => setIsDetailsOpen(false)}>×</button>
-          <UmaBuildDisplay
+          <UmaBuildTeam
             teamNumber={1}
             build={build}
             availableBuilds={[]}
             umaList={uma ? [uma] : []}
             skillList={skillList}
+            headerActions={(
+              <div className="build-card__image-actions">
+                {imageStatus ? (
+                  <span role="status" aria-live="polite">{imageStatus}</span>
+                ) : null}
+                <button
+                  type="button"
+                  className="build-card__copy-image"
+                  aria-label="Copy build image"
+                  disabled={isCopyingImage}
+                  onClick={() => void copyBuildImage()}
+                >
+                  <span>{isCopyingImage ? "Creating…" : "Image"}</span>
+                  <CopyIcon />
+                </button>
+              </div>
+            )}
             onSelectBuild={() => undefined}
           />
         </dialog>
+      ) : null}
+      {isDetailsOpen ? (
+        <div className="result-image-stage" aria-hidden="true">
+          <BuildImage
+            ref={imageRef}
+            event={imageEvent}
+            builds={[{ slot: 1, build }]}
+            umaList={uma ? [uma] : []}
+            skillList={skillList}
+          />
+        </div>
       ) : null}
     </article>
   );

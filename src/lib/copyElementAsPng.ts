@@ -6,7 +6,7 @@ export async function copyElementAsPng(
   node: HTMLElement,
   filename: string,
 ): Promise<ImageCopyResult> {
-  const image = toBlob(node, { pixelRatio: 2 }).then((blob) => {
+  const image = toBlob(node, { pixelRatio: 2, cacheBust: true }).then((blob) => {
     if (!blob) throw new Error("The browser could not render the image.");
     return blob;
   });

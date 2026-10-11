@@ -3,10 +3,29 @@
   gap: 0.75rem;
 }
 
+.uma-build-results__mode,
+.uma-build-results__summary-row {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--muted-text-color);
+  font-size: 0.78rem;
+}
+
+.uma-build-results__mode select,
+.uma-build-results__summary-row select {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.6rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.4rem;
+  font: inherit;
+}
+
 .uma-build-results__summary {
   min-width: 0;
   padding: 0.85rem;
-  background: #171d28;
+  background: var(--surface-raised-color);
   border: 1px solid #27303e;
   border-radius: 0.65rem;
 }
@@ -115,6 +134,18 @@
   justify-content: space-between;
   gap: 0.75rem;
   margin-bottom: 0.55rem;
+}
+
+.uma-build-results__summary-build-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.uma-build-results__summary-build-heading h3 {
+  margin: 0;
 }
 
 .uma-build-results__summary-finals-heading h3 {
@@ -273,10 +304,6 @@
   font-size: 0.9rem;
 }
 
-.uma-build-results__exclude {
-  margin-right: 0.5rem;
-}
-
 .uma-build-results__collapse {
   display: inline-flex;
   flex: 0 0 auto;
@@ -370,23 +397,8 @@
   object-fit: contain;
 }
 
-.uma-build-results__details {
-  padding: 0.25rem 0.45rem;
-  color: var(--text-color);
-  background: var(--surface-raised-color);
-  border: 1px solid var(--border-color);
-  border-radius: 0.35rem;
-  cursor: pointer;
-  font-size: 0.7rem;
-}
-
-.uma-build-results__details:hover,
-.uma-build-results__details:focus-visible {
-  background: var(--accent-color);
-  outline: none;
-}
-
-.uma-build-results input {
+.uma-build-results__team-wins-input input,
+.uma-build-results__ticket-editor-build input {
   width: 4.25rem;
   min-height: 2.2rem;
   padding: 0.35rem;
@@ -417,7 +429,7 @@
   gap: 0.45rem;
   width: 100%;
   min-width: 0;
-  max-width: 11rem;
+  max-width: 9.5rem;
   padding: 0.55rem;
   background: #10141c;
   border: 1px solid #303b4d;
@@ -436,13 +448,94 @@
 .uma-build-results__ticket-card-actions {
   display: flex;
   align-items: center;
+  gap: 0.2rem;
+}
+
+.uma-build-results__ticket-edit {
+  min-height: 1.5rem;
+  padding: 0.15rem 0.4rem;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  font: inherit;
+  font-size: 0.68rem;
+  cursor: pointer;
+}
+
+.uma-build-results__ticket-edit:hover,
+.uma-build-results__ticket-edit:focus-visible,
+.uma-build-results__ticket-edit[aria-pressed="true"] {
+  color: var(--accent-color);
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build-results__win-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.uma-build-results__win-stepper button {
+  display: inline-grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  padding: 0;
+  color: var(--text-color);
+  background: var(--surface-raised-color);
+  border: 1px solid var(--border-color);
+  border-radius: 0.3rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.uma-build-results__win-stepper button:hover:not(:disabled),
+.uma-build-results__win-stepper button:focus-visible {
+  border-color: var(--accent-color);
+  outline: none;
+}
+
+.uma-build-results__win-stepper button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.uma-build-results__win-stepper strong {
+  min-width: 1.2rem;
+  text-align: center;
+}
+
+.uma-build-results__team-wins {
+  display: flex;
+  align-items: center;
   gap: 0.25rem;
+  margin: 0;
+  color: var(--muted-text-color);
+  font-size: 0.68rem;
+}
+
+.uma-build-results__summary-entry-wins {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  color: var(--text-color);
+  font-size: 0.82rem;
+}
+
+.uma-build-results__summary-total-wins {
+  margin: 0 1rem;
+  color: var(--muted-text-color);
+  font-size: 0.75rem;
 }
 
 .uma-build-results__ticket-remove {
   display: inline-grid;
-  width: 1.8rem;
-  height: 1.8rem;
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
   place-items: center;
   padding: 0.3rem;
   color: #ef4444;
@@ -478,27 +571,55 @@
 }
 
 .uma-build-results__ticket-card li {
-  display: flex;
   min-width: 0;
-  align-items: center;
-  gap: 0.45rem;
   color: var(--text-color);
 }
 
-.uma-build-results__ticket-card li span {
+.uma-build-results__ticket-build-entry {
   display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  min-width: 0;
+  gap: 0.1rem 0.35rem;
+}
+
+.uma-build-results__ticket-build-entry > .uma-build-results__build-selector-field--compact {
+  display: contents;
+}
+
+.uma-build-results__ticket-build-entry > .uma-build-results__build-selector-field--compact > .uma-build-results__ticket-build-part:first-child {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  align-self: center;
+}
+
+.uma-build-results__ticket-build-entry > .uma-build-results__build-selector-field--compact > .uma-build-results__ticket-build-name {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.uma-build-results__ticket-build-entry > .uma-build-results__build-selector-field--compact > .uma-build-results__build-picker--empty {
+  grid-column: 1 / -1;
+  grid-row: 1 / span 2;
+}
+
+.uma-build-results__ticket-build-entry > .uma-build-results__win-stepper {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  min-width: 0;
+  justify-content: flex-start;
+}
+
+.uma-build-results__ticket-build-entry > .uma-build-results__win-stepper small {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-.uma-build-results__ticket-card li strong,
 .uma-build-results__ticket-card li small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.uma-build-results__ticket-card li strong {
-  font-size: 0.72rem;
 }
 
 .uma-build-results__ticket-card li small,
@@ -543,25 +664,9 @@
 
 .uma-build-results__ticket-editor-builds {
   display: grid;
-  gap: 0.7rem;
-  padding: 0.85rem 1rem;
-}
-
-.uma-build-results__team-wins-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0.4rem 1rem 0;
-  color: var(--muted-text-color);
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.uma-build-results__team-wins-toggle input {
-  width: 1rem;
-  height: 1rem;
-  margin: 0;
-  accent-color: var(--accent-color);
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.85rem 0.5rem;
 }
 
 .uma-build-results__team-wins-input {
@@ -642,6 +747,87 @@
   font-weight: 650;
 }
 
+.uma-build-results__build-selector-field--compact {
+  display: contents;
+  min-width: 0;
+}
+
+.uma-build-results__ticket-build-part {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  padding: 0;
+  color: var(--text-color);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 0.3rem;
+  font: inherit;
+  text-align: left;
+  cursor: default;
+}
+
+.uma-build-results__ticket-build-part:not(:disabled) {
+  padding: 0.1rem;
+  background: transparent;
+  border-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.uma-build-results__ticket-build-part:disabled,
+.uma-build-results__ticket-build-part:disabled:hover,
+.uma-build-results__ticket-build-part:disabled:focus-visible {
+  color: var(--text-color);
+  background: transparent;
+  border-color: transparent;
+  outline: none;
+}
+
+.uma-build-results__ticket-build-name {
+  width: 100%;
+  overflow: hidden;
+  align-self: start;
+  justify-self: start;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.uma-build-results__build-selector-field--compact .uma-build-results__build-picker {
+  min-height: 2rem;
+  background: var(--surface-raised-color);
+  border-color: var(--border-color);
+  border-style: dashed;
+}
+
+.uma-build-results__build-selector-field--compact .uma-build-results__ticket-build-icon,
+.uma-build-results__build-selector-field--compact .uma-build-results__ticket-build-icon-placeholder {
+  width: 2.4rem;
+  height: 2.4rem;
+}
+
+.uma-build-results__build-selector-field--compact > .uma-build-results__build-picker {
+  grid-column: 1 / -1;
+}
+
+.uma-build-results__ticket-card li .uma-build-results__win-stepper {
+  gap: 0.3rem;
+}
+
+.uma-build-results__ticket-card li .uma-build-results__win-stepper small {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.uma-build-results__ticket-card li .uma-build-results__win-stepper button {
+  flex: 0 0 1.2rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  text-align: center;
+}
+
 .uma-build-results__build-picker {
   display: flex;
   width: 100%;
@@ -658,8 +844,25 @@
   cursor: pointer;
 }
 
-.uma-build-results__build-picker:hover,
-.uma-build-results__build-picker:focus-visible {
+.uma-build-results__build-picker:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.uma-build-results__build-picker--empty {
+  min-height: 3.2rem;
+  justify-content: center;
+  border-style: dashed;
+}
+
+.uma-build-results__build-picker-empty-label {
+  color: var(--accent-color);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.uma-build-results__build-picker:not(:disabled):hover,
+.uma-build-results__build-picker:not(:disabled):focus-visible {
   border-color: var(--accent-color);
   outline: none;
 }
@@ -812,12 +1015,19 @@
 }
 
 .uma-build-results__finals-editor .uma-build-results__placement {
-  padding: 0 1rem;
+  padding: 0 0.5rem;
 }
 
 .uma-build-results__finals-editor-build {
   grid-template-columns: minmax(0, 1fr) 8rem auto;
-  align-items: end;
+  align-items: center;
+}
+
+.uma-build-results__finals-editor-build .uma-build-results__remove-build {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: start;
+  align-self: center;
 }
 
 .uma-build-results__finals-placement-select {
@@ -839,7 +1049,8 @@
   font: inherit;
 }
 
-.uma-build-results input:focus-visible {
+.uma-build-results__team-wins-input input:focus-visible,
+.uma-build-results__ticket-editor-build input:focus-visible {
   border-color: var(--accent-color);
   outline: 2px solid rgba(105, 183, 255, 0.18);
 }
@@ -852,7 +1063,7 @@
   max-height: 90vh;
   overflow: auto;
   overscroll-behavior: contain;
-  padding: 2.5rem 0 0;
+  padding: 1rem 0 0;
   color: var(--text-color);
   background: var(--surface-color);
   border: 1px solid var(--border-color);
@@ -865,7 +1076,7 @@
 
 .uma-build-results__dialog h2 {
   margin: 0;
-  padding: 0 1rem 0.75rem;
+  padding: 0 0.5rem 0.75rem;
   color: var(--text-color);
   font-size: 1rem;
 }
@@ -963,8 +1174,13 @@
     grid-template-columns: minmax(0, 1fr) 4.5rem;
   }
 
+  .uma-build-results__ticket-editor-builds {
+    grid-template-columns: 1fr;
+  }
+
   .uma-build-results__ticket-editor-build .uma-build-results__remove-build {
     grid-column: 1 / -1;
+    grid-row: auto;
     justify-self: end;
   }
 

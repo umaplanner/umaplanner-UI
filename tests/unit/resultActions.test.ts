@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import { createEmptyEventResults } from "../../src/features/planner/plannerTypes";
+import {
+  createEmptyEventResults,
+} from "../../src/features/planner/plannerTypes";
 import { createResultActions } from "../../src/features/planner/resultActions";
 
 describe("result actions", () => {
-  it("requires all three builds and saves team wins without per-build wins", () => {
+  it("creates a ticket immediately with its saved team lineup and team wins", () => {
     const current = createEmptyEventResults("CM 42");
     const saveEventResults = vi.fn();
     const { saveTicketResult } = createResultActions({
@@ -32,7 +34,7 @@ describe("result actions", () => {
     }));
   });
 
-  it("does not save a ticket with fewer than three builds", () => {
+  it("creates a ticket with no lineup so its build slots can be filled in place", () => {
     const current = createEmptyEventResults("CM 42");
     const saveEventResults = vi.fn();
     const { saveTicketResult } = createResultActions({
@@ -42,11 +44,12 @@ describe("result actions", () => {
       saveEventResults,
     });
 
-    saveTicketResult("round1Day1", 1, [
-      { buildId: "build-1", slot: 1, wins: 3 },
-      { buildId: "build-2", slot: 2, wins: 0 },
-    ]);
+    saveTicketResult("round1Day1", 1, []);
 
-    expect(saveEventResults).not.toHaveBeenCalled();
+    expect(saveEventResults).toHaveBeenCalledWith(expect.objectContaining({
+      results: expect.objectContaining({ round1Day1: [0, 0, 0, 0] }),
+      ticketCounts: expect.objectContaining({ round1Day1: 1 }),
+      ticketBuildResults: { round1Day1: { 1: [] } },
+    }));
   });
 });

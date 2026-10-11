@@ -67,7 +67,6 @@ export default function Planner() {
     swapTeamBuild,
     saveTicketResult,
     removeTicketResult,
-    updateResultRoundExcluded,
     saveFinalsResult,
   } = useTeam(selectedEvent);
   useEffect(() => {
@@ -353,7 +352,6 @@ export default function Planner() {
             showSupportCards={showSupportCards}
             onSaveTicket={saveTicketResult}
             onRemoveTicket={removeTicketResult}
-            onToggleRoundExcluded={updateResultRoundExcluded}
             onSaveFinals={saveFinalsResult}
           />
         ) : buildMode === "display" ? (

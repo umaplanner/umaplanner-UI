@@ -92,8 +92,7 @@
   padding: 0.35rem;
 }
 
-.uma-build__plan-toggle,
-.uma-build-results__exclude {
+.uma-build__plan-toggle {
   display: inline-flex;
   flex: 0 0 auto;
   flex-direction: row;
@@ -148,9 +147,7 @@
 }
 
 .uma-build__plan-toggle:hover,
-.uma-build__plan-toggle:focus-within,
-.uma-build-results__exclude:hover,
-.uma-build-results__exclude:focus-within {
+.uma-build__plan-toggle:focus-within {
   background: rgba(105, 183, 255, 0.16);
   border-color: var(--accent-color);
 }
@@ -165,8 +162,7 @@
   text-transform: none;
 }
 
-.uma-build__toolbar .uma-build__plan-toggle input,
-.uma-build-results .uma-build-results__exclude input {
+.uma-build__toolbar .uma-build__plan-toggle input {
   flex: 0 0 auto;
   order: -1;
   width: 1rem;

@@ -44,19 +44,11 @@ async function openSavedBuildPicker(
   slot: number,
 ) {
   await user.click(
-    within(parent).getByRole("button", { name: `Choose build for Uma ${slot}` }),
+    within(parent).getAllByRole("button", {
+      name: new RegExp(`Choose build.*Uma ${slot}`),
+    })[0],
   );
-  return screen.getByRole("dialog", { name: "Choose a saved build" });
-}
-
-async function chooseSavedBuild(
-  user: ReturnType<typeof userEvent.setup>,
-  parent: HTMLElement,
-  slot: number,
-  buildName: RegExp,
-) {
-  const picker = await openSavedBuildPicker(user, parent, slot);
-  await user.click(within(picker).getByRole("button", { name: buildName }));
+  return screen.getByRole("dialog", { name: /saved build/i });
 }
 
 describe("UmaBuildResults", () => {
@@ -91,7 +83,7 @@ describe("UmaBuildResults", () => {
     unmount();
   });
 
-  it("keeps ticket and Finals editors open through Strict Mode effect cleanup", async () => {
+  it("adds a ticket directly without opening a ticket editor in Strict Mode", async () => {
     const user = userEvent.setup();
     Object.defineProperty(dialogPrototype, "close", {
       configurable: true,
@@ -128,12 +120,16 @@ describe("UmaBuildResults", () => {
       .toHaveAttribute("open");
     await user.click(screen.getByRole("button", { name: "Close Finals editor" }));
 
-    await user.click(screen.getAllByRole("button", { name: "Add ticket" })[0]);
-    expect(screen.getByRole("dialog", { name: "Add ticket — Round 1 Day 1" }))
-      .toHaveAttribute("open");
+    await user.click(
+      within(within(screen.getByRole("region", { name: "Round 1" }))
+        .getByRole("region", { name: "Day 1" }))
+        .getByRole("button", { name: "Add ticket" }),
+    );
+    expect(screen.queryByRole("dialog", { name: "Add ticket — Round 1 Day 1" }))
+      .not.toBeInTheDocument();
   });
 
-  it("shows rounds with two day rows and computes rates out of 20", () => {
+  it("shows rounds and keeps build swapping disabled until ticket editing is pressed", () => {
     const onRemoveTicket = vi.fn();
     const builds = [1, 2, 3].map((slot) => ({
       ...createDefaultBuild(String(slot)),
@@ -186,18 +182,14 @@ describe("UmaBuildResults", () => {
       within(within(day1).getByRole("article", { name: "Ticket 1" }))
         .getByText("Team wins: 3/5"),
     ).toBeInTheDocument();
-    fireEvent.click(
-      within(within(day1).getByRole("article", { name: "Ticket 1" }))
-        .getByRole("button", { name: "Edit" }),
-    );
-    const editDialog = screen.getByRole("dialog", {
-      name: "Edit ticket — Round 1 Day 1",
-    });
-    expect(editDialog.querySelector(".uma-build-results__ticket-build-icon"))
-      .toHaveAttribute("src", expect.stringContaining("/images/characters/thumb/1.png"));
-    expect(within(editDialog).queryByRole("button", { name: "Add build" }))
-      .not.toBeInTheDocument();
-    fireEvent.click(within(editDialog).getByRole("button", { name: "Cancel" }));
+    const ticket = within(day1).getByRole("article", { name: "Ticket 1" });
+    expect(within(ticket).getByRole("button", { name: "Edit Ticket 1" }))
+      .toHaveAttribute("aria-pressed", "false");
+    expect(within(ticket).getByRole("button", {
+      name: "Choose build by name for Uma 1",
+    })).toBeDisabled();
+    expect(within(ticket).getByRole("button", { name: "Remove Ticket 1" }))
+      .toHaveClass("uma-build-results__ticket-remove");
 
     const round2 = screen.getByRole("region", { name: "Round 2" });
     expect(
@@ -212,9 +204,7 @@ describe("UmaBuildResults", () => {
     expect(screen.queryByRole("spinbutton")).not.toBeInTheDocument();
     expect(within(day1).queryByRole("button", { name: "Add ticket" }))
       .not.toBeInTheDocument();
-    const removeTicket = within(day1).getByRole("button", { name: "Remove Ticket 2" });
-    expect(removeTicket).toHaveClass("uma-build-results__ticket-remove");
-    fireEvent.click(removeTicket);
+    fireEvent.click(within(day1).getByRole("button", { name: "Remove Ticket 2" }));
     expect(onRemoveTicket).toHaveBeenCalledWith("round1Day1", 2);
   });
 
@@ -672,7 +662,7 @@ describe("UmaBuildResults", () => {
       .toHaveTextContent("3/5");
   });
 
-  it("requires three builds when recording team wins without a per-build breakdown", async () => {
+  it("uses full-detail tickets and preserves saved team totals", async () => {
     const user = userEvent.setup();
     const onSaveTicket = vi.fn();
     const builds = [1, 2, 3].map((slot) => ({
@@ -709,35 +699,12 @@ describe("UmaBuildResults", () => {
     const day1 = within(screen.getByRole("region", { name: "Round 1" }))
       .getByRole("region", { name: "Day 1" });
     await user.click(within(day1).getByRole("button", { name: "Add ticket" }));
-    const dialog = screen.getByRole("dialog", {
-      name: "Add ticket — Round 1 Day 1",
-    });
-    const submitButton = within(dialog).getByRole("button", { name: "Submit ticket" });
-    expect(submitButton).toBeDisabled();
-    await user.click(within(dialog).getByRole("checkbox", {
-      name: "I know the team wins, but not which builds got them",
-    }));
-    fireEvent.change(within(dialog).getByRole("spinbutton", { name: "Team wins" }), {
-      target: { value: "3" },
-    });
-    expect(submitButton).toBeDisabled();
-    await chooseSavedBuild(user, dialog, 1, /Build 1/);
-    expect(submitButton).toBeDisabled();
-    await chooseSavedBuild(user, dialog, 2, /Build 2/);
-    expect(submitButton).toBeDisabled();
-    await chooseSavedBuild(user, dialog, 3, /Build 3/);
-    expect(submitButton).toBeEnabled();
-    await user.click(submitButton);
-    expect(onSaveTicket).toHaveBeenCalledWith("round1Day1", 1, [
-      { buildId: "build-1", slot: 1, wins: 0 },
-      { buildId: "build-2", slot: 2, wins: 0 },
-      { buildId: "build-3", slot: 3, wins: 0 },
-    ], 3);
+    expect(onSaveTicket).toHaveBeenCalledWith("round1Day1", 1, []);
 
     rerender(
       <UmaBuildResults
         {...props}
-        results={{
+      results={{
           ...props.results,
           round1Day1: [3, 0, 0, 0],
         }}
@@ -754,19 +721,25 @@ describe("UmaBuildResults", () => {
     );
     const savedDay1 = within(screen.getByRole("region", { name: "Round 1" }))
       .getByRole("region", { name: "Day 1" });
-    expect(within(savedDay1).getByText("Team wins: 3/5"))
-      .toBeInTheDocument();
+    expect(within(savedDay1).getByText("Team wins:", { exact: false }))
+      .toHaveTextContent("Team wins: 3/5");
     [1, 2, 3].forEach((slot) => {
       expect(within(savedDay1).getByText(`Build ${slot}`)).toBeInTheDocument();
+      expect(within(savedDay1).getByRole("button", {
+        name: `Increase wins for Build ${slot} on Ticket 1`,
+      })).toBeInTheDocument();
     });
-    expect(within(savedDay1).getAllByText("Wins N/A")).toHaveLength(3);
+    expect(within(savedDay1).queryByRole("button", {
+      name: "Increase team wins on Ticket 1",
+    })).not.toBeInTheDocument();
+    expect(within(savedDay1).queryByText("Wins N/A")).not.toBeInTheDocument();
     expect(within(savedDay1).getByLabelText("Round 1 Day 1 win rate"))
       .toHaveTextContent("60% (3/5)");
     expect(screen.getByLabelText("Total win rate")).toHaveTextContent("60% WR");
     expect(screen.getByLabelText("Total win rate")).toHaveTextContent("3/5");
   });
 
-  it("prevents ticket builds with duplicate base Umas and excludes plan builds", async () => {
+  it("shows the same saved-build choices when swapping ticket builds", async () => {
     const user = userEvent.setup();
     const builds = [
       { id: "build-a", outfitId: "100101", name: "Build A" },
@@ -784,9 +757,15 @@ describe("UmaBuildResults", () => {
       <UmaBuildResults
         event="CM 42"
         results={createDefaultTeamResults()}
-        buildAssignments={{}}
-        ticketBuildResults={{}}
-        ticketCounts={createDefaultTicketCounts()}
+        buildAssignments={{
+          round1Day1: { 1: [{ buildId: "build-a", tickets: [1] }] },
+        }}
+        ticketBuildResults={{
+          round1Day1: {
+            1: [{ buildId: "build-a", slot: 1, wins: 0 }],
+          },
+        }}
+        ticketCounts={{ ...createDefaultTicketCounts(), round1Day1: 1 }}
         initialBuildIds={[null, null, null]}
         finalPlacement={null}
         availableBuilds={builds}
@@ -804,34 +783,48 @@ describe("UmaBuildResults", () => {
         onSaveFinals={vi.fn()}
       />,
     );
-    await user.click(
-      within(within(screen.getByRole("region", { name: "Round 1" }))
-        .getByRole("region", { name: "Day 1" }))
-        .getByRole("button", { name: "Add ticket" }),
-    );
-    const dialog = screen.getByRole("dialog", {
-      name: "Add ticket — Round 1 Day 1",
+    const day1 = within(screen.getByRole("region", { name: "Round 1" }))
+      .getByRole("region", { name: "Day 1" });
+    const ticketCard = within(day1).getByRole("article", { name: "Ticket 1" });
+    const editButton = within(ticketCard).getByRole("button", { name: "Edit Ticket 1" });
+    const buildButton = within(ticketCard).getByRole("button", {
+      name: "Choose build by image for Uma 1",
     });
-    const firstBuildPicker = await openSavedBuildPicker(user, dialog, 1);
-    const buildACard = within(firstBuildPicker).getByRole("button", { name: /Build A/ });
-    expect(buildACard).toHaveTextContent("Uma A");
-    expect(buildACard).toHaveTextContent("Character A");
-    expect(buildACard).toHaveTextContent("Speed 1200");
-    await user.click(buildACard);
-    const secondBuildPicker = await openSavedBuildPicker(user, dialog, 2);
-    expect(within(secondBuildPicker).queryByRole("button", { name: /Build B/ }))
-      .not.toBeInTheDocument();
-    expect(within(secondBuildPicker).queryByRole("button", { name: /Plan/ }))
-      .not.toBeInTheDocument();
+    expect(buildButton).toBeDisabled();
+    await user.click(editButton);
+    expect(editButton).toHaveAttribute("aria-pressed", "true");
+    expect(buildButton).toBeEnabled();
+    const firstBuildPicker = await openSavedBuildPicker(user, ticketCard, 1);
+    expect(within(firstBuildPicker).getByRole("button", { name: /Build A/ }))
+      .toHaveTextContent("Speed 1200");
+    await user.click(within(firstBuildPicker).getByRole("button", {
+      name: "Close saved builds",
+    }));
+    await user.click(within(ticketCard).getByRole("button", {
+      name: "Choose build by name for Uma 1",
+    }));
+    expect(screen.getByRole("dialog", { name: "Swap to a saved build" }))
+      .toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Close saved builds" }));
+    const secondBuildPicker = await openSavedBuildPicker(user, ticketCard, 2);
+    expect(within(secondBuildPicker).getByRole("button", { name: /Build B/ }))
+      .toBeInTheDocument();
+    expect(within(secondBuildPicker).getByRole("button", { name: /Plan/ }))
+      .toBeInTheDocument();
     expect(within(secondBuildPicker).getByRole("button", { name: /Build C/ }))
       .toBeInTheDocument();
     await user.click(within(secondBuildPicker).getByRole("button", {
       name: "Close saved builds",
     }));
+    await user.click(editButton);
+    expect(editButton).toHaveAttribute("aria-pressed", "false");
+    expect(buildButton).toBeDisabled();
+    await user.click(buildButton);
+    expect(screen.queryByRole("dialog", { name: "Swap to a saved build" }))
+      .not.toBeInTheDocument();
   });
 
-  it("requires three builds and limits combined wins to five", async () => {
-    const user = userEvent.setup();
+  it("renders saved ticket builds and wins in the final ticket card", () => {
     const onSaveTicket = vi.fn();
     const builds = [1, 2, 3, 4].map((slot) => ({
       ...createDefaultBuild(String(slot)),
@@ -841,13 +834,27 @@ describe("UmaBuildResults", () => {
       lastUpdate: slot,
     }));
 
-    const { unmount } = render(
+    render(
       <UmaBuildResults
         event="CM 42"
-        results={createDefaultTeamResults()}
-        buildAssignments={{}}
-        ticketBuildResults={{}}
-        ticketCounts={createDefaultTicketCounts()}
+        results={{ ...createDefaultTeamResults(), round1Day1: [5, 0, 0, 0] }}
+        buildAssignments={{
+          round1Day1: {
+            1: [{ buildId: "build-1", tickets: [1] }],
+            2: [{ buildId: "build-2", tickets: [1] }],
+            3: [{ buildId: "build-3", tickets: [1] }],
+          },
+        }}
+        ticketBuildResults={{
+          round1Day1: {
+            1: [
+              { slot: 1, buildId: "build-1", wins: 4 },
+              { slot: 2, buildId: "build-2", wins: 1 },
+              { slot: 3, buildId: "build-3", wins: 0 },
+            ],
+          },
+        }}
+        ticketCounts={{ ...createDefaultTicketCounts(), round1Day1: 1 }}
         initialBuildIds={[null, null, null]}
         finalPlacement={null}
         availableBuilds={builds}
@@ -870,41 +877,22 @@ describe("UmaBuildResults", () => {
 
     const round1Day1 = within(screen.getByRole("region", { name: "Round 1" }))
       .getByRole("region", { name: "Day 1" });
-    await user.click(within(round1Day1).getByRole("button", { name: "Add ticket" }));
-
-    const dialog = screen.getByRole("dialog", { name: "Add ticket — Round 1 Day 1" });
-    await chooseSavedBuild(user, dialog, 1, /Build 1/);
-    expect(within(dialog).getByRole("spinbutton", { name: "Wins for Build 1" }))
-      .toHaveValue(0);
-    await chooseSavedBuild(user, dialog, 2, /Build 2/);
-
-    fireEvent.change(
-      within(dialog).getByRole("spinbutton", { name: "Wins for Build 1" }),
-      { target: { value: "4" } },
-    );
-    const secondWins = within(dialog).getByRole("spinbutton", {
-      name: "Wins for Build 2",
-    });
-    expect(secondWins).toHaveAttribute("max", "1");
-    fireEvent.change(secondWins, { target: { value: "2" } });
-    expect(secondWins).toHaveValue(1);
-    expect(within(dialog).getByText("Total wins: 5/5")).toBeInTheDocument();
-
-    await chooseSavedBuild(user, dialog, 3, /Build 3/);
-    expect(within(dialog).getAllByRole("button", { name: /Choose build for Uma/ }))
-      .toHaveLength(3);
-
-    await user.click(within(dialog).getByRole("button", { name: "Submit ticket" }));
-    expect(onSaveTicket).toHaveBeenCalledWith("round1Day1", 1, [
-      { slot: 1, buildId: "build-1", wins: 4 },
-      { slot: 2, buildId: "build-2", wins: 1 },
-      { slot: 3, buildId: "build-3", wins: 0 },
-    ]);
-    unmount();
+    const ticket = within(round1Day1).getByRole("article", { name: "Ticket 1" });
+    expect(within(ticket).getByRole("button", {
+      name: "Choose build by name for Uma 1",
+    })).toHaveTextContent("Build 1");
+    expect(within(ticket).getByRole("button", {
+      name: "Increase wins for Build 1 on Ticket 1",
+    })).toBeDisabled();
+    expect(within(ticket).getByText("Team wins: 5/5")).toBeInTheDocument();
+    expect(within(ticket).getByRole("button", { name: "Remove Ticket 1" }))
+      .toBeInTheDocument();
+    expect(onSaveTicket).not.toHaveBeenCalled();
   });
 
   it("copies the current team for the first ticket, then the previous ticket lineup", async () => {
     const user = userEvent.setup();
+    const onSaveTicket = vi.fn();
     const builds = [1, 2, 3, 4].map((slot) => ({
       ...createDefaultBuild(String(slot)),
       id: `build-${slot}`,
@@ -930,7 +918,7 @@ describe("UmaBuildResults", () => {
         }))}
         skillList={[]}
         showSupportCards={false}
-        onSaveTicket={vi.fn()}
+        onSaveTicket={onSaveTicket}
         onRemoveTicket={vi.fn()}
         onToggleRoundExcluded={vi.fn()}
         onSaveFinals={vi.fn()}
@@ -940,23 +928,11 @@ describe("UmaBuildResults", () => {
     const day1 = within(screen.getByRole("region", { name: "Round 1" }))
       .getByRole("region", { name: "Day 1" });
     await user.click(within(day1).getByRole("button", { name: "Add ticket" }));
-    const dialog = screen.getByRole("dialog", {
-      name: "Add ticket — Round 1 Day 1",
-    });
-    expect(within(dialog).getAllByRole("button", { name: /Choose build for Uma/ }))
-      .toHaveLength(3);
-    [1, 2, 3].forEach((slot) => {
-      const buildPicker = within(dialog).getByRole("button", {
-        name: `Choose build for Uma ${slot}`,
-      });
-      expect(buildPicker).toHaveTextContent(`Build ${slot}`);
-      expect(buildPicker).toHaveTextContent(`Uma ${slot}`);
-      expect(buildPicker).toHaveTextContent(`Character ${slot}`);
-      expect(
-        within(dialog).getByRole("spinbutton", { name: `Wins for Build ${slot}` }),
-      ).toHaveValue(0);
-    });
-    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(onSaveTicket).toHaveBeenLastCalledWith("round1Day1", 1, [
+      { buildId: "build-1", slot: 1, wins: 0 },
+      { buildId: "build-2", slot: 2, wins: 0 },
+      { buildId: "build-3", slot: 3, wins: 0 },
+    ]);
 
     const ticketCounts = { ...createDefaultTicketCounts(), round1Day1: 1 as const };
     rerender(
@@ -967,10 +943,20 @@ describe("UmaBuildResults", () => {
           round1Day1: [2, 0, 0, 0],
         }}
         buildAssignments={{
-          round1Day1: { 1: [{ buildId: "build-4", tickets: [1] }] },
+          round1Day1: {
+            1: [{ buildId: "build-4", tickets: [1] }],
+            2: [{ buildId: "build-2", tickets: [1] }],
+            3: [{ buildId: "build-3", tickets: [1] }],
+          },
         }}
         ticketBuildResults={{
-          round1Day1: { 1: [{ buildId: "build-4", slot: 1, wins: 2 }] },
+          round1Day1: {
+            1: [
+              { buildId: "build-4", slot: 1, wins: 2 },
+              { buildId: "build-2", slot: 2, wins: 0 },
+              { buildId: "build-3", slot: 3, wins: 0 },
+            ],
+          },
         }}
         ticketCounts={ticketCounts}
         initialBuildIds={builds.slice(0, 3).map((build) => build.id) as [string, string, string]}
@@ -984,7 +970,7 @@ describe("UmaBuildResults", () => {
         }))}
         skillList={[]}
         showSupportCards={false}
-        onSaveTicket={vi.fn()}
+        onSaveTicket={onSaveTicket}
         onRemoveTicket={vi.fn()}
         onToggleRoundExcluded={vi.fn()}
         onSaveFinals={vi.fn()}
@@ -993,15 +979,11 @@ describe("UmaBuildResults", () => {
     const updatedDay1 = within(screen.getByRole("region", { name: "Round 1" }))
       .getByRole("region", { name: "Day 1" });
     await user.click(within(updatedDay1).getByRole("button", { name: "Add ticket" }));
-    const nextTicketDialog = screen.getByRole("dialog", {
-      name: "Add ticket — Round 1 Day 1",
-    });
-    expect(within(nextTicketDialog).getByRole("button", { name: "Choose build for Uma 1" }))
-      .toHaveTextContent("Build 4");
-    expect(within(nextTicketDialog).getByRole("button", { name: "Choose build for Uma 2" }))
-      .toHaveTextContent("Build 2");
-    expect(within(nextTicketDialog).getByRole("button", { name: "Choose build for Uma 3" }))
-      .toHaveTextContent("Build 3");
+    expect(onSaveTicket).toHaveBeenLastCalledWith("round1Day1", 2, [
+      { buildId: "build-4", slot: 1, wins: 0 },
+      { buildId: "build-2", slot: 2, wins: 0 },
+      { buildId: "build-3", slot: 3, wins: 0 },
+    ]);
   });
 
   it("shows the final ticket lineup and calculates the rate using the configured ticket count", () => {
@@ -1170,9 +1152,7 @@ describe("UmaBuildResults", () => {
     );
   });
 
-  it("excludes round rows, saves null results, and allows the round to be restored", async () => {
-    const user = userEvent.setup();
-    const onToggleRoundExcluded = vi.fn();
+  it("shows only full-detail rounds and removes round exclusion controls", () => {
     const props = {
       event: "CM 42",
       results: createDefaultTeamResults(),
@@ -1184,30 +1164,18 @@ describe("UmaBuildResults", () => {
       availableBuilds: [],
       umaList: [],
       onSaveTicket: vi.fn(),
-      onRemoveTicket: vi.fn(),
-      onToggleRoundExcluded,
       onSaveFinals: vi.fn(),
     };
-    const { rerender } = render(<UmaBuildResults {...props} />);
+    render(<UmaBuildResults {...props} />);
 
     const round1 = screen.getByRole("region", { name: "Round 1" });
     expect(within(round1).getAllByRole("region", { name: /^Day/ })).toHaveLength(2);
-    expect(screen.queryByRole("checkbox", { name: "Exclude Finals" })).not.toBeInTheDocument();
-    const excludeRound1 = within(round1).getByRole("checkbox", { name: "Exclude Round 1" });
-    expect(excludeRound1).not.toBeChecked();
-    await user.click(excludeRound1);
-    expect(onToggleRoundExcluded).toHaveBeenCalledWith("round1", true);
-
-    const excludedResults = setTeamResultRoundExcluded(props.results, "round1", true);
-    expect(excludedResults.round1Day1).toBeNull();
-    expect(excludedResults.round1Day2).toBeNull();
-    rerender(<UmaBuildResults {...props} results={excludedResults} />);
-
-    expect(within(round1).queryByRole("row")).not.toBeInTheDocument();
-    expect(within(round1).getByRole("checkbox", { name: "Exclude Round 1" }))
-      .toBeChecked();
-    await user.click(within(round1).getByRole("checkbox", { name: "Exclude Round 1" }));
-    expect(onToggleRoundExcluded).toHaveBeenLastCalledWith("round1", false);
+    expect(screen.queryByLabelText("Results detail mode")).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Exclude Round 1" }))
+      .not.toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Build performance summary" }))
+      .toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Add" })).not.toBeInTheDocument();
   });
 
 });

@@ -3,14 +3,12 @@ import {
   hasDuplicateBaseUmaIds,
   resolveResultBuildId,
   setBuildAssignmentTickets,
-  setTeamResultRoundExcluded,
   type EventResults,
   type InitialTeamBuildIds,
   type TeamFinalBuildPlacements,
   type TeamFinalPlacement,
   type TeamRaceResultRow,
   type TeamResultCounts,
-  type TeamResultRound,
   type TeamTicket,
   type TeamTicketBuildResult,
   type UmaSlot,
@@ -51,7 +49,7 @@ export function createResultActions({
     if (
       currentTicketCount === undefined ||
       ticket > currentTicketCount + 1 ||
-      builds.length !== 3 ||
+      builds.length > 3 ||
       uniqueBuilds.size !== builds.length ||
       uniqueSlots.size !== builds.length ||
       winsTotal === undefined ||
@@ -59,7 +57,6 @@ export function createResultActions({
       winsTotal < 0 ||
       winsTotal > 5 ||
       builds.some((build) =>
-        !build.buildId ||
         ![1, 2, 3].includes(build.slot) ||
         !Number.isInteger(build.wins) ||
         build.wins < 0 ||
@@ -189,32 +186,6 @@ export function createResultActions({
     });
   }
 
-  function updateResultRoundExcluded(round: TeamResultRound, excluded: boolean) {
-    const current = getCurrentResults();
-    if (!selectedEvent || !current || current.event !== selectedEvent) return;
-
-    const ticketBuildResults = { ...current.ticketBuildResults };
-    const rows = round === "round1"
-      ? ["round1Day1", "round1Day2"] as const
-      : ["round2Day1", "round2Day2"] as const;
-    for (const row of rows) {
-      const rowTicketResults = ticketBuildResults[row];
-      if (!rowTicketResults) continue;
-      ticketBuildResults[row] = Object.fromEntries(
-        Object.entries(rowTicketResults).map(([ticket, builds]) => [
-          ticket,
-          builds?.map((build) => ({ ...build, wins: 0 })) ?? [],
-        ]),
-      );
-    }
-
-    saveEventResults({
-      ...current,
-      results: setTeamResultRoundExcluded(current.results, round, excluded),
-      ticketBuildResults,
-    });
-  }
-
   function saveFinalsResult(
     buildIds: InitialTeamBuildIds,
     buildPlacements: TeamFinalBuildPlacements,
@@ -257,7 +228,6 @@ export function createResultActions({
   return {
     saveTicketResult,
     removeTicketResult,
-    updateResultRoundExcluded,
     saveFinalsResult,
   };
 }

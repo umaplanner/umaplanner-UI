@@ -1,36 +1,38 @@
+import { useState } from "react";
 import type {
   TeamRaceResultRow,
-  TeamResultRound,
   TeamResults,
   TeamTicket,
-  TeamTicketBuildResults,
   TeamTicketCount,
   TeamResultRow,
 } from "../../../features/planner/plannerTypes";
 import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
-import UmaImage from "../../UmaImage";
 import type {
   ResolvedTicketBuildResult,
   ResultGroup,
-  TicketEditor,
 } from "./types";
+import BuildSelector from "./BuildSelector";
 import { formatResultOpeningDate, formatWinRate } from "./utils";
 
 interface Props {
   group: ResultGroup;
   results: TeamResults;
-  ticketBuildResults: TeamTicketBuildResults;
   ticketCounts: Record<TeamResultRow, TeamTicketCount>;
   resultAvailability: Record<TeamResultRow, boolean>;
   resultOpeningDates?: Record<TeamResultRow, Date | null>;
   collapsed: boolean;
-  excluded: boolean;
   umaList: UmaEntry[];
-  onToggleRoundExcluded: (round: TeamResultRound, excluded: boolean) => void;
+  availableBuilds: StoredUmaBuild[];
   onToggleCollapsed: (title: ResultGroup["title"]) => void;
-  onEditTicket: (editor: TicketEditor) => void;
+  onAddTicket: (row: TeamRaceResultRow) => void;
   onRemoveTicket: (row: TeamRaceResultRow, ticket: TeamTicket) => void;
+  onSaveTicket: (
+    row: TeamRaceResultRow,
+    ticket: TeamTicket,
+    builds: { buildId: string; slot: 1 | 2 | 3; wins: number }[],
+    teamWins?: number,
+  ) => void;
   getTicketBuildResults: (
     row: TeamRaceResultRow,
     ticket: TeamTicket,
@@ -41,21 +43,21 @@ interface Props {
 export default function Group({
   group,
   results,
-  ticketBuildResults,
   ticketCounts,
   resultAvailability,
   resultOpeningDates,
   collapsed,
-  excluded,
   umaList,
-  onToggleRoundExcluded,
+  availableBuilds,
   onToggleCollapsed,
-  onEditTicket,
+  onAddTicket,
   onRemoveTicket,
+  onSaveTicket,
   getTicketBuildResults,
   getBuild,
 }: Props) {
-  const { title, round } = group;
+  const [editingTickets, setEditingTickets] = useState<Set<string>>(() => new Set());
+  const { title } = group;
 
   return (
     <section
@@ -64,15 +66,6 @@ export default function Group({
     >
       <div className="uma-build-results__group-heading">
         <h2 id={`results-${title.replace(" ", "-").toLowerCase()}`}>{title}</h2>
-        <label className="uma-build-results__exclude">
-          <input
-            type="checkbox"
-            aria-label={`Exclude ${title}`}
-            checked={excluded}
-            onChange={(event) => onToggleRoundExcluded(round, event.target.checked)}
-          />
-          exclude
-        </label>
         <button
           className="uma-build-results__collapse"
           type="button"
@@ -85,7 +78,7 @@ export default function Group({
           </svg>
         </button>
       </div>
-      {!excluded && !collapsed ? (
+      {!collapsed ? (
         <div className="uma-build-results__days">
           {group.rows.map(({ row, label }) => {
             const count = ticketCounts[row];
@@ -129,15 +122,13 @@ export default function Group({
                 <div className="uma-build-results__ticket-list">
                   {Array.from({ length: count }, (_, index) => {
                     const ticket = (index + 1) as TeamTicket;
+                    const ticketKey = `${row}:${ticket}`;
+                    const isEditing = editingTickets.has(ticketKey);
                     const builds = getTicketBuildResults(row, ticket);
-                    const teamWinsOnly =
-                      ticketBuildResults[row]?.[ticket]?.length === 0;
-                    const hasPerBuildWins =
-                      !teamWinsOnly && builds.length > 0 &&
-                      builds.every((build) => build.wins !== null);
-                    const totalTicketWins = hasPerBuildWins
-                      ? builds.reduce((total, build) => total + (build.wins ?? 0), 0)
-                      : counts[ticket - 1];
+                    const hasPerBuildWins = builds.every((build) => build.wins !== null);
+                    const totalTicketWins = !hasPerBuildWins
+                      ? counts[ticket - 1]
+                      : builds.reduce((total, build) => total + (build.wins ?? 0), 0);
                     return (
                       <article
                         className="uma-build-results__ticket-card"
@@ -148,10 +139,17 @@ export default function Group({
                           <strong>Ticket {ticket}</strong>
                           <div className="uma-build-results__ticket-card-actions">
                             <button
-                              className="uma-build-results__details"
+                              className="uma-build-results__ticket-edit"
                               type="button"
+                              aria-label={`Edit Ticket ${ticket}`}
+                              aria-pressed={isEditing}
                               onClick={() =>
-                                onEditTicket({ row, groupTitle: title, label, ticket })}
+                                setEditingTickets((current) => {
+                                  const next = new Set(current);
+                                  if (next.has(ticketKey)) next.delete(ticketKey);
+                                  else next.add(ticketKey);
+                                  return next;
+                                })}
                             >
                               Edit
                             </button>
@@ -167,46 +165,95 @@ export default function Group({
                             </button>
                           </div>
                         </div>
-                        {builds.length > 0 ? (
-                          <ul>
-                            {builds.map((ticketBuild) => {
-                              const build = getBuild(ticketBuild.buildId);
-                              const uma = build
-                                ? umaList.find(
-                                    (entry) => String(entry.id) === build.outfitId,
-                                  )
-                                : undefined;
+                        <ul>
+                          {builds.map((ticketBuild) => {
+                              const build = getBuild(ticketBuild.buildId || null);
                               return (
                                 <li key={`${ticketBuild.slot}:${ticketBuild.buildId}`}>
-                                  {uma ? (
-                                    <UmaImage
-                                      className="uma-build-results__ticket-image"
-                                      uma={uma}
-                                      alt=""
+                                  <div className="uma-build-results__ticket-build-entry">
+                                    <BuildSelector
+                                      slot={ticketBuild.slot}
+                                      buildId={ticketBuild.buildId}
+                                      compact
+                                      disabled={!isEditing}
+                                      nativeModal={false}
+                                      choices={availableBuilds}
+                                      availableBuilds={availableBuilds}
+                                      umaList={umaList}
+                                      ariaLabel={`Choose build for Uma ${ticketBuild.slot} on Ticket ${ticket}`}
+                                      title="Swap to a saved build"
+                                      onChange={(buildId) => {
+                                        const nextBuilds = builds.flatMap((entry) => {
+                                          const nextId = entry.slot === ticketBuild.slot
+                                            ? buildId
+                                            : entry.buildId;
+                                          return nextId
+                                            ? [{
+                                              buildId: nextId,
+                                              slot: entry.slot,
+                                              wins: entry.slot === ticketBuild.slot
+                                                ? 0
+                                                : entry.wins ?? 0,
+                                            }]
+                                            : [];
+                                        });
+                                        onSaveTicket(
+                                          row,
+                                          ticket,
+                                          nextBuilds,
+                                        );
+                                      }}
                                     />
-                                  ) : null}
-                                  <span>
-                                    <strong>
-                                      {build?.name || `Uma ${ticketBuild.slot}`}
-                                    </strong>
-                                    <small>
-                                      {teamWinsOnly
-                                        ? "Wins N/A"
-                                        : `${ticketBuild.wins ?? 0} ${(ticketBuild.wins ?? 0) === 1 ? "win" : "wins"}`}
-                                    </small>
-                                  </span>
+                                    {ticketBuild.buildId ? (
+                                      <span className="uma-build-results__win-stepper">
+                                        <small>
+                                          {ticketBuild.wins ?? 0} {(ticketBuild.wins ?? 0) === 1 ? "win" : "wins"}
+                                        </small>
+                                        <button
+                                          type="button"
+                                          aria-label={`Decrease wins for ${build?.name || `Uma ${ticketBuild.slot}`} on Ticket ${ticket}`}
+                                          disabled={(ticketBuild.wins ?? 0) <= 0}
+                                          onClick={() => {
+                                            const wins = builds.filter((entry) => entry.buildId).map((entry) => ({
+                                              buildId: entry.buildId,
+                                              slot: entry.slot,
+                                              wins: entry.wins ?? 0,
+                                            }));
+                                            const current = wins.find((entry) =>
+                                              entry.slot === ticketBuild.slot
+                                            );
+                                            if (current) current.wins -= 1;
+                                            onSaveTicket(row, ticket, wins);
+                                          }}
+                                        >−</button>
+                                        <button
+                                          type="button"
+                                          aria-label={`Increase wins for ${build?.name || `Uma ${ticketBuild.slot}`} on Ticket ${ticket}`}
+                                          disabled={builds.reduce((total, entry) => total + (entry.wins ?? 0), 0) >= 5}
+                                          onClick={() => {
+                                            const wins = builds.filter((entry) => entry.buildId).map((entry) => ({
+                                              buildId: entry.buildId,
+                                              slot: entry.slot,
+                                              wins: entry.wins ?? 0,
+                                            }));
+                                            const current = wins.find((entry) =>
+                                              entry.slot === ticketBuild.slot
+                                            );
+                                            if (current) current.wins += 1;
+                                            onSaveTicket(row, ticket, wins);
+                                          }}
+                                        >+</button>
+                                      </span>
+                                    ) : null}
+                                  </div>
                                 </li>
                               );
-                            })}
+                          })}
                           </ul>
-                        ) : (
-                          <p>
-                            {teamWinsOnly
-                              ? "Build lineup not recorded."
-                              : "No builds recorded."}
-                          </p>
-                        )}
-                        <p>Team wins: {totalTicketWins}/5</p>
+                        <p className="uma-build-results__team-wins">
+                          Team wins:{" "}
+                          {totalTicketWins}/5
+                        </p>
                       </article>
                     );
                   })}
@@ -219,7 +266,7 @@ export default function Group({
                         ? "Tickets can be added starting on this result day."
                         : undefined}
                       onClick={() =>
-                        onEditTicket({ row, groupTitle: title, label, ticket: null })}
+                        onAddTicket(row)}
                     >
                       Add ticket
                     </button>

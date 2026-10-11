@@ -96,6 +96,7 @@ describe("results API", () => {
     expect(results?.finalPlacement).toBe(2);
     expect(results?.finalBuildPlacements).toEqual([2, 3, null]);
     expect(results?.ticketBuildResults.round1Day1?.[1]).toHaveLength(3);
+    expect(results?.detailMode).toBe("full");
   });
 
   it("posts results as a batch without including team selections", async () => {
@@ -115,8 +116,10 @@ describe("results API", () => {
     expect(payload[0].event).toBe("CM 42");
     expect(payload[0].data).toEqual({
       lastUpdate: 0,
-      round1Day1: null,
-      round1Day2: null,
+      detailMode: "full",
+      summaryBuildResults: [],
+      round1Day1: {},
+      round1Day2: {},
       round2Day1: {},
       round2Day2: {},
       finals: {
@@ -179,6 +182,8 @@ describe("results API", () => {
         event: result.event,
         data: {
           lastUpdate: 0,
+          detailMode: "full",
+          summaryBuildResults: [],
           round1Day1: {},
           round1Day2: {},
           round2Day1: {},

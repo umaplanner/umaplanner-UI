@@ -31,6 +31,10 @@ describe("planner result build assignments", () => {
 
   it("starts result rows with no tickets and validates per-build ticket wins", () => {
     const empty = createEmptyEventResults("CM 42");
+    expect(normalizeEventResults({
+      ...empty,
+      detailMode: "simplified",
+    }, "CM 42").detailMode).toBe("full");
     expect(empty.ticketCounts).toEqual({
       round1Day1: 0,
       round1Day2: 0,
@@ -232,7 +236,7 @@ describe("planner result build assignments", () => {
     expect(migrated.results.round1Day1).toEqual([5, 4, 3, 0]);
   });
 
-  it("persists excluded round results as null and restores empty rows when included", () => {
+  it("migrates excluded legacy rounds to empty active rows", () => {
     const excludedResults = setTeamResultRoundExcluded(
       createDefaultTeamResults(),
       "round2",
@@ -243,8 +247,10 @@ describe("planner result build assignments", () => {
       results: excludedResults,
     }, "CM 42");
 
-    expect(normalized.results.round2Day1).toBeNull();
-    expect(normalized.results.round2Day2).toBeNull();
+    expect(normalized.results.round2Day1).toEqual([0, 0, 0, 0]);
+    expect(normalized.results.round2Day2).toEqual([0, 0, 0, 0]);
+    expect(normalized.ticketCounts.round2Day1).toBe(0);
+    expect(normalized.ticketCounts.round2Day2).toBe(0);
     expect(setTeamResultRoundExcluded(normalized.results, "round2", false))
       .toEqual(createDefaultTeamResults());
   });

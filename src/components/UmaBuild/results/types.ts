@@ -1,6 +1,5 @@
 import type {
   TeamRaceResultRow,
-  TeamResultRound,
   TeamTicket,
   TeamTicketBuildResult,
   TeamUmaPlacement,
@@ -10,15 +9,7 @@ import type { StoredUmaBuild } from "../../../types/UmaBuild";
 
 export type ResultGroup = {
   title: "Round 1" | "Round 2";
-  round: TeamResultRound;
   rows: { row: TeamRaceResultRow; label: string }[];
-};
-
-export type TicketEditor = {
-  row: TeamRaceResultRow;
-  groupTitle: string;
-  label: string;
-  ticket: TeamTicket | null;
 };
 
 export type ResultBuildSummary = {

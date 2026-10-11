@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  isTeamResultRoundExcluded,
   resolveResultBuildId,
   teamResultRows,
 } from "../../../features/planner/plannerTypes";
@@ -10,7 +9,6 @@ import type {
   TeamFinalBuildPlacements,
   TeamFinalPlacement,
   TeamRaceResultRow,
-  TeamResultRound,
   TeamResultRow,
   TeamResults,
   TeamTicket,
@@ -30,10 +28,8 @@ import type {
   ResultGroup,
   ResultBuildSummary,
   ResolvedTicketBuildResult,
-  TicketEditor as TicketEditorState,
 } from "./types";
 import Summary from "./Summary";
-import TicketEditor from "./TicketEditor";
 import "../../../styles/Builds.css";
 import "../../../styles/UmaBuildResults.css";
 
@@ -59,7 +55,6 @@ interface Props {
     teamWins?: number,
   ) => void;
   onRemoveTicket: (row: TeamRaceResultRow, ticket: TeamTicket) => void;
-  onToggleRoundExcluded: (round: TeamResultRound, excluded: boolean) => void;
   onSaveFinals: (
     buildIds: InitialTeamBuildIds,
     buildPlacements: TeamFinalBuildPlacements,
@@ -70,7 +65,6 @@ interface Props {
 const resultGroups: ResultGroup[] = [
   {
     title: "Round 1",
-    round: "round1",
     rows: [
       { row: "round1Day1", label: "Day 1" },
       { row: "round1Day2", label: "Day 2" },
@@ -78,7 +72,6 @@ const resultGroups: ResultGroup[] = [
   },
   {
     title: "Round 2",
-    round: "round2",
     rows: [
       { row: "round2Day1", label: "Day 1" },
       { row: "round2Day2", label: "Day 2" },
@@ -109,7 +102,6 @@ export default function Results({
   showSupportCards,
   onSaveTicket,
   onRemoveTicket,
-  onToggleRoundExcluded,
   onSaveFinals,
 }: Props) {
   const selectableBuilds = availableBuilds.filter(
@@ -117,7 +109,6 @@ export default function Results({
   );
   const { collapsedGroups, setCollapsedGroups } =
     useResultCollapsePreferences(event);
-  const [ticketEditor, setTicketEditor] = useState<TicketEditorState | null>(null);
   const [isFinalsEditorOpen, setIsFinalsEditorOpen] = useState(false);
   const lineupSource = { buildAssignments, ticketCounts, initialBuildIds };
 
@@ -131,20 +122,39 @@ export default function Results({
     row: TeamRaceResultRow,
     ticket: TeamTicket,
   ): ResolvedTicketBuildResult[] {
-    const savedResults = ticketBuildResults[row]?.[ticket];
-    if (savedResults) {
-      if (savedResults.length > 0) return savedResults;
-      return ([1, 2, 3] as const).flatMap((slot) => {
-        const buildId = buildAssignments[row]?.[slot]
-          ?.find((assignment) => assignment.tickets.includes(ticket))
-          ?.buildId;
-        return buildId ? [{ buildId, slot, wins: null }] : [];
-      });
-    }
     return ([1, 2, 3] as const).flatMap((slot) => {
-      const buildId = getEffectiveBuildId(row, ticket, slot);
-      return buildId ? [{ buildId, slot, wins: null }] : [];
+      const saved = ticketBuildResults[row]?.[ticket]?.find(
+        (build) => build.slot === slot,
+      );
+      const assigned = buildAssignments[row]?.[slot]
+        ?.find((assignment) => assignment.tickets.includes(ticket))
+        ?.buildId;
+      const buildId = saved?.buildId ?? assigned ??
+        (ticketBuildResults[row]?.[ticket] === undefined
+          ? getEffectiveBuildId(row, ticket, slot)
+          : null);
+      return [{
+        buildId: buildId ?? "",
+        slot,
+        wins: saved?.wins ?? null,
+      }];
     });
+  }
+
+  function addTicket(row: TeamRaceResultRow) {
+    const count = ticketCounts[row];
+    if (!resultAvailability[row] || count >= 4) return;
+    const ticket = (count + 1) as TeamTicket;
+    const previousTicket = count > 0 ? count as TeamTicket : 1;
+    const builds = ([1, 2, 3] as const).flatMap((slot) => {
+      const buildId = getEffectiveBuildId(row, previousTicket, slot);
+      return buildId ? [{ buildId, slot, wins: 0 }] : [];
+    });
+    onSaveTicket(
+      row,
+      ticket,
+      builds,
+    );
   }
 
   const summaryBuilds: ResultBuildSummary[] = (() => {
@@ -154,22 +164,26 @@ export default function Results({
       if (row === "finals" || results[row] === null) continue;
       for (let index = 0; index < ticketCounts[row]; index += 1) {
         const ticket = (index + 1) as TeamTicket;
-        const savedBuildResults = ticketBuildResults[row]?.[ticket];
-        const builds = savedBuildResults ?? ([1, 2, 3] as const).flatMap((slot) => {
-          const buildId = getEffectiveBuildId(row, ticket, slot);
-          return buildId ? [{ buildId, slot, wins: null }] : [];
-        });
-        for (const ticketBuild of builds) {
-          const build = getBuild(ticketBuild.buildId);
+        const savedBuildResults = ticketBuildResults[row]?.[ticket] ?? [];
+        for (const slot of [1, 2, 3] as const) {
+          const saved = savedBuildResults.find((entry) => entry.slot === slot);
+          const assigned = buildAssignments[row]?.[slot]
+            ?.find((assignment) => assignment.tickets.includes(ticket))
+            ?.buildId;
+          const buildId = saved?.buildId ?? assigned ??
+            (ticketBuildResults[row]?.[ticket] === undefined
+              ? getEffectiveBuildId(row, ticket, slot)
+              : null);
+          const build = getBuild(buildId);
           if (!build) continue;
 
           const summary = byBuild.get(build.id) ?? {
             build,
             wins: 0,
             raceCount: 0,
-            slot: ticketBuild.slot,
+            slot,
           };
-          if (ticketBuild.wins !== null) summary.wins += ticketBuild.wins;
+          if (saved?.wins !== undefined) summary.wins += saved.wins;
           summary.raceCount += 5;
           byBuild.set(build.id, summary);
         }
@@ -205,17 +219,17 @@ export default function Results({
   })();
 
   const canShowBuildWinRates =
-    !isTeamResultRoundExcluded(results, "round1") ||
-    !isTeamResultRoundExcluded(results, "round2");
+    results.round1Day1 !== null || results.round1Day2 !== null ||
+    results.round2Day1 !== null || results.round2Day2 !== null;
   const roundWins = teamResultRows.reduce((total, row) => {
-    if (row === "finals" || results[row] === null) return total;
-    return total + (results[row]?.slice(0, ticketCounts[row])
-      .reduce((rowTotal, wins) => rowTotal + wins, 0) ?? 0);
-  }, 0);
+      if (row === "finals" || results[row] === null) return total;
+      return total + (results[row]?.slice(0, ticketCounts[row])
+        .reduce((rowTotal, wins) => rowTotal + wins, 0) ?? 0);
+    }, 0);
   const roundTicketCount = teamResultRows.reduce((total, row) => {
-    if (row === "finals" || results[row] === null) return total;
-    return total + ticketCounts[row];
-  }, 0);
+      if (row === "finals" || results[row] === null) return total;
+      return total + ticketCounts[row];
+    }, 0);
   const totalWins = roundWins + (finalPlacement === 1 ? 1 : 0);
   const totalRaces = roundTicketCount * 5 + (finalPlacement === null ? 0 : 1);
   const totalWinRate = totalRaces > 0
@@ -253,41 +267,24 @@ export default function Results({
           key={group.title}
           group={group}
           results={results}
-          ticketBuildResults={ticketBuildResults}
           ticketCounts={ticketCounts}
           resultAvailability={resultAvailability}
           resultOpeningDates={resultOpeningDates}
           collapsed={collapsedGroups[group.title] ?? false}
-          excluded={isTeamResultRoundExcluded(results, group.round)}
           umaList={umaList}
-          onToggleRoundExcluded={onToggleRoundExcluded}
+          availableBuilds={availableBuilds}
           onToggleCollapsed={(title) =>
             setCollapsedGroups((current) => ({
               ...current,
               [title]: !(current[title] ?? false),
             }))}
-          onEditTicket={setTicketEditor}
+          onAddTicket={addTicket}
           onRemoveTicket={onRemoveTicket}
+          onSaveTicket={onSaveTicket}
           getTicketBuildResults={getTicketBuildResults}
           getBuild={getBuild}
         />
       ))}
-      {ticketEditor ? (
-        <TicketEditor
-          editor={ticketEditor}
-          results={results}
-          ticketBuildResults={ticketBuildResults}
-          ticketCounts={ticketCounts as Record<TeamRaceResultRow, TeamTicketCount>}
-          availableBuilds={availableBuilds}
-          selectableBuilds={selectableBuilds}
-          umaList={umaList}
-          getBuild={getBuild}
-          getEffectiveBuildId={getEffectiveBuildId}
-          onSaveTicket={onSaveTicket}
-          canAddTicket={resultAvailability[ticketEditor.row]}
-          onClose={() => setTicketEditor(null)}
-        />
-      ) : null}
       {isFinalsEditorOpen ? (
         <FinalsEditor
           hasFinalsData={hasFinalsData}

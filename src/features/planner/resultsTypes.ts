@@ -18,6 +18,7 @@ export type TeamFinalBuildPlacements = [
 export type TeamResults = Record<TeamResultRow, TeamResultCounts | null>;
 export type TeamTicket = 1 | 2 | 3 | 4;
 export type TeamTicketCount = 0 | 1 | 2 | 3 | 4;
+export type TeamResultDetailMode = "full";
 export type TeamTicketBuildResult = {
   buildId: string;
   slot: UmaSlot;
@@ -26,6 +27,11 @@ export type TeamTicketBuildResult = {
 export type TeamTicketBuildResults = Partial<
   Record<TeamRaceResultRow, Partial<Record<TeamTicket, TeamTicketBuildResult[]>>>
 >;
+export type TeamSummaryBuildResult = {
+  row: TeamRaceResultRow;
+  buildId: string;
+  wins: number;
+};
 export type TeamTicketCounts = Record<TeamResultRow, TeamTicketCount>;
 export type TeamBuildAssignment = {
   buildId: string | null;
@@ -38,11 +44,13 @@ export type TeamBuildAssignments = Partial<
 
 export type EventResults = {
   event: string;
+  detailMode: TeamResultDetailMode;
   results: TeamResults;
   finalPlacement: TeamFinalPlacement | null;
   finalBuildPlacements: TeamFinalBuildPlacements;
   buildAssignments: TeamBuildAssignments;
   ticketBuildResults: TeamTicketBuildResults;
+  summaryBuildResults: TeamSummaryBuildResult[];
   ticketCounts: TeamTicketCounts;
   initialBuildIds: InitialTeamBuildIds;
   lastUpdate: number;
@@ -175,11 +183,13 @@ export function hasDuplicateBaseUmaIds(
 export function createEmptyEventResults(event = ""): EventResults {
   return {
     event,
+    detailMode: "full",
     results: createDefaultTeamResults(),
     finalPlacement: null,
     finalBuildPlacements: [null, null, null],
     buildAssignments: {},
     ticketBuildResults: {},
+    summaryBuildResults: [],
     ticketCounts: createDefaultTicketCounts(),
     initialBuildIds: [null, null, null],
     lastUpdate: 0,

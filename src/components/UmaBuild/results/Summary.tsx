@@ -167,53 +167,57 @@ export default function Summary({
             )}
           </div>
         </div>
-        <hr className="uma-build-results__summary-separator" />
-        <div
-          className="uma-build-results__summary-build-performance"
-          role="group"
-          aria-label="Build performance summary"
-        >
-          <h3>Builds used in rounds</h3>
-          {summaryBuilds.length === 0 ? (
-            <p>No builds recorded yet.</p>
-          ) : (
-            <div className="uma-build-results__summary-build-grid">
-              {summaryBuilds.map(({ build, wins, raceCount, slot }) => {
-                const uma = umaList.find(
-                  (entry) => String(entry.id) === build.outfitId,
-                );
-                return (
-                  <button
-                    type="button"
-                    className="uma-build-results__summary-build"
-                    key={build.id}
-                    aria-label={`Show details for Round build ${build.name || "Unnamed build"}`}
-                    onClick={() =>
-                      setSummaryDetails({
-                        build,
-                        slot,
-                        title: "Round build details",
-                      })}
-                  >
-                    {uma ? (
-                      <UmaImage
-                        className="uma-build-results__uma-image"
-                        uma={uma}
-                        alt={`${build.name || "Unnamed build"}: ${uma.outfitTitle}`}
-                      />
-                    ) : null}
-                    <strong>{build.name || "Unnamed build"}</strong>
-                    {canShowBuildWinRates && raceCount > 0 ? (
-                      <small>
-                        {formatWinRate((wins / raceCount) * 100)}% WR ({wins}/{raceCount})
-                      </small>
-                    ) : null}
-                  </button>
-                );
-              })}
+        <>
+          <hr className="uma-build-results__summary-separator" />
+          <div
+            className="uma-build-results__summary-build-performance"
+            role="group"
+            aria-label="Build performance summary"
+          >
+            <div className="uma-build-results__summary-build-heading">
+              <h3>Builds used in rounds</h3>
             </div>
-          )}
-        </div>
+            {summaryBuilds.length === 0 ? (
+              <p>No builds recorded yet.</p>
+            ) : (
+              <div className="uma-build-results__summary-build-grid">
+                {summaryBuilds.map(({ build, wins, raceCount, slot }) => {
+                  const uma = umaList.find(
+                    (entry) => String(entry.id) === build.outfitId,
+                  );
+                  return (
+                    <button
+                      type="button"
+                      className="uma-build-results__summary-build"
+                      key={build.id}
+                      aria-label={`Show details for Round build ${build.name || "Unnamed build"}`}
+                      onClick={() =>
+                        setSummaryDetails({
+                          build,
+                          slot,
+                          title: "Round build details",
+                        })}
+                    >
+                      {uma ? (
+                        <UmaImage
+                          className="uma-build-results__uma-image"
+                          uma={uma}
+                          alt={`${build.name || "Unnamed build"}: ${uma.outfitTitle}`}
+                        />
+                      ) : null}
+                      <strong>{build.name || "Unnamed build"}</strong>
+                      {canShowBuildWinRates && raceCount > 0 ? (
+                        <small>
+                          {formatWinRate((wins / raceCount) * 100)}% WR ({wins}/{raceCount})
+                        </small>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
       </section>
       {summaryDetails ? (
         <dialog

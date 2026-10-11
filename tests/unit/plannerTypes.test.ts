@@ -6,6 +6,7 @@ import {
   isTeamTicketBuildResults,
   normalizeEventResults,
   resolveResultBuildId,
+  serializeEventResults,
   getBaseUmaId,
   hasDuplicateBaseUmaIds,
   setTeamResultRoundExcluded,
@@ -90,6 +91,49 @@ describe("planner result build assignments", () => {
       ...empty,
       finalBuildPlacements: [2],
     }, "CM 42").finalBuildPlacements).toEqual([null, null, null]);
+  });
+
+  it("round-trips grouped round tickets and Finals builds", () => {
+    const eventResults = createEmptyEventResults("CM 42");
+    eventResults.ticketCounts.round1Day1 = 1;
+    eventResults.ticketBuildResults.round1Day1 = {
+      1: [
+        { buildId: "build-a", slot: 1, wins: 2 },
+        { buildId: "build-b", slot: 2, wins: 1 },
+        { buildId: "build-c", slot: 3, wins: 1 },
+      ],
+    };
+    eventResults.buildAssignments.round1Day1 = {
+      1: [{ buildId: "build-a", tickets: [1] }],
+      2: [{ buildId: "build-b", tickets: [1] }],
+      3: [{ buildId: "build-c", tickets: [1] }],
+    };
+    eventResults.finalPlacement = 2;
+    eventResults.finalBuildPlacements = [2, 3, null];
+    eventResults.buildAssignments.finals = {
+      1: [{ buildId: "build-a", tickets: [1] }],
+      2: [{ buildId: "build-d", tickets: [1] }],
+    };
+
+    const serialized = serializeEventResults(eventResults);
+    const restored = normalizeEventResults(serialized, "CM 42");
+
+    expect(serialized.round1Day1).toEqual({
+      1: {
+        builds: [
+          { buildId: "build-a", wins: 2 },
+          { buildId: "build-b", wins: 1 },
+          { buildId: "build-c", wins: 1 },
+        ],
+      },
+    });
+    expect(restored.results.round1Day1?.[0]).toBe(4);
+    expect(restored.ticketBuildResults.round1Day1?.[1]).toEqual(
+      eventResults.ticketBuildResults.round1Day1?.[1],
+    );
+    expect(restored.finalPlacement).toBe(2);
+    expect(restored.finalBuildPlacements).toEqual([2, 3, null]);
+    expect(resolveResultBuildId(restored, "finals", 1, 2)).toBe("build-d");
   });
 
   it("keeps at most one explicit build assigned to each ticket and slot", () => {

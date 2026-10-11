@@ -184,12 +184,20 @@ export default function Results({
         if (!finalBuildId) continue;
 
         const summary = byBuild.get(finalBuildId);
-        if (!summary) continue;
+        const finalBuild = getBuild(finalBuildId);
+        if (!finalBuild) continue;
+        const finalSummary = summary ?? {
+          build: finalBuild,
+          wins: 0,
+          raceCount: 0,
+          slot,
+        };
 
-        summary.raceCount += 1;
+        finalSummary.raceCount += 1;
         if (finalBuildPlacements[slot - 1] === 1) {
-          summary.wins += 1;
+          finalSummary.wins += 1;
         }
+        byBuild.set(finalBuildId, finalSummary);
       }
     }
 

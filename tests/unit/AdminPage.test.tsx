@@ -52,19 +52,19 @@ describe("AdminPage", () => {
         if (url.includes("/admin/stats/events")) {
           return mockResponse({
             dailyCounts: [
-              { date: "2026-10-07", event: "Cup A", teams: 1 },
-              { date: "2026-10-08", event: "Cup A", teams: 2 },
-              { date: "2026-10-09", event: "Cup A", teams: 3 },
-              { date: "2026-10-10", event: "Cup A", teams: 4 },
+              { date: "2026-10-07", event: "Cup A", teams: 1, results: 1, ticket: 2 },
+              { date: "2026-10-08", event: "Cup A", teams: 2, results: 2, ticket: 4 },
+              { date: "2026-10-09", event: "Cup A", teams: 3, results: 3, ticket: 6 },
+              { date: "2026-10-10", event: "Cup A", teams: 4, results: 4, ticket: 8 },
             ],
           });
         }
         return mockResponse({
           dailyCounts: [
-            { date: "2026-10-07", users: 2, builds: 2 },
-            { date: "2026-10-08", users: 4, builds: 4 },
-            { date: "2026-10-09", users: 6, builds: 6 },
-            { date: "2026-10-10", users: 8, builds: 8 },
+            { date: "2026-10-07", users: 2, builds: 2, results: 1, ticket: 2 },
+            { date: "2026-10-08", users: 4, builds: 4, results: 2, ticket: 4 },
+            { date: "2026-10-09", users: 6, builds: 6, results: 3, ticket: 6 },
+            { date: "2026-10-10", users: 8, builds: 8, results: 4, ticket: 8 },
           ],
         });
       }),
@@ -77,11 +77,13 @@ describe("AdminPage", () => {
     expect(await screen.findByRole("heading", { name: "Overall daily counts" })).toBeInTheDocument();
     expect(await screen.findAllByRole("heading", { name: "2026-10-10" })).toHaveLength(2);
     const positiveChanges = screen.getAllByText("+300%");
-    expect(positiveChanges).toHaveLength(3);
+    expect(positiveChanges).toHaveLength(7);
     expect(positiveChanges[0]).toHaveClass("admin-change-positive");
     expect(screen.getAllByText("Users")).toHaveLength(8);
     expect(screen.getAllByText("Builds")).toHaveLength(8);
     expect(screen.getAllByText("Teams")).toHaveLength(8);
+    expect(screen.getAllByText("Results")).toHaveLength(8);
+    expect(screen.getAllByText("Tickets")).toHaveLength(8);
     const periodSelector = screen.getByRole("combobox", { name: "Comparison period" });
     expect(periodSelector).toBeInTheDocument();
     expect(await screen.findByRole("option", { name: "Last 7 days" })).toBeInTheDocument();
@@ -155,7 +157,7 @@ describe("AdminPage", () => {
     expect(screen.getAllByText("Users")).toHaveLength(2);
     expect(screen.getAllByText("Builds")).toHaveLength(2);
     expect(screen.getAllByText("Teams")).toHaveLength(2);
-    expect(screen.getAllByText("—")).toHaveLength(4);
+    expect(screen.getAllByText("—")).toHaveLength(8);
     expect(screen.getByRole("combobox", { name: "Comparison period" })).toBeEnabled();
     expect(screen.getByRole("option", { name: "Last 1 day" })).toBeInTheDocument();
     expect(screen.queryByRole("option", { name: "Last 3 days" })).not.toBeInTheDocument();
@@ -195,12 +197,21 @@ describe("AdminPage", () => {
         return mockResponse({
           periodDays: 1,
           events: {
-            "CM 20": [{ date: "2026-10-10", users: 2, builds: 45, teams: 2 }],
+            "CM 20": [{
+              date: "2026-10-10",
+              users: 2,
+              builds: 45,
+              teams: 2,
+              results: 8,
+              tickets: 6,
+            }],
           },
           comparison: {
             usersPercentChange: 100,
             buildsPercentChange: -6.25,
             teamsPercentChange: -60,
+            resultsPercentChange: 25,
+            ticketsPercentChange: -50,
           },
         });
       }),
@@ -211,7 +222,13 @@ describe("AdminPage", () => {
     expect(await screen.findAllByText("+100%")).toHaveLength(2);
     expect(screen.getAllByText("-6.25%")).toHaveLength(2);
     expect(screen.getAllByText("-60%")).toHaveLength(2);
+    expect(screen.getAllByText("+25%")).toHaveLength(2);
+    expect(screen.getAllByText("-50%")).toHaveLength(2);
     expect(screen.getAllByText("45")).toHaveLength(2);
+    expect(screen.getAllByText("8")).toHaveLength(2);
+    expect(screen.getAllByText("6")).toHaveLength(2);
+    expect(screen.getAllByText("Results")).toHaveLength(2);
+    expect(screen.getAllByText("Tickets")).toHaveLength(2);
     expect(screen.queryByText("Additional details")).not.toBeInTheDocument();
   });
 

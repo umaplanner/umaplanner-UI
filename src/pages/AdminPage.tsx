@@ -358,9 +358,11 @@ type StatsData = {
 };
 
 const statMetrics = [
-  { key: "users", label: "Users" },
-  { key: "builds", label: "Builds" },
-  { key: "teams", label: "Teams" },
+  { key: "users", label: "Users", keys: ["users"] },
+  { key: "builds", label: "Builds", keys: ["builds"] },
+  { key: "teams", label: "Teams", keys: ["teams"] },
+  { key: "results", label: "Results", keys: ["results"] },
+  { key: "ticket", label: "Tickets", keys: ["ticket", "tickets"] },
 ] as const;
 
 function getStatsData(data: unknown, selectedEvent?: string | null): StatsData | null {
@@ -419,10 +421,10 @@ function combineCountsByDate(dailyCounts: DailyCount[]): DailyCount[] {
   for (const dailyCount of dailyCounts) {
     if (typeof dailyCount.date !== "string") continue;
     const combinedCount = combined.get(dailyCount.date) ?? { date: dailyCount.date };
-    for (const { key } of statMetrics) {
-      const count = getCount(dailyCount[key]);
+    for (const metric of statMetrics) {
+      const count = getMetricCount(dailyCount, metric);
       if (count !== null) {
-        combinedCount[key] = (getCount(combinedCount[key]) ?? 0) + count;
+        combinedCount[metric.key] = (getCount(combinedCount[metric.key]) ?? 0) + count;
       }
     }
     combined.set(dailyCount.date, combinedCount);
@@ -472,11 +474,14 @@ function DailyStatsDisplay({
           <article className="admin-daily-card" key={`${date}-${index}`}>
             <h3 className="admin-daily-date">{date}</h3>
             <div className="admin-metric-grid">
-              {statMetrics.map(({ key, label }) => {
-                const value = getCount(dailyCount[key]);
-                const previousValue = getCount(comparisonCount?.[key]);
+              {statMetrics.map((metric) => {
+                const { key, label } = metric;
+                const value = getMetricCount(dailyCount, metric);
+                const previousValue = comparisonCount
+                  ? getMetricCount(comparisonCount, metric)
+                  : null;
                 const explicitChange = isLatestCount
-                  ? getCount(comparison?.[`${key}PercentChange`])
+                  ? getMetricPercentChange(comparison, metric)
                   : null;
 
                 return (
@@ -502,6 +507,29 @@ function DailyStatsDisplay({
       })}
     </div>
   );
+}
+
+function getMetricCount(
+  counts: DailyCount,
+  metric: (typeof statMetrics)[number],
+): number | null {
+  for (const key of metric.keys) {
+    const count = getCount(counts[key]);
+    if (count !== null) return count;
+  }
+  return null;
+}
+
+function getMetricPercentChange(
+  comparison: Record<string, unknown> | null,
+  metric: (typeof statMetrics)[number],
+): number | null {
+  if (!comparison) return null;
+  for (const key of metric.keys) {
+    const change = getCount(comparison[`${key}PercentChange`]);
+    if (change !== null) return change;
+  }
+  return null;
 }
 
 function getCount(value: unknown): number | null {

@@ -4,6 +4,7 @@ import {
   isTeamResults,
   isTeamTicketBuildResults,
   normalizeEventResults,
+  serializeEventResults,
   type EventResults,
 } from "./plannerTypes";
 
@@ -15,16 +16,25 @@ function toEventResults(record: unknown): EventResults | null {
       !Array.isArray(envelope.data)
     ? { ...(envelope.data as Record<string, unknown>), event: envelope.event }
     : envelope;
-  const assignments = data.buildAssignments ?? data.buildOverrides;
-  if (
-    !isTeamResults(data.results) ||
-    (assignments !== undefined && !isTeamBuildAssignments(assignments)) ||
+  const groupedData = !("results" in data) &&
     (
-      data.ticketBuildResults !== undefined &&
-      !isTeamTicketBuildResults(data.ticketBuildResults)
-    )
-  ) {
-    return null;
+      "round1Day1" in data ||
+      "round1Day2" in data ||
+      "round2Day1" in data ||
+      "round2Day2" in data ||
+      (data.finals !== null && typeof data.finals === "object")
+    );
+  if (!groupedData) {
+    // REMOVE legacy API response validation after old-format server records are migrated.
+    const assignments = data.buildAssignments ?? data.buildOverrides;
+    if (
+      !isTeamResults(data.results) ||
+      (assignments !== undefined && !isTeamBuildAssignments(assignments)) ||
+      (
+        data.ticketBuildResults !== undefined &&
+        !isTeamTicketBuildResults(data.ticketBuildResults)
+      )
+    ) return null;
   }
   return normalizeEventResults(data, envelope.event);
 }
@@ -65,7 +75,10 @@ export async function fetchCurrentEventResults(
 export async function postResults(results: EventResults[]): Promise<void> {
   if (results.length === 0 || !config.apiBaseUrl) return;
   const url = `${config.apiBaseUrl}/results`;
-  const payload = results.map(({ event, ...data }) => ({ event, data }));
+  const payload = results.map((result) => ({
+    event: result.event,
+    data: serializeEventResults(result),
+  }));
   const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

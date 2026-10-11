@@ -2,6 +2,8 @@ import {
   createDefaultTeamResults,
   createDefaultTicketCounts,
   createEmptyEventResults,
+  resolveResultBuildId,
+  setBuildAssignmentTickets,
   teamResultRows,
   type EventResults,
   type InitialTeamBuildIds,
@@ -41,6 +43,7 @@ interface LegacyTeamResults {
   finals: TeamResultCounts;
 }
 
+// REMOVE after legacy API and IndexedDB result records have all been migrated.
 export function isTeamResults(value: unknown): value is TeamResults | LegacyTeamResults {
   if (!value || typeof value !== "object") return false;
   const results = value as Record<string, unknown>;
@@ -73,6 +76,7 @@ export function normalizeTeamResults(value: unknown): TeamResults {
   };
 }
 
+// REMOVE after legacy API and IndexedDB result records have all been migrated.
 export function isTeamBuildOverrides(value: unknown): value is LegacyTeamBuildOverrides {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const overrides = value as Record<string, unknown>;
@@ -142,6 +146,7 @@ function legacyTicketCount(value: unknown): TeamTicketCount | null {
   return Math.max(1, lastUsed + 1) as TeamTicketCount;
 }
 
+// REMOVE the legacyTicketsUsed fallback after legacy result records are migrated.
 export function normalizeTeamTicketCounts(
   value: unknown,
   legacyTicketsUsed?: unknown,
@@ -244,6 +249,7 @@ export function normalizeTeamBuildAssignments(
   ticketCounts: TeamTicketCounts = createDefaultTicketCounts(),
 ): TeamBuildAssignments {
   const normalized: TeamBuildAssignments = {};
+  // REMOVE legacy override handling after legacy API and IndexedDB records are migrated.
   if (isTeamBuildOverrides(value)) {
     const legacy = value as Record<string, Record<string, unknown>>;
     for (const row of teamResultRows) {
@@ -334,6 +340,19 @@ function normalizeFinalBuildPlacements(value: unknown): TeamFinalBuildPlacements
 export function normalizeEventResults(value: unknown, event: string): EventResults {
   if (!value || typeof value !== "object") return createEmptyEventResults(event);
   const data = value as Record<string, unknown>;
+  if (
+    !("results" in data) &&
+    (
+      "round1Day1" in data ||
+      "round1Day2" in data ||
+      "round2Day1" in data ||
+      "round2Day2" in data ||
+      (data.finals !== null && typeof data.finals === "object")
+    )
+  ) {
+    return normalizeGroupedEventResults(data, event);
+  }
+  // REMOVE the legacy-shape normalization path after legacy API and IndexedDB records are migrated.
   const ticketCounts = normalizeTeamTicketCounts(data.ticketCounts, data.ticketsUsed);
   const results = normalizeTeamResults(data.results);
   for (const row of teamResultRows) {
@@ -363,6 +382,154 @@ export function normalizeEventResults(value: unknown, event: string): EventResul
   };
 }
 
+function normalizeGroupedEventResults(
+  data: Record<string, unknown>,
+  event: string,
+): EventResults {
+  const normalized = createEmptyEventResults(event);
+  const results = { ...normalized.results };
+  const ticketCounts = { ...normalized.ticketCounts };
+  const ticketBuildResults: TeamTicketBuildResults = {};
+  let buildAssignments: TeamBuildAssignments = {};
+
+  for (const row of teamResultRows) {
+    if (row === "finals") continue;
+    const tickets = data[row];
+    if (tickets === null) {
+      results[row] = null;
+      ticketCounts[row] = 0;
+      continue;
+    }
+    if (!tickets || typeof tickets !== "object" || Array.isArray(tickets)) continue;
+
+    const savedTickets: Partial<Record<TeamTicket, TeamTicketBuildResult[]>> = {};
+    for (const [ticketKey, ticketValue] of Object.entries(tickets)) {
+      const ticket = Number(ticketKey);
+      if (!Number.isInteger(ticket) || ticket < 1 || ticket > 4) continue;
+      if (!ticketValue || typeof ticketValue !== "object" || Array.isArray(ticketValue)) {
+        continue;
+      }
+      const ticketData = ticketValue as Record<string, unknown>;
+      if (!Array.isArray(ticketData.builds) || ticketData.builds.length !== 3) continue;
+      const builds = ticketData.builds.map((build, index) => {
+        if (!build || typeof build !== "object" || Array.isArray(build)) return null;
+        const buildData = build as Record<string, unknown>;
+        if (
+          typeof buildData.buildId !== "string" ||
+          buildData.buildId.length === 0 ||
+          !Number.isInteger(buildData.wins) ||
+          Number(buildData.wins) < 0 ||
+          Number(buildData.wins) > 5
+        ) return null;
+        return {
+          buildId: buildData.buildId,
+          slot: (index + 1) as UmaSlot,
+          wins: Number(buildData.wins),
+        };
+      });
+      if (builds.some((build) => build === null)) continue;
+
+      const teamWins = Number.isInteger(ticketData.teamWins) &&
+          Number(ticketData.teamWins) >= 0 && Number(ticketData.teamWins) <= 5
+        ? Number(ticketData.teamWins)
+        : builds.reduce((total, build) => total + (build?.wins ?? 0), 0);
+      results[row]![ticket - 1] = teamWins;
+      savedTickets[ticket as TeamTicket] = builds as TeamTicketBuildResult[];
+      ticketCounts[row] = Math.max(ticketCounts[row], ticket) as TeamTicketCount;
+      for (const build of builds as TeamTicketBuildResult[]) {
+        buildAssignments = setBuildAssignmentTickets(
+          buildAssignments,
+          row,
+          build.slot,
+          build.buildId,
+          ticket as TeamTicket,
+        );
+      }
+    }
+    if (Object.keys(savedTickets).length > 0) ticketBuildResults[row] = savedTickets;
+  }
+
+  const finalsData = data.finals && typeof data.finals === "object" &&
+      !Array.isArray(data.finals)
+    ? data.finals as Record<string, unknown>
+    : {};
+  const finalBuilds = Array.isArray(finalsData.builds) ? finalsData.builds : [];
+  const finalBuildPlacements = ([0, 1, 2] as const).map((index) => {
+    const build = finalBuilds[index];
+    if (!build || typeof build !== "object" || Array.isArray(build)) return null;
+    const placement = (build as Record<string, unknown>).placement;
+    return Number.isInteger(placement) && Number(placement) >= 1 && Number(placement) <= 9
+      ? Number(placement) as TeamUmaPlacement
+      : null;
+  }) as TeamFinalBuildPlacements;
+  for (const [index, build] of finalBuilds.slice(0, 3).entries()) {
+    if (!build || typeof build !== "object" || Array.isArray(build)) continue;
+    const buildId = (build as Record<string, unknown>).buildId;
+    if (typeof buildId !== "string" || buildId.length === 0) continue;
+    buildAssignments = setBuildAssignmentTickets(
+      buildAssignments,
+      "finals",
+      (index + 1) as UmaSlot,
+      buildId,
+      1,
+    );
+  }
+
+  const finalPlacement = normalizeFinalPlacement(finalsData.placement);
+  return {
+    ...normalized,
+    results,
+    ticketCounts,
+    ticketBuildResults,
+    buildAssignments,
+    finalPlacement,
+    finalBuildPlacements,
+    lastUpdate: typeof data.lastUpdate === "number" ? data.lastUpdate : 0,
+  };
+}
+
+export function serializeEventResults(results: EventResults): Record<string, unknown> {
+  const serialized: Record<string, unknown> = { lastUpdate: results.lastUpdate };
+  for (const row of teamResultRows) {
+    if (row === "finals") continue;
+    if (results.results[row] === null) {
+      serialized[row] = null;
+      continue;
+    }
+
+    const tickets: Record<string, unknown> = {};
+    for (let index = 0; index < results.ticketCounts[row]; index += 1) {
+      const ticket = (index + 1) as TeamTicket;
+      const savedBuilds = results.ticketBuildResults[row]?.[ticket];
+      const builds = ([1, 2, 3] as const).map((slot) => {
+        const buildId = resolveResultBuildId(results, row, ticket, slot);
+        if (!buildId) return null;
+        const savedBuild = savedBuilds?.find((build) => build.slot === slot);
+        return { buildId, wins: savedBuild?.wins ?? 0 };
+      });
+      if (builds.some((build) => build === null)) continue;
+
+      const ticketData: Record<string, unknown> = { builds };
+      if (savedBuilds?.length === 0) {
+        ticketData.teamWins = results.results[row]?.[index] ?? 0;
+      }
+      tickets[ticket] = ticketData;
+    }
+    serialized[row] = tickets;
+  }
+
+  serialized.finals = {
+    placement: results.finalPlacement,
+    builds: ([1, 2, 3] as const).map((slot) => ({
+      buildId: results.buildAssignments.finals?.[slot]
+        ?.find((assignment) => assignment.tickets.includes(1))?.buildId ?? null,
+      placement: results.finalBuildPlacements[slot - 1],
+    })),
+  };
+  return serialized;
+}
+
+// REMOVE after legacy team records no longer embed results.
 export function getLegacyEventResults(value: unknown, event: string): EventResults | null {
   if (!value || typeof value !== "object") return null;
   const data = value as Record<string, unknown>;

@@ -487,7 +487,7 @@ describe("UmaBuildResults", () => {
     );
   });
 
-  it("summarizes Finals builds and win rates across round tickets", async () => {
+  it("summarizes builds from rounds and Finals with their accumulated win rates", async () => {
     const user = userEvent.setup();
     const buildA = {
       ...createDefaultBuild("1"),
@@ -510,6 +510,13 @@ describe("UmaBuildResults", () => {
       name: "Build C",
       lastUpdate: 3,
     };
+    const buildD = {
+      ...createDefaultBuild("4"),
+      id: "build-d",
+      event: "CM 42",
+      name: "Build D",
+      lastUpdate: 4,
+    };
     const results = {
       ...createDefaultTeamResults(),
       round1Day1: [5, 0, 0, 0] as [number, number, number, number],
@@ -531,6 +538,7 @@ describe("UmaBuildResults", () => {
         buildAssignments={{
           round1Day2: { 2: [{ buildId: buildC.id, tickets: [1] }] },
           round2Day1: { 1: [{ buildId: buildB.id, tickets: [1] }] },
+          finals: { 3: [{ buildId: buildD.id, tickets: [1] }] },
         }}
         ticketBuildResults={{
           round1Day1: { 1: [{ buildId: buildA.id, slot: 1, wins: 5 }] },
@@ -540,12 +548,14 @@ describe("UmaBuildResults", () => {
         }}
         ticketCounts={ticketCounts}
         initialBuildIds={[buildA.id, null, null]}
-        finalPlacement={2}
-        availableBuilds={[buildA, buildB, buildC]}
+        finalPlacement={1}
+        finalBuildPlacements={[null, null, 1]}
+        availableBuilds={[buildA, buildB, buildC, buildD]}
         umaList={[
           { id: 1, charaId: 1, baseCharacterName: "Character A", outfitTitle: "Uma A" },
           { id: 2, charaId: 2, baseCharacterName: "Character B", outfitTitle: "Uma B" },
           { id: 3, charaId: 3, baseCharacterName: "Character C", outfitTitle: "Uma C" },
+          { id: 4, charaId: 4, baseCharacterName: "Character D", outfitTitle: "Uma D" },
         ]}
         skillList={[]}
         showSupportCards={false}
@@ -557,7 +567,7 @@ describe("UmaBuildResults", () => {
     );
 
     const summary = screen.getByRole("region", { name: "Summary" });
-    expect(within(summary).getByText("2nd")).toBeInTheDocument();
+    expect(within(summary).getByText("1st")).toBeInTheDocument();
     expect(within(summary).getByText("Uma B")).toBeInTheDocument();
     expect(within(summary).queryByRole("button", { name: "Details" }))
       .not.toBeInTheDocument();
@@ -576,6 +586,11 @@ describe("UmaBuildResults", () => {
         name: "Show details for Round build Build C",
       }),
     ).toHaveTextContent("0% WR (0/5)");
+    expect(
+      within(summary).getByRole("button", {
+        name: "Show details for Round build Build D",
+      }),
+    ).toHaveTextContent("100% WR (1/1)");
 
     await user.click(
       within(summary).getByRole("button", {

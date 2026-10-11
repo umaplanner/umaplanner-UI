@@ -61,6 +61,43 @@ describe("results API", () => {
     expect(fetchMock.mock.calls[0][0]).toBe("https://api.example.com/results");
   });
 
+  it("loads results saved in grouped round and Finals containers", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        event: "CM 42",
+        data: {
+          round1Day1: {
+            1: {
+              builds: [
+                { buildId: "build-a", wins: 2 },
+                { buildId: "build-b", wins: 1 },
+                { buildId: "build-c", wins: 1 },
+              ],
+            },
+          },
+          finals: {
+            placement: 2,
+            builds: [
+              { buildId: "build-a", placement: 2 },
+              { buildId: "build-b", placement: 3 },
+              { buildId: null, placement: null },
+            ],
+          },
+        },
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const results = await fetchCurrentEventResults("CM 42");
+
+    expect(results?.ticketCounts.round1Day1).toBe(1);
+    expect(results?.results.round1Day1?.[0]).toBe(4);
+    expect(results?.finalPlacement).toBe(2);
+    expect(results?.finalBuildPlacements).toEqual([2, 3, null]);
+    expect(results?.ticketBuildResults.round1Day1?.[1]).toHaveLength(3);
+  });
+
   it("posts results as a batch without including team selections", async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal("fetch", fetchMock);
@@ -74,11 +111,56 @@ describe("results API", () => {
 
     expect(fetchMock.mock.calls[0][0]).toBe("https://api.example.com/results");
     const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
-    const { event, ...data } = results;
-    expect(payload).toEqual([{ event, data }]);
+    expect(payload).toHaveLength(1);
     expect(payload[0].event).toBe("CM 42");
-    expect(payload[0].data.results.round1Day1).toBeNull();
+    expect(payload[0].data).toEqual({
+      lastUpdate: 0,
+      round1Day1: null,
+      round1Day2: null,
+      round2Day1: {},
+      round2Day2: {},
+      finals: {
+        placement: null,
+        builds: [
+          { buildId: null, placement: null },
+          { buildId: null, placement: null },
+          { buildId: "build-3", placement: null },
+        ],
+      },
+    });
     expect(payload[0]).not.toHaveProperty("results");
+  });
+
+  it("stores only used tickets with their three builds and wins", async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    const results = createEmptyEventResults("CM 42");
+    results.ticketCounts.round1Day1 = 2;
+    results.ticketBuildResults.round1Day1 = {
+      1: [
+        { buildId: "build-1", slot: 1, wins: 2 },
+        { buildId: "build-2", slot: 2, wins: 1 },
+        { buildId: "build-3", slot: 3, wins: 1 },
+      ],
+    };
+    results.buildAssignments.round1Day1 = {
+      1: [{ buildId: "build-1", tickets: [1] }],
+      2: [{ buildId: "build-2", tickets: [1] }],
+      3: [{ buildId: "build-3", tickets: [1] }],
+    };
+
+    await postResults([results]);
+
+    const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(payload[0].data.round1Day1).toEqual({
+      1: {
+        builds: [
+          { buildId: "build-1", wins: 2 },
+          { buildId: "build-2", wins: 1 },
+          { buildId: "build-3", wins: 1 },
+        ],
+      },
+    });
   });
 
   it("posts all provided events in one batch request", async () => {
@@ -93,7 +175,24 @@ describe("results API", () => {
 
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(
-      results.map(({ event, ...data }) => ({ event, data })),
+      results.map((result) => ({
+        event: result.event,
+        data: {
+          lastUpdate: 0,
+          round1Day1: {},
+          round1Day2: {},
+          round2Day1: {},
+          round2Day2: {},
+          finals: {
+            placement: null,
+            builds: [
+              { buildId: null, placement: null },
+              { buildId: null, placement: null },
+              { buildId: null, placement: null },
+            ],
+          },
+        },
+      })),
     );
   });
 

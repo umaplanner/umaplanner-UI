@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import { useEvent } from "../../contexts/EventContext";
+import { useAuth } from "../../contexts/AuthContext";
 import UmaBuild from "../../components/UmaBuild/editor/BuildEditor";
 import UmaBuildDisplay from "../../components/UmaBuild/display/Display";
 import UmaBuildList from "../../components/UmaBuild/list/List";
@@ -48,6 +49,7 @@ export default function Planner() {
   const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [focusedTeamSlot, setFocusedTeamSlot] = useState<UmaSlot | null>(1);
   const { selectedEvent } = useEvent();
+  const { user } = useAuth();
   const initialEvent = useRef(selectedEvent);
   const hasInitializedBuildMode = useRef(false);
   const { raceEntry, umaList, skillList, supportCardList } = usePlannerData(selectedEvent);
@@ -288,6 +290,12 @@ export default function Planner() {
   return (
     <div className="planner">
       <RaceDisplay raceEntry={raceEntry} />
+      {!user && (
+        <p className="anonymous-contribution-notice">
+          While logged out, your selected team and build stats are sent under a
+          random browser ID and included in event overview statistics.
+        </p>
+      )}
       <div className="uma-build-mode" role="group" aria-label="Build mode">
         <button
           type="button"

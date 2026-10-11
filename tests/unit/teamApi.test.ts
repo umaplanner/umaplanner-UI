@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { fetchTeams, postTeams } from "../../src/features/planner/teamApi";
+import { postAnonymousTeam } from "../../src/features/planner/anonymousTeamApi";
 import { createEmptyTeam } from "../../src/features/planner/plannerTypes";
+import type { StoredUmaBuild } from "../../src/types/UmaBuild";
 
 vi.mock("../../src/lib/config", () => ({
   config: { apiBaseUrl: "https://api.example.com" },
@@ -40,5 +42,77 @@ describe("team API", () => {
     await postTeams([team]);
 
     expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual([team]);
+  });
+
+  it("posts anonymous team and build data without build names", async () => {
+    localStorage.clear();
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal("fetch", fetchMock);
+    const team = {
+      ...createEmptyTeam("CM 42"),
+      uma1: "build-1",
+      lastUpdate: 123,
+    };
+    const build: StoredUmaBuild = {
+      id: "build-1",
+      event: "CM 42",
+      name: "Private local label",
+      lastUpdate: 123,
+      outfitId: "101",
+      "build-type": "standard",
+      starCount: 3,
+      uniqueLv: 3,
+      speed: 1200,
+      stamina: 800,
+      power: 900,
+      guts: 400,
+      wisdom: 500,
+      strategy: "Senkou",
+      distanceAptitude: "S",
+      surfaceAptitude: "A",
+      strategyAptitude: "A",
+      mood: 0,
+      skills: ["skill-1"],
+      forcedSkillPositions: {},
+      supportCards: [{
+        position: 1,
+        support_card_id: 1234,
+        limit_break_count: 4,
+      }],
+    };
+
+    await postAnonymousTeam(team, [build]);
+
+    const [url, options] = fetchMock.mock.calls[0];
+    const payload = JSON.parse(options.body);
+    expect(url).toBe("https://api.example.com/anonymous/teams");
+    expect(payload.anonymousId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
+    );
+    expect(payload.team).toEqual({
+      uma1: "build-1",
+      uma2: null,
+      uma3: null,
+      lastUpdate: 123,
+    });
+    expect(payload.builds).toEqual([{
+      id: "build-1",
+      "build-type": "standard",
+      outfitId: "101",
+      strategy: "Senkou",
+      speed: 1200,
+      stamina: 800,
+      power: 900,
+      guts: 400,
+      wisdom: 500,
+      skills: ["skill-1"],
+      supportCards: [{
+        position: 1,
+        supportCardId: 1234,
+        limitBreakCount: 4,
+      }],
+    }]);
+    expect(JSON.stringify(payload)).not.toContain("Private local label");
+    expect(fetchMock.mock.calls[0][1]).not.toHaveProperty("credentials");
   });
 });

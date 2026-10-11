@@ -28,6 +28,7 @@ import {
 import { createResultActions } from "./resultActions";
 import { deleteBuild, fetchBuilds, postBuilds } from "./buildApi";
 import { fetchTeams, postTeams } from "./teamApi";
+import { postAnonymousTeam } from "./anonymousTeamApi";
 import {
   fetchAllResults,
   fetchCurrentEventResults,
@@ -52,6 +53,8 @@ export function useTeam(selectedEvent: string | null) {
   const teamSyncTimerRef = useRef<number | undefined>(undefined);
   const pendingTeamsRef = useRef(new Map<string, EventTeam>());
   const teamSyncGenerationRef = useRef(new Map<string, number>());
+  const anonymousTeamSyncTimerRef = useRef<number | undefined>(undefined);
+  const pendingAnonymousTeamsRef = useRef(new Map<string, EventTeam>());
   const resultsSyncTimerRef = useRef<number | undefined>(undefined);
   const pendingResultsRef = useRef(new Map<string, EventResults>());
   const resultsRef = useRef<EventResults | null>(null);
@@ -161,6 +164,49 @@ export function useTeam(selectedEvent: string | null) {
       console.error("Error validating team before backend sync:", error);
     });
   }, [teamHasDuplicateBaseUmas]);
+
+  const scheduleAnonymousTeamSync = useCallback((team: EventTeam) => {
+    if (userRef.current || isAuthLoading) return;
+    pendingAnonymousTeamsRef.current.set(team.event, team);
+    if (anonymousTeamSyncTimerRef.current !== undefined) {
+      window.clearTimeout(anonymousTeamSyncTimerRef.current);
+    }
+
+    anonymousTeamSyncTimerRef.current = window.setTimeout(() => {
+      anonymousTeamSyncTimerRef.current = undefined;
+      const pendingTeams = Array.from(pendingAnonymousTeamsRef.current.values());
+      pendingAnonymousTeamsRef.current.clear();
+      void Promise.all(pendingTeams.map(async (pendingTeam) => {
+        const buildIds = [pendingTeam.uma1, pendingTeam.uma2, pendingTeam.uma3];
+        const storedBuilds = await Promise.all(buildIds.map((buildId) =>
+          buildId === null
+            ? undefined
+            : buildRepository.getByKey([pendingTeam.event, buildId])
+        ));
+        if (storedBuilds.some((build, index) =>
+          buildIds[index] !== null && build === undefined
+        )) {
+          throw new Error(
+            `Cannot sync anonymous team for ${pendingTeam.event}: a selected build is missing.`,
+          );
+        }
+
+        return {
+          team: pendingTeam,
+          builds: storedBuilds.filter(
+            (build): build is StoredUmaBuild => build !== undefined,
+          ),
+        };
+      })).then(async (contributions) => {
+        if (userRef.current) return;
+        await Promise.all(contributions.map(({ team, builds }) =>
+          postAnonymousTeam(team, builds)
+        ));
+      }).catch((error) => {
+        console.error("Error syncing anonymous teams to backend:", error);
+      });
+    }, SYNC_DEBOUNCE_MS);
+  }, [buildRepository, isAuthLoading]);
 
   function invalidatePendingTeamSync(event: string): number {
     const generation = (teamSyncGenerationRef.current.get(event) ?? 0) + 1;
@@ -603,6 +649,9 @@ export function useTeam(selectedEvent: string | null) {
         if (cancelled) {
           return;
         }
+        if (!user && storedTeam) {
+          scheduleAnonymousTeamSync(normalizedTeam);
+        }
         if (storedTeam || !user) {
           setLoadedEvent(event);
         }
@@ -654,6 +703,7 @@ export function useTeam(selectedEvent: string | null) {
     buildRepository,
     refreshBuilds,
     scheduleTeamSync,
+    scheduleAnonymousTeamSync,
     teamHasDuplicateBaseUmas,
     syncRemoteBuilds,
     syncRemoteTeam,
@@ -697,6 +747,20 @@ export function useTeam(selectedEvent: string | null) {
       await buildRepository.put(storedBuild);
       if (userRef.current) {
         scheduleBuildSync(storedBuild);
+      } else {
+        const storedTeam = await createTeamRepository().getByKey(event);
+        if (
+          storedTeam &&
+          [storedTeam.uma1, storedTeam.uma2, storedTeam.uma3].includes(id)
+        ) {
+          const normalizedTeam = normalizeStoredTeam(storedTeam, event);
+          const team = {
+            ...normalizedTeam,
+            lastUpdate: Math.max(Date.now(), normalizedTeam.lastUpdate + 1),
+          };
+          await createTeamRepository().put(team);
+          scheduleAnonymousTeamSync(team);
+        }
       }
       await refreshBuilds(event);
       return id;
@@ -720,12 +784,13 @@ export function useTeam(selectedEvent: string | null) {
           uma1: team.uma1 === buildId ? null : team.uma1,
           uma2: team.uma2 === buildId ? null : team.uma2,
           uma3: team.uma3 === buildId ? null : team.uma3,
-          lastUpdate: Date.now(),
+          lastUpdate: Math.max(Date.now(), team.lastUpdate + 1),
         };
         if (updatedTeam.uma1 !== team.uma1 || updatedTeam.uma2 !== team.uma2 || updatedTeam.uma3 !== team.uma3) {
           if (!await teamHasDuplicateBaseUmas(updatedTeam)) {
             await teamRepository.put(updatedTeam);
             if (user) scheduleTeamSync(updatedTeam);
+            else scheduleAnonymousTeamSync(updatedTeam);
           }
           setUmas((current) => ({ ...current, ...updatedTeam }));
         }
@@ -777,7 +842,7 @@ export function useTeam(selectedEvent: string | null) {
       uma1: buildIds[0],
       uma2: buildIds[1],
       uma3: buildIds[2],
-      lastUpdate: Date.now(),
+      lastUpdate: Math.max(Date.now(), team.lastUpdate + 1),
     };
 
     if (
@@ -787,6 +852,8 @@ export function useTeam(selectedEvent: string | null) {
     await repository.put(updatedTeam);
     if (user) {
       scheduleTeamSync(updatedTeam);
+    } else {
+      scheduleAnonymousTeamSync(updatedTeam);
     }
     setUmas((current) => ({
       ...current,

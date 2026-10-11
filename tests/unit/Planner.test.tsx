@@ -20,6 +20,10 @@ vi.mock("../../src/features/planner/useTeam", () => ({
   useTeam: mocks.useTeam,
 }));
 
+vi.mock("../../src/contexts/AuthContext", () => ({
+  useAuth: () => ({ user: null, isLoading: false }),
+}));
+
 vi.mock("../../src/features/planner/resultSchedule", async (importOriginal) => {
   const actual = await importOriginal<typeof import("../../src/features/planner/resultSchedule")>();
   return {

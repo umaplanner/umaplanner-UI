@@ -10,7 +10,7 @@ import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
 import type { StoredUmaBuild } from "../../src/types/UmaBuild";
 
 const mocks = vi.hoisted(() => ({
-  user: { username: "test-user", avatarUrl: "" },
+  user: null as null | { username: string; avatarUrl: string },
   fetchBuilds: vi.fn(async (): Promise<BuildFetchResult> => ({
     builds: [],
     deletedIds: [],
@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => ({
   deleteBuild: vi.fn(async () => undefined),
   fetchTeams: vi.fn(async () => []),
   postTeams: vi.fn(async () => undefined),
+  postAnonymousTeam: vi.fn(async () => undefined),
   fetchAllResults: vi.fn(async () => []),
   fetchCurrentEventResults: vi.fn(async () => null),
   postResults: vi.fn(async () => undefined),
@@ -43,6 +44,10 @@ vi.mock("../../src/features/planner/teamApi", () => ({
   postTeams: mocks.postTeams,
 }));
 
+vi.mock("../../src/features/planner/anonymousTeamApi", () => ({
+  postAnonymousTeam: mocks.postAnonymousTeam,
+}));
+
 vi.mock("../../src/features/planner/resultsApi", () => ({
   fetchAllResults: mocks.fetchAllResults,
   fetchCurrentEventResults: mocks.fetchCurrentEventResults,
@@ -52,6 +57,7 @@ vi.mock("../../src/features/planner/resultsApi", () => ({
 describe("useTeam build sync", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.user = { username: "test-user", avatarUrl: "" };
   });
 
   it("debounces build saves and supplies a missing unique level before syncing", async () => {
@@ -139,6 +145,45 @@ describe("useTeam build sync", () => {
         remoteBuild,
       );
     });
+    unmount();
+  });
+
+  it("uploads a logged-out team's selected build to anonymous storage", async () => {
+    mocks.user = null;
+    const event = "CM anonymous upload test";
+    const { result, unmount } = renderHook(() => useTeam(event));
+    await waitFor(() => expect(result.current.isTeamLoading).toBe(false));
+
+    let buildId: string | null = null;
+    await act(async () => {
+      buildId = await result.current.saveBuild(
+        createDefaultBuild("uma-anonymous"),
+        "Local-only name",
+      );
+    });
+    expect(buildId).not.toBeNull();
+
+    await act(async () => {
+      await result.current.swapTeamBuild([buildId, null, null]);
+    });
+
+    await waitFor(() => expect(mocks.postAnonymousTeam).toHaveBeenCalled(), {
+      timeout: 4_000,
+    });
+    expect(mocks.postAnonymousTeam).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event,
+        uma1: buildId,
+        uma2: null,
+        uma3: null,
+      }),
+      [
+        expect.objectContaining({
+          id: buildId,
+          outfitId: "uma-anonymous",
+        }),
+      ],
+    );
     unmount();
   });
 

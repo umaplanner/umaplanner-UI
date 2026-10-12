@@ -31,6 +31,7 @@ export default function Layout({children}: LayoutProps) {
         <nav aria-label="Main navigation">
           <NavLink to={routes.planner}>Planner</NavLink>
           <NavLink to={routes.overview}>Overview</NavLink>
+          <NavLink to={routes.results}>Results</NavLink>
           <EventSelector />
           <NavLink to={routes.umaImport}>Imports</NavLink>
           <UserMenu />

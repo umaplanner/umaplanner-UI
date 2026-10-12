@@ -2,6 +2,7 @@ import { Navigate, Routes, Route } from "react-router";
 import Layout from "../components/Layout";
 import OverviewPage from "../pages/OverviewPage";
 import PlannerPage from "../pages/PlannerPage";
+import ResultsPage from "../pages/ResultsPage";
 import UmaImport from "../features/uma-import/UmaImport";
 import AdminPage from "../pages/AdminPage";
 import { EventProvider } from "../contexts/EventContext";
@@ -19,6 +20,7 @@ export default function App() {
               element={<Navigate to={routes.planner} replace />}
             />
             <Route path={routes.overview} element={<OverviewPage />} />
+            <Route path={routes.results} element={<ResultsPage />} />
             <Route path={routes.planner} element={<PlannerPage />} />
             <Route path={routes.umaImport} element={<UmaImport />} />
             <Route path={routes.admin} element={<AdminPage />} />

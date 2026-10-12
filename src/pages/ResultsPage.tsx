@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useEvent } from "../contexts/EventContext";
 import { useTeam } from "../features/planner/useTeam";
 import { usePlannerData } from "../features/planner/usePlannerData";
+import { useResults } from "../features/results/useResults";
 
 import UmaBuildResults from "../features/results/Results";
 import {
@@ -16,13 +17,13 @@ export default function ResultsPage() {
   const [currentTime, setCurrentTime] = useState(() => new Date());
   const showSupportCards = true;
   const { raceEntry, umaList, skillList } = usePlannerData(selectedEvent);
+  const { allBuilds } = useTeam(selectedEvent);
   const {
-    allBuilds,
     eventResults,
     saveTicketResult,
     removeTicketResult,
     saveFinalsResult,
-  } = useTeam(selectedEvent);
+  } = useResults(selectedEvent, allBuilds);
   const activeRaceEntry = raceEntry?.eventTitle === selectedEvent
     ? raceEntry
     : undefined;

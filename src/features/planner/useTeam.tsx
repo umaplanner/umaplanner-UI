@@ -5,9 +5,7 @@ import type {
 } from "../../types/UmaBuild";
 import {
   createBuildRepository,
-  createResultsRepository,
   createTeamRepository,
-  normalizeStoredResults,
   normalizeStoredTeam,
 } from "./plannerRepository";
 import {
@@ -17,20 +15,9 @@ import {
   type TeamState,
 } from "./plannerTypes";
 import {
-  createEmptyEventResults,
   hasDuplicateBaseUmaIds,
-  type EventResults,
   type InitialTeamBuildIds,
 } from "../results/resultsTypes";
-import {
-  getLegacyEventResults,
-} from "../results/resultsNormalization";
-import { createResultActions } from "../results/resultActions";
-import {
-  fetchAllResults,
-  fetchCurrentEventResults,
-  postResults,
-} from "../results/resultsApi";
 import { deleteBuild, fetchBuilds, postBuilds } from "./buildApi";
 import { fetchTeams, postTeams } from "./teamApi";
 import { postAnonymousTeam } from "./anonymousTeamApi";
@@ -55,9 +42,6 @@ export function useTeam(selectedEvent: string | null) {
   const teamSyncGenerationRef = useRef(new Map<string, number>());
   const anonymousTeamSyncTimerRef = useRef<number | undefined>(undefined);
   const pendingAnonymousTeamsRef = useRef(new Map<string, EventTeam>());
-  const resultsSyncTimerRef = useRef<number | undefined>(undefined);
-  const pendingResultsRef = useRef(new Map<string, EventResults>());
-  const resultsRef = useRef<EventResults | null>(null);
   const [buildRepository] = useState(() => createBuildRepository());
   const [umas, setUmas] = useState<TeamState>({
     ...createEmptyTeam(),
@@ -69,7 +53,6 @@ export function useTeam(selectedEvent: string | null) {
     uma3BuildName: "",
   });
   const [allBuilds, setAllBuilds] = useState<StoredUmaBuild[]>([]);
-  const [eventResults, setEventResults] = useState<EventResults>(() => createEmptyEventResults());
   const [loadedEvent, setLoadedEvent] = useState<string | null>(null);
   const isTeamLoading = Boolean(selectedEvent) &&
     (isAuthLoading || loadedEvent !== selectedEvent);
@@ -77,10 +60,6 @@ export function useTeam(selectedEvent: string | null) {
   useEffect(() => {
     umasRef.current = umas;
   }, [umas]);
-
-  useEffect(() => {
-    resultsRef.current = eventResults;
-  }, [eventResults]);
 
   useEffect(() => {
     userRef.current = user;
@@ -219,59 +198,14 @@ export function useTeam(selectedEvent: string | null) {
     return generation;
   }
 
-  function scheduleResultsSync(results: EventResults) {
-    if (!userRef.current) return;
-    pendingResultsRef.current.set(results.event, results);
-    if (resultsSyncTimerRef.current !== undefined) {
-      window.clearTimeout(resultsSyncTimerRef.current);
-    }
-    resultsSyncTimerRef.current = window.setTimeout(() => {
-      resultsSyncTimerRef.current = undefined;
-      pendingResultsRef.current.clear();
-      if (userRef.current) {
-        void createResultsRepository().getAll().then((storedResults) => {
-          if (userRef.current && storedResults.length > 0) {
-            return postResults(storedResults);
-          }
-        }).catch((error) => {
-          console.error("Error syncing results to backend:", error);
-        });
-      }
-    }, SYNC_DEBOUNCE_MS);
-  }
-
-  async function migrateLegacyResults(event: string, sources: unknown[]) {
-    const repository = createResultsRepository();
-    const storedResults = await repository.getByKey(event);
-    if (storedResults) return normalizeStoredResults(storedResults, event);
-
-    const migratedResults = sources
-      .map((source) => getLegacyEventResults(source, event))
-      .filter((results): results is EventResults => results !== null)
-      .sort((left, right) => right.lastUpdate - left.lastUpdate)[0];
-    if (!migratedResults) return null;
-
-    await repository.put(migratedResults);
-    scheduleResultsSync(migratedResults);
-    if (resultsRef.current?.event === event) {
-      resultsRef.current = migratedResults;
-      setEventResults(migratedResults);
-    }
-    return migratedResults;
-  }
-
   useEffect(() => () => {
     flushBuildSync();
     if (teamSyncTimerRef.current !== undefined) {
       window.clearTimeout(teamSyncTimerRef.current);
     }
-    if (resultsSyncTimerRef.current !== undefined) {
-      window.clearTimeout(resultsSyncTimerRef.current);
-    }
     teamSyncTimerRef.current = undefined;
     pendingTeamsRef.current.clear();
     teamSyncGenerationRef.current.clear();
-    pendingResultsRef.current.clear();
   }, [flushBuildSync]);
 
   useEffect(() => {
@@ -392,13 +326,6 @@ export function useTeam(selectedEvent: string | null) {
     const localTeam = await repository.getByKey(event);
     const remoteSnapshot = (await fetchTeams(event))[0];
     const remoteTeam = remoteSnapshot?.team;
-    await migrateLegacyResults(event, [localTeam, remoteSnapshot?.legacyResults]);
-    if (localTeam && getLegacyEventResults(localTeam, event)) {
-      const normalizedLocalTeam = normalizeStoredTeam(localTeam, event);
-      if (!await teamHasDuplicateBaseUmas(normalizedLocalTeam)) {
-        await repository.put(normalizedLocalTeam);
-      }
-    }
     if (remoteTeam && remoteSnapshot?.legacyResults) {
       scheduleTeamSync(remoteTeam);
     }
@@ -438,85 +365,6 @@ export function useTeam(selectedEvent: string | null) {
     return remoteTeam ?? null;
   }, [buildRepository, scheduleTeamSync, teamHasDuplicateBaseUmas]);
 
-  const syncAllRemoteResults = useCallback(async (): Promise<void> => {
-    if (!userRef.current) return;
-
-    const repository = createResultsRepository();
-    const [storedRecords, remoteResults] = await Promise.all([
-      repository.getAll(),
-      fetchAllResults(),
-    ]);
-    const localResults = storedRecords.map((result) =>
-      normalizeStoredResults(result, result.event)
-    );
-    const localByEvent = new Map(
-      localResults.map((result) => [result.event, result]),
-    );
-    const remoteByEvent = new Map(
-      remoteResults.map((result) => [result.event, result]),
-    );
-    const newerRemoteResults = remoteResults.filter((remoteResult) => {
-      const localResult = localByEvent.get(remoteResult.event);
-      return !localResult || remoteResult.lastUpdate > localResult.lastUpdate;
-    });
-
-    if (newerRemoteResults.length > 0) {
-      await repository.addMany(newerRemoteResults);
-      const currentEventResult = newerRemoteResults.find(
-        (result) => resultsRef.current?.event === result.event,
-      );
-      if (currentEventResult) {
-        resultsRef.current = currentEventResult;
-        setEventResults(currentEventResult);
-      }
-    }
-
-    const localResultToSync = localResults.find((localResult) => {
-      const remoteResult = remoteByEvent.get(localResult.event);
-      return !remoteResult || localResult.lastUpdate > remoteResult.lastUpdate;
-    });
-    if (localResultToSync) {
-      scheduleResultsSync(localResultToSync);
-    }
-  }, []);
-
-  const syncRemoteSelectedResult = useCallback(async (
-    event: string,
-  ): Promise<void> => {
-    if (!userRef.current) return;
-
-    const repository = createResultsRepository();
-    const [storedResults, remoteResults] = await Promise.all([
-      repository.getByKey(event),
-      fetchCurrentEventResults(event),
-    ]);
-    const localResults = storedResults
-      ? normalizeStoredResults(storedResults, event)
-      : null;
-
-    if (remoteResults && (
-      !localResults ||
-      remoteResults.lastUpdate > localResults.lastUpdate
-    )) {
-      await repository.put(remoteResults);
-      if (resultsRef.current?.event === event) {
-        resultsRef.current = remoteResults;
-        setEventResults(remoteResults);
-      }
-      return;
-    }
-
-    if (localResults) {
-      if (!remoteResults || localResults.lastUpdate > remoteResults.lastUpdate) {
-        scheduleResultsSync(localResults);
-      }
-      if (resultsRef.current?.event === event) {
-        resultsRef.current = localResults;
-        setEventResults(localResults);
-      }
-    }
-  }, []);
-
   useEffect(() => {
     if (isAuthLoading || !user || !selectedEvent) return;
     const event = selectedEvent;
@@ -525,12 +373,9 @@ export function useTeam(selectedEvent: string | null) {
       void syncRemoteTeam(event).catch((error) => {
         console.error("Error fetching teams from backend:", error);
       });
-      void syncRemoteSelectedResult(event).catch((error) => {
-        console.error("Error fetching results from backend:", error);
-      });
     }, 60_000);
     return () => window.clearInterval(interval);
-  }, [isAuthLoading, selectedEvent, syncRemoteBuilds, syncRemoteTeam, syncRemoteSelectedResult, user]);
+  }, [isAuthLoading, selectedEvent, syncRemoteBuilds, syncRemoteTeam, user]);
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -546,15 +391,9 @@ export function useTeam(selectedEvent: string | null) {
         uma3BuildName: "",
       });
       setAllBuilds([]);
-      const emptyResults = createEmptyEventResults();
-      resultsRef.current = emptyResults;
-      setEventResults(emptyResults);
       return;
     }
     const event = selectedEvent;
-    const initialResults = createEmptyEventResults(event);
-    resultsRef.current = initialResults;
-    setEventResults(initialResults);
 
     let cancelled = false;
 
@@ -562,38 +401,12 @@ export function useTeam(selectedEvent: string | null) {
       try {
         await buildRepository.ready();
         const repository = createTeamRepository();
-        const resultsRepository = createResultsRepository();
         const storedTeam = await repository.getByKey(event);
         if (cancelled) {
           return;
         }
 
-        const migratedResults = await migrateLegacyResults(event, [storedTeam]);
-        if (storedTeam && getLegacyEventResults(storedTeam, event)) {
-          const normalizedStoredTeam = normalizeStoredTeam(storedTeam, event);
-          if (!await teamHasDuplicateBaseUmas(normalizedStoredTeam)) {
-            await repository.put(normalizedStoredTeam);
-          }
-        }
-        const storedResults = migratedResults ??
-          await resultsRepository.getByKey(event);
         const normalizedTeam = normalizeStoredTeam(storedTeam ?? createEmptyTeam(event), event);
-        let loadedResults = normalizeStoredResults(storedResults, event);
-        const teamBuildIds: EventResults["initialBuildIds"] = [
-          normalizedTeam.uma1,
-          normalizedTeam.uma2,
-          normalizedTeam.uma3,
-        ];
-        if (
-          loadedResults.initialBuildIds.every((buildId) => buildId === null) &&
-          teamBuildIds.some((buildId) => buildId !== null)
-        ) {
-          loadedResults = { ...loadedResults, initialBuildIds: teamBuildIds };
-          await resultsRepository.put(loadedResults);
-          if (user) scheduleResultsSync(loadedResults);
-        }
-        resultsRef.current = loadedResults;
-        setEventResults(loadedResults);
 
         let emptyTeamToPersist: EventTeam | null = null;
         if (storedTeam) {
@@ -674,9 +487,6 @@ export function useTeam(selectedEvent: string | null) {
                 await repository.put(emptyTeamToPersist);
                 scheduleTeamSync(emptyTeamToPersist);
               }
-              await syncAllRemoteResults().catch((error) => {
-                console.error("Error fetching results from backend:", error);
-              });
             }
           } finally {
             if (!storedTeam && !cancelled) {
@@ -707,7 +517,6 @@ export function useTeam(selectedEvent: string | null) {
     teamHasDuplicateBaseUmas,
     syncRemoteBuilds,
     syncRemoteTeam,
-    syncAllRemoteResults,
   ]);
 
 
@@ -865,54 +674,12 @@ export function useTeam(selectedEvent: string | null) {
       uma2BuildName: selectedBuilds[1]?.name ?? "",
       uma3BuildName: selectedBuilds[2]?.name ?? "",
     }));
-    const currentResults = resultsRef.current;
-    if (currentResults?.event === event) {
-      const initialBuildIds = currentResults.initialBuildIds.map(
-        (buildId, index) => buildId ?? buildIds[index],
-      ) as InitialTeamBuildIds;
-      if (
-        initialBuildIds.some(
-          (buildId, index) => buildId !== currentResults.initialBuildIds[index],
-        )
-      ) {
-        saveEventResults({ ...currentResults, initialBuildIds });
-      }
-    }
   }
-
-  function saveEventResults(nextResults: EventResults) {
-    if (
-      !selectedEvent ||
-      nextResults.event !== selectedEvent
-    ) return;
-
-    const updatedResults: EventResults = {
-      ...nextResults,
-      lastUpdate: Date.now(),
-    };
-    resultsRef.current = updatedResults;
-    setEventResults(updatedResults);
-    void createResultsRepository().put(updatedResults).then(() => {
-      if (userRef.current) scheduleResultsSync(updatedResults);
-    }).catch((error) => {
-      console.error("Error saving event results:", error);
-    });
-  }
-
-
-  const resultActions = createResultActions({
-    selectedEvent,
-    allBuilds,
-    getCurrentResults: () => resultsRef.current,
-    saveEventResults,
-  });
 
   return {
-    ...resultActions,
     umas,
     isTeamLoading,
     allBuilds,
-    eventResults,
     saveBuild,
     removeBuild,
     swapTeamBuild,

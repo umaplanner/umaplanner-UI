@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { copyElementAsPng } from "../../../lib/copyElementAsPng";
-import CopyIcon from "../../CopyIcon";
+import { copyElementAsPng } from "../../lib/copyElementAsPng";
+import CopyIcon from "../../components/CopyIcon";
 import {
   resolveResultBuildId,
   teamResultRows,
-} from "../../../features/planner/plannerTypes";
+} from "../planner/plannerTypes";
 import type {
   InitialTeamBuildIds,
   TeamBuildAssignments,
@@ -17,11 +17,11 @@ import type {
   TeamTicketBuildResult,
   TeamTicketBuildResults,
   TeamTicketCount,
-} from "../../../features/planner/plannerTypes";
-import type { StoredUmaBuild } from "../../../types/UmaBuild";
+} from "../planner/plannerTypes";
+import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import type { UmaEntry } from "../../../types/UmaEntry";
-import { useResultCollapsePreferences } from "../../Preferences";
+import { useResultCollapsePreferences } from "../../components/Preferences";
 import FinalsEditor from "./FinalsEditor";
 import Group from "./Group";
 import type {
@@ -38,8 +38,8 @@ import type {
   ResultImageDay,
   ResultImageSummary,
 } from "./ResultImage";
-import "../../../styles/Builds.css";
-import "../../../styles/UmaBuildResults.css";
+import "../../styles/Builds.css";
+import "../../styles/UmaBuildResults.css";
 
 interface Props {
   event: string;

@@ -40,7 +40,6 @@ export default function Layout({children}: LayoutProps) {
 
       <main className="site-main">{children}</main>
       <Analytics />
-      <SpeedInsights />
     </>
   );
 }

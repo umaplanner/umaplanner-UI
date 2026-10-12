@@ -1,11 +1,10 @@
-
 import { useEffect, useRef, useState } from "react";
 import { useEvent } from "../contexts/EventContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useTeam } from "../features/planner/useTeam";
 import { usePlannerData } from "../features/planner/usePlannerData";
 
-import UmaBuildResults from "../components/UmaBuild/results/Results";
+import UmaBuildResults from "../features/results/Results";
 import {
   getNextResultOpeningAt,
   getResultAvailability,

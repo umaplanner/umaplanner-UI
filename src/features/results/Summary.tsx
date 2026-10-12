@@ -8,8 +8,8 @@ import type {
 import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import type { UmaEntry } from "../../../types/UmaEntry";
-import UmaImage from "../../UmaImage";
-import UmaBuildTeam from "../team/Team";
+import UmaImage from "../../components/UmaImage";
+import UmaBuildTeam from "../../components/UmaBuild/team/Team";
 import type { ResultBuildSummary } from "./types";
 import {
   formatResultOpeningDate,

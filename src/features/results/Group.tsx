@@ -12,7 +12,7 @@ import type {
   ResolvedTicketBuildResult,
   ResultGroup,
 } from "./types";
-import CopyIcon from "../../CopyIcon";
+import CopyIcon from "../../components/CopyIcon";
 import BuildSelector from "./BuildSelector";
 import { formatResultOpeningDate, formatWinRate } from "./utils";
 

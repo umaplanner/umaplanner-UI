@@ -1,8 +1,8 @@
 import { forwardRef } from "react";
-import type { StoredUmaBuild } from "../../../types/UmaBuild";
-import type { SkillEntry } from "../../../types/SkillEntry";
-import type { UmaEntry } from "../../../types/UmaEntry";
-import UmaBuildTeam from "../team/Team";
+import type { StoredUmaBuild } from "../../types/UmaBuild";
+import type { SkillEntry } from "../../types/SkillEntry";
+import type { UmaEntry } from "../../types/UmaEntry";
+import UmaBuildTeam from "../UmaBuild/team/Team";
 import BrandedImage from "./BrandedImage";
 
 export interface BuildImageEntry {

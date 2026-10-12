@@ -6,10 +6,10 @@ import type {
   TeamUmaPlacement,
 } from "../../../features/planner/plannerTypes";
 import type { UmaEntry } from "../../../types/UmaEntry";
-import BrandedImage from "../image/BrandedImage";
+import BrandedImage from "../../components/image/BrandedImage";
 import { formatUmaPlacement, formatWinRate } from "./utils";
-import UmaImage from "../../UmaImage";
-import "../../../styles/ResultImage.css";
+import UmaImage from "../../components/UmaImage";
+import "../../styles/ResultImage.css";
 
 export interface ResultImageBuild {
   id: string;

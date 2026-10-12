@@ -5,7 +5,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import UmaBuild from "../../components/UmaBuild/editor/BuildEditor";
 import TeamPanel from "../../components/UmaBuild/team/TeamPanel";
 import UmaBuildList from "../../components/UmaBuild/list/List";
-import UmaBuildResults from "../../components/UmaBuild/results/Results";
 import RaceDisplay from "../../components/RaceDisplay";
 import "../../styles/Planner.css";
 import { usePlannerData } from "./usePlannerData";

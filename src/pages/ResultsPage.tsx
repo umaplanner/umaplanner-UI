@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useEvent } from "../contexts/EventContext";
-import { useAuth } from "../contexts/AuthContext";
 import { useTeam } from "../features/planner/useTeam";
 import { usePlannerData } from "../features/planner/usePlannerData";
 
@@ -15,10 +14,8 @@ import {
 export default function ResultsPage() {
   const { selectedEvent } = useEvent();
   const [currentTime, setCurrentTime] = useState(() => new Date());
-  const [showSupportCards, setShowSupportCards] = useState(true);
-  const initialEvent = useRef(selectedEvent);
-  const hasInitializedBuildMode = useRef(false);
-  const { raceEntry, umaList, skillList, supportCardList } = usePlannerData(selectedEvent);
+  const showSupportCards = true;
+  const { raceEntry, umaList, skillList } = usePlannerData(selectedEvent);
   const {
     allBuilds,
     eventResults,
@@ -42,21 +39,6 @@ export default function ResultsPage() {
     );
     return () => window.clearTimeout(timeout);
   }, [activeRaceEntry, currentTime]);
-
-  useEffect(() => {
-    if (hasInitializedBuildMode.current) {
-      return;
-    }
-    if (selectedEvent !== initialEvent.current) {
-      hasInitializedBuildMode.current = true;
-      return;
-    }
-    if (!initialEvent.current || activeRaceEntry?.eventTitle !== initialEvent.current) {
-      return;
-    }
-
-    hasInitializedBuildMode.current = true;
-  }, [activeRaceEntry, resultAvailability.round1Day1, selectedEvent]);
 
   return (
     <main className="results-page">
@@ -83,4 +65,3 @@ export default function ResultsPage() {
     </main>
   );
 }
-

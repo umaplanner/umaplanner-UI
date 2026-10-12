@@ -19,8 +19,8 @@ import type {
   TeamTicketCount,
 } from "../planner/plannerTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
-import type { SkillEntry } from "../../../types/SkillEntry";
-import type { UmaEntry } from "../../../types/UmaEntry";
+import type { SkillEntry } from "../../types/SkillEntry";
+import type { UmaEntry } from "../../types/UmaEntry";
 import { useResultCollapsePreferences } from "../../components/Preferences";
 import FinalsEditor from "./FinalsEditor";
 import Group from "./Group";

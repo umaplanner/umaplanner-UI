@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import { useEvent } from "../../contexts/EventContext";
-import { useAuth } from "../../contexts/AuthContext";
 import UmaBuild from "../../components/UmaBuild/editor/BuildEditor";
 import TeamPanel from "../../components/UmaBuild/team/TeamPanel";
 import UmaBuildList from "../../components/UmaBuild/list/List";
@@ -24,7 +23,6 @@ import {
 
 export default function Planner() {
   const [buildMode, setBuildMode] = useState<"team" | "edit" | "builds">("team");
-  const [currentTime, setCurrentTime] = useState(() => new Date());
   const [showSupportCards, setShowSupportCards] = useState(true);
   const [editingBuild] = useState<UmaSlot>(1);
   const [editingBuildDraft, setEditingBuildDraft] = useState<{
@@ -40,9 +38,6 @@ export default function Planner() {
     null,
   ]);
   const { selectedEvent } = useEvent();
-  const { user } = useAuth();
-  const initialEvent = useRef(selectedEvent);
-  const hasInitializedBuildMode = useRef(false);
   const { raceEntry, umaList, skillList, supportCardList } = usePlannerData(selectedEvent);
   const {
     umas,
@@ -216,12 +211,6 @@ export default function Planner() {
   return (
     <div className="planner">
       <RaceDisplay raceEntry={raceEntry} />
-      {/* {!user && ( */}
-      {/*   <p className="anonymous-contribution-notice"> */}
-      {/*     While logged out, your selected team and build stats are sent under a */}
-      {/*     random browser ID and included in event overview statistics. */}
-      {/*   </p> */}
-      {/* )} */}
       <div className="uma-build-mode" role="group" aria-label="Build mode">
         <button
           type="button"

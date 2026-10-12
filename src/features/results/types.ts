@@ -4,8 +4,8 @@ import type {
   TeamTicketBuildResult,
   TeamUmaPlacement,
   UmaSlot,
-} from "../../../features/planner/plannerTypes";
-import type { StoredUmaBuild } from "../../../types/UmaBuild";
+} from "../planner/plannerTypes";
+import type { StoredUmaBuild } from "../../types/UmaBuild";
 
 export type ResultGroup = {
   title: "Round 1" | "Round 2";

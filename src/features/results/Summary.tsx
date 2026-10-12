@@ -4,7 +4,7 @@ import type {
   TeamFinalBuildPlacements,
   TeamFinalPlacement,
   UmaSlot,
-} from "../planner/plannerTypes";
+} from "./resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaEntry } from "../../types/UmaEntry";

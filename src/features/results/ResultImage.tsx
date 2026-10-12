@@ -4,7 +4,7 @@ import type {
   TeamRaceResultRow,
   TeamTicket,
   TeamUmaPlacement,
-} from "../planner/plannerTypes";
+} from "./resultsTypes";
 import type { UmaEntry } from "../../types/UmaEntry";
 import BrandedImage from "../../components/image/BrandedImage";
 import { formatUmaPlacement, formatWinRate } from "./utils";

@@ -12,7 +12,7 @@ import {
   type TeamTicket,
   type TeamTicketBuildResult,
   type UmaSlot,
-} from "./plannerTypes";
+} from "./resultsTypes";
 
 interface Dependencies {
   selectedEvent: string | null;

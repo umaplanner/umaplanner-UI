@@ -6,7 +6,7 @@ import {
   type TeamFinalBuildPlacements,
   type TeamFinalPlacement,
   type TeamUmaPlacement,
-} from "../planner/plannerTypes";
+} from "./resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import BuildSelector from "./BuildSelector";

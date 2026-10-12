@@ -8,7 +8,7 @@ import {
   getNextResultOpeningAt,
   getResultAvailability,
   getResultOpeningDates,
-} from "../features/planner/resultSchedule";
+} from "../features/results/resultSchedule";
 
 
 export default function ResultsPage() {

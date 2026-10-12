@@ -5,7 +5,7 @@ import type {
   TeamTicket,
   TeamTicketCount,
   TeamResultRow,
-} from "../planner/plannerTypes";
+} from "./resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type {

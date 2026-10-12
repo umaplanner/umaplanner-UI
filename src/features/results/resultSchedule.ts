@@ -1,5 +1,5 @@
 import type { RaceEntry } from "../../types/RaceEntry";
-import type { TeamResultRow } from "./plannerTypes";
+import type { TeamResultRow } from "./resultsTypes";
 
 export const resultDayOffsets: Record<TeamResultRow, number> = {
   round1Day1: 4,

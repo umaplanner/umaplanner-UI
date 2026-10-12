@@ -4,7 +4,7 @@ import type {
   TeamTicketBuildResult,
   TeamUmaPlacement,
   UmaSlot,
-} from "../planner/plannerTypes";
+} from "./resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 
 export type ResultGroup = {

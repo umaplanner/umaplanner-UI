@@ -1,13 +1,14 @@
 import { IndexedDbRepository } from "../../components/indexedDbRepository";
 import type { RaceEntry } from "../../types/RaceEntry";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
-import type { EventResults, EventTeam } from "./plannerTypes";
+import type { EventResults } from "../results/resultsTypes";
 import {
-  createEmptyEventResults,
-  createEmptyTeam,
   normalizeEventResults,
   serializeEventResults,
-} from "./plannerTypes";
+} from "../results/resultsNormalization";
+import { createEmptyEventResults } from "../results/resultsTypes";
+import type { EventTeam } from "./plannerTypes";
+import { createEmptyTeam } from "./plannerTypes";
 
 export function createRaceRepository() {
   return new IndexedDbRepository<RaceEntry>({

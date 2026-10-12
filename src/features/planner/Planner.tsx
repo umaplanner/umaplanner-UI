@@ -10,9 +10,8 @@ import { usePlannerData } from "./usePlannerData";
 import { useTeam } from "./useTeam";
 import {
   createDefaultBuild,
-  type InitialTeamBuildIds,
-  type UmaSlot,
 } from "./plannerTypes";
+import type { InitialTeamBuildIds, UmaSlot } from "../results/resultsTypes";
 import {
   findSkill,
   getUmaUniqueSkillId,

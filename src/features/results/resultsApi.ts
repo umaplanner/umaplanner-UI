@@ -5,8 +5,8 @@ import {
   isTeamTicketBuildResults,
   normalizeEventResults,
   serializeEventResults,
-  type EventResults,
-} from "./plannerTypes";
+} from "./resultsNormalization";
+import type { EventResults } from "./resultsTypes";
 
 function toEventResults(record: unknown): EventResults | null {
   if (!record || typeof record !== "object") return null;

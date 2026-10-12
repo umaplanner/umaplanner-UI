@@ -13,27 +13,27 @@ import {
 import {
   createEmptyTeam,
   createDefaultBuild,
-  hasDuplicateBaseUmaIds,
   type EventTeam,
   type TeamState,
-  type InitialTeamBuildIds,
 } from "./plannerTypes";
 import {
   createEmptyEventResults,
+  hasDuplicateBaseUmaIds,
   type EventResults,
-} from "./resultsTypes";
+  type InitialTeamBuildIds,
+} from "../results/resultsTypes";
 import {
   getLegacyEventResults,
-} from "./resultsNormalization";
-import { createResultActions } from "./resultActions";
-import { deleteBuild, fetchBuilds, postBuilds } from "./buildApi";
-import { fetchTeams, postTeams } from "./teamApi";
-import { postAnonymousTeam } from "./anonymousTeamApi";
+} from "../results/resultsNormalization";
+import { createResultActions } from "../results/resultActions";
 import {
   fetchAllResults,
   fetchCurrentEventResults,
   postResults,
-} from "./resultsApi";
+} from "../results/resultsApi";
+import { deleteBuild, fetchBuilds, postBuilds } from "./buildApi";
+import { fetchTeams, postTeams } from "./teamApi";
+import { postAnonymousTeam } from "./anonymousTeamApi";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   normalizeStrategyName,

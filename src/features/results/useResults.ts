@@ -29,9 +29,11 @@ export function useResults(selectedEvent: string | null, allBuilds: StoredUmaBui
 
   const saveEventResults = useCallback((nextResults: EventResults) => {
     if (!selectedEvent || nextResults.event !== selectedEvent) return;
+
     const updatedResults = { ...nextResults, lastUpdate: Date.now() };
     resultsRef.current = updatedResults;
     setEventResults(updatedResults);
+
     void createResultsRepository().put(updatedResults).then(() => {
       if (userRef.current) resultsSync.schedule(updatedResults);
     }).catch((error) => console.error("Error saving event results:", error));
@@ -39,17 +41,20 @@ export function useResults(selectedEvent: string | null, allBuilds: StoredUmaBui
 
   useEffect(() => {
     if (isAuthLoading) return;
+
     if (!selectedEvent) {
       const empty = createEmptyEventResults();
       resultsRef.current = empty;
       setEventResults(empty);
       return;
     }
+
     const event = selectedEvent;
     const initialResults = createEmptyEventResults(event);
     resultsRef.current = initialResults;
     setEventResults(initialResults);
     let cancelled = false;
+
     async function loadResults() {
       try {
         const repository = createResultsRepository();
@@ -62,25 +67,32 @@ export function useResults(selectedEvent: string | null, allBuilds: StoredUmaBui
             .map((source) => getLegacyEventResults(source, event))
             .filter((result): result is EventResults => result !== null)
             .sort((left, right) => right.lastUpdate - left.lastUpdate)[0] ?? null;
+
         if (cancelled) return;
+
         let loadedResults = migratedResults ?? createEmptyEventResults(event);
         if (!storedResults && migratedResults) {
           await repository.put(migratedResults);
           resultsSync.schedule(migratedResults);
         }
+
         const team = normalizeStoredTeam(
           storedTeam ?? remoteTeam?.team ?? createEmptyTeam(event), event,
         );
         const teamBuildIds: InitialTeamBuildIds = [team.uma1, team.uma2, team.uma3];
+
         if (loadedResults.initialBuildIds.every((buildId) => buildId === null) &&
             teamBuildIds.some((buildId) => buildId !== null)) {
           loadedResults = { ...loadedResults, initialBuildIds: teamBuildIds };
           await repository.put(loadedResults);
           resultsSync.schedule(loadedResults);
         }
+
         if (cancelled) return;
+
         resultsRef.current = loadedResults;
         setEventResults(loadedResults);
+
         if (user) await resultsSync.syncAll();
       } catch (error) { console.error("Error loading results:", error); }
     }
@@ -90,11 +102,13 @@ export function useResults(selectedEvent: string | null, allBuilds: StoredUmaBui
 
   useEffect(() => {
     if (isAuthLoading || !user || !selectedEvent) return;
+
     const event = selectedEvent;
     const interval = window.setInterval(() => {
       void resultsSync.syncSelected(event).catch((error) =>
         console.error("Error fetching results from backend:", error));
     }, 60_000);
+
     return () => window.clearInterval(interval);
   }, [isAuthLoading, resultsSync, selectedEvent, user]);
 

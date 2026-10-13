@@ -20,13 +20,16 @@ export function getTicketBuildResults(
     const saved = results.ticketBuildResults[row]?.[ticket]?.find(
       (build) => build.slot === slot,
     );
+
     const assigned = results.buildAssignments[row]?.[slot]
       ?.find((assignment) => assignment.tickets.includes(ticket))
       ?.buildId;
+
     const buildId = saved?.buildId ?? assigned ??
       (results.ticketBuildResults[row]?.[ticket] === undefined
         ? resolveResultBuildId(results, row, ticket, slot)
         : null);
+
     return {
       buildId: buildId ?? "",
       slot,
@@ -48,6 +51,7 @@ export function getResultBuildSummaries(
     for (let index = 0; index < results.ticketCounts[row]; index += 1) {
       const ticket = (index + 1) as TeamTicket;
       const savedBuildResults = results.ticketBuildResults[row]?.[ticket] ?? [];
+
       for (const slot of [1, 2, 3] as const) {
         const saved = savedBuildResults.find((entry) => entry.slot === slot);
         const assigned = results.buildAssignments[row]?.[slot]
@@ -82,6 +86,7 @@ export function getResultBuildSummaries(
 
       const finalBuild = getBuild(finalBuildId);
       if (!finalBuild) continue;
+
       const summary = byBuild.get(finalBuildId) ?? {
         build: finalBuild,
         wins: 0,
@@ -102,15 +107,20 @@ export function getResultTotals(
 ) {
   const roundWins = teamResultRows.reduce((total, row) => {
     if (row === "finals" || results.results[row] === null) return total;
+
     return total + (results.results[row]?.slice(0, results.ticketCounts[row])
       .reduce((rowTotal, wins) => rowTotal + wins, 0) ?? 0);
   }, 0);
+
   const roundTicketCount = teamResultRows.reduce((total, row) => {
     if (row === "finals" || results.results[row] === null) return total;
+
     return total + results.ticketCounts[row];
   }, 0);
+
   const totalWins = roundWins + (results.finalPlacement === 1 ? 1 : 0);
   const totalRaces = roundTicketCount * 5 + (results.finalPlacement === null ? 0 : 1);
+
   return {
     roundWins,
     roundTicketCount,
@@ -136,6 +146,7 @@ export function getFinalBuilds(
 ): [StoredUmaBuild | undefined, StoredUmaBuild | undefined, StoredUmaBuild | undefined] {
   const getBuild = (buildId: string | null) =>
     buildId ? availableBuilds.find((entry) => entry.id === buildId) : undefined;
+
   return ([1, 2, 3] as const).map((slot) =>
     getBuild(resolveResultBuildId(results, "finals", 1, slot)),
   ) as [StoredUmaBuild | undefined, StoredUmaBuild | undefined, StoredUmaBuild | undefined];

@@ -8,7 +8,7 @@ import type {
 import type { UmaEntry } from "../../types/UmaEntry";
 import BrandedImage from "../../components/image/BrandedImage";
 import { formatUmaPlacement, formatWinRate } from "./domain/utils";
-import UmaImage from "../../components/UmaImage";
+import ResultImageBuild from "./components/ResultImageBuild";
 import "../../styles/ResultImage.css";
 
 export interface ResultImageBuild {
@@ -66,24 +66,6 @@ function ordinalPlacement(placement: TeamFinalPlacement) {
   return formatUmaPlacement(placement);
 }
 
-function BuildPortrait({ build, className = "" }: {
-  build: ResultImageBuild;
-  className?: string;
-}) {
-  return (
-    <div className={`result-image__portrait ${className}`}>
-      {build.uma ? (
-        <UmaImage
-          uma={build.uma}
-          alt={build.uma.outfitTitle}
-        />
-      ) : (
-        <span aria-hidden="true">U{build.slot}</span>
-      )}
-    </div>
-  );
-}
-
 const ResultImage = forwardRef<HTMLElement, Props>(
   function ResultImage({
     event,
@@ -136,7 +118,7 @@ const ResultImage = forwardRef<HTMLElement, Props>(
                         : ""}`}
                       key={build.slot}
                     >
-                      <BuildPortrait
+                      <ResultImageBuild
                         build={build}
                         className="result-image__portrait--final"
                       />
@@ -168,7 +150,7 @@ const ResultImage = forwardRef<HTMLElement, Props>(
                 >
                   {summary.builds.map((build) => (
                     <article className="result-image__build-stat" key={build.id}>
-                      <BuildPortrait build={build} />
+                      <ResultImageBuild build={build} />
                       <div>
                         <strong>{build.name}</strong>
                         <span>
@@ -227,7 +209,7 @@ const ResultImage = forwardRef<HTMLElement, Props>(
                     >
                       {day.builds.map((build) => (
                         <article className="result-image__day-build" key={build.id}>
-                          <BuildPortrait build={build} />
+                          <ResultImageBuild build={build} />
                           <div>
                             <strong>{build.name}</strong>
                             <span>

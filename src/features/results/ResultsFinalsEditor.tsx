@@ -9,13 +9,13 @@ import {
 } from "./domain/resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
-import BuildSelector from "./ResultsBuildSelector";
 import type {
   EffectiveResultBuildLookup,
   FinalsDraft,
   ResultBuildLookup,
 } from "./domain/types";
-import { formatUmaPlacement, umaPlacements } from "./domain/utils";
+import FinalsBuildRow from "./components/FinalsBuildRow";
+import FinalsPlacementSelector from "./components/FinalsPlacementSelector";
 
 interface Props {
   hasFinalsData: boolean;
@@ -162,28 +162,11 @@ export default function FinalsEditor({
           Set each Uma's finish from 1st to 9th. Overall Finals placement is
           automatically 1st if any Uma finishes 1st; otherwise choose 2nd or 3rd.
         </p>
-        <div className="uma-build-results__placement" role="group" aria-label="Finals placement">
-          {([1, 2, 3] as const).map((placement) => (
-            <button
-              key={placement}
-              type="button"
-              aria-pressed={draft.placement === placement}
-              disabled={placement === 1 || draft.buildPlacements.includes(1)}
-              title={placement === 1
-                ? "Finals placement is automatically 1st when any selected Uma places 1st"
-                : undefined}
-              onClick={() => {
-                if (placement === 1) return;
-                setDraft((current) => ({
-                  ...current,
-                  placement: current.placement === placement ? null : placement,
-                }));
-              }}
-            >
-              {formatUmaPlacement(placement)}
-            </button>
-          ))}
-        </div>
+        <FinalsPlacementSelector
+          placement={draft.placement}
+          hasFirstPlace={draft.buildPlacements.includes(1)}
+          onChange={(placement) => setDraft((current) => ({ ...current, placement }))}
+        />
         <div className="uma-build-results__ticket-editor-builds">
           {([1, 2, 3] as const).map((slot, index) => {
             const buildId = draft.buildIds[index];
@@ -201,51 +184,18 @@ export default function FinalsEditor({
                 !usedBaseUmaIds.has(getBaseUmaId(build.outfitId)),
             );
             return (
-              <div
-                className="uma-build-results__ticket-editor-build uma-build-results__finals-editor-build"
+              <FinalsBuildRow
                 key={slot}
-              >
-                <BuildSelector
-                  slot={slot}
-                  buildId={buildId}
-                  choices={choices}
-                  availableBuilds={availableBuilds}
-                  umaList={umaList}
-                  ariaLabel={`Choose build for Uma ${slot}`}
-                  onChange={(selectedBuildId) => updateBuild(index, selectedBuildId)}
-                />
-                <label className="uma-build-results__finals-placement-select">
-                  Uma placement
-                  <select
-                    aria-label={`Placement for Uma ${slot}`}
-                    value={draft.buildPlacements[index] ?? ""}
-                    disabled={!buildId}
-                    onChange={(event) => {
-                      const value = event.target.value;
-                      updatePlacement(
-                        index,
-                        umaPlacements.find((placement) => String(placement) === value) ?? null,
-                      );
-                    }}
-                  >
-                    <option value="">Not recorded</option>
-                    {umaPlacements.map((placement) => (
-                      <option key={placement} value={placement}>
-                        {formatUmaPlacement(placement)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <button
-                  className="uma-build-results__remove-build"
-                  type="button"
-                  aria-label={`Clear selected build for Uma ${slot}`}
-                  disabled={!buildId}
-                  onClick={() => updateBuild(index, "")}
-                >
-                  Clear selected build
-                </button>
-              </div>
+                slot={slot}
+                buildId={buildId}
+                choices={choices}
+                availableBuilds={availableBuilds}
+                umaList={umaList}
+                placement={draft.buildPlacements[index]}
+                onBuildChange={(selectedBuildId) => updateBuild(index, selectedBuildId)}
+                onPlacementChange={(placement) => updatePlacement(index, placement)}
+                onClear={() => updateBuild(index, "")}
+              />
             );
           })}
         </div>

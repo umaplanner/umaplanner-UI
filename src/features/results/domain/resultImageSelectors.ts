@@ -93,6 +93,7 @@ export function getResultImageData({
         recordedWins: number;
         ticketNumbers: Set<1 | 2 | 3 | 4>;
       }>();
+
       const tickets = Array.from({ length: count }, (_, index) => {
         const ticket = (index + 1) as 1 | 2 | 3 | 4;
         const builds = getTicketBuildResults(
@@ -102,6 +103,7 @@ export function getResultImageData({
         );
         for (const build of builds) {
           if (!build.buildId) continue;
+
           const storedBuild = getBuild(build.buildId);
           const aggregate = dayBuilds.get(build.buildId) ?? {
             id: build.buildId,
@@ -121,12 +123,15 @@ export function getResultImageData({
           }
           dayBuilds.set(build.buildId, aggregate);
         }
+
         const allBuildWinsRecorded = builds.every((build) => build.wins !== null);
         const ticketWins = allBuildWinsRecorded
           ? builds.reduce((total, build) => total + (build.wins ?? 0), 0)
           : counts[index];
+
         return { number: ticket, wins: ticketWins };
       });
+
       const buildStats = Array.from(dayBuilds.values(), (build) => {
         const hasCompleteWinData = build.recordedWins === build.appearances;
         const raceCount = build.appearances * 5;
@@ -144,6 +149,7 @@ export function getResultImageData({
           hasCompleteWinData,
         };
       });
+
       return [{
         row,
         round: group.title,

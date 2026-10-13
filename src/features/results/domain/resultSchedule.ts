@@ -39,6 +39,7 @@ export function getResultAvailability(
   now = new Date(),
 ): Record<TeamResultRow, boolean> {
   const openingDates = getResultOpeningDates(raceEntry);
+
   return Object.fromEntries(
     (Object.keys(openingDates) as TeamResultRow[]).map((row) => [
       row,

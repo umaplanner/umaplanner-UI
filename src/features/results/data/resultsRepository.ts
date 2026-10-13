@@ -24,7 +24,9 @@ export function createResultsRepository() {
     const isCurrent = "round1Day1" in record || "round1Day2" in record ||
       "round2Day1" in record || "round2Day2" in record || "finals" in record;
     if (isCurrent) return normalizeEventResults(record, event);
+
     if (!isLegacyEventResults(record)) return createEmptyEventResults(event);
+
     const results = migrateLegacyEventResults(record, event);
     await repository.put({ event, ...serializeEventResults(results) });
     return results;
@@ -33,6 +35,7 @@ export function createResultsRepository() {
   return {
     async getAll() {
       const records = await repository.getAll();
+
       return (await Promise.all(records.map((record) =>
         typeof record.event === "string"
           ? normalizeAndMigrate(record, record.event)

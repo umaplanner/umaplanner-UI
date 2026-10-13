@@ -27,11 +27,6 @@ export type TeamTicketBuildResult = {
 export type TeamTicketBuildResults = Partial<
   Record<TeamRaceResultRow, Partial<Record<TeamTicket, TeamTicketBuildResult[]>>>
 >;
-export type TeamSummaryBuildResult = {
-  row: TeamRaceResultRow;
-  buildId: string;
-  wins: number;
-};
 export type TeamTicketCounts = Record<TeamResultRow, TeamTicketCount>;
 export type TeamBuildAssignment = {
   buildId: string | null;
@@ -50,7 +45,6 @@ export type EventResults = {
   finalBuildPlacements: TeamFinalBuildPlacements;
   buildAssignments: TeamBuildAssignments;
   ticketBuildResults: TeamTicketBuildResults;
-  summaryBuildResults: TeamSummaryBuildResult[];
   ticketCounts: TeamTicketCounts;
   initialBuildIds: InitialTeamBuildIds;
   lastUpdate: number;
@@ -189,7 +183,6 @@ export function createEmptyEventResults(event = ""): EventResults {
     finalBuildPlacements: [null, null, null],
     buildAssignments: {},
     ticketBuildResults: {},
-    summaryBuildResults: [],
     ticketCounts: createDefaultTicketCounts(),
     initialBuildIds: [null, null, null],
     lastUpdate: 0,

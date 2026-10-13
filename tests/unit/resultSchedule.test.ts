@@ -5,7 +5,7 @@ import {
   getResultOpenAt,
   getResultOpeningDates,
   resultDayOffsets,
-} from "../../src/features/planner/resultSchedule";
+} from "../../src/features/results/domain/resultSchedule";
 import type { RaceEntry } from "../../src/types/RaceEntry";
 
 const raceEntry: RaceEntry = {

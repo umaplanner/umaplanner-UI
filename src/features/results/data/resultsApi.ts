@@ -1,12 +1,7 @@
-import { config } from "../../lib/config";
-import {
-  isTeamBuildAssignments,
-  isTeamResults,
-  isTeamTicketBuildResults,
-  normalizeEventResults,
-  serializeEventResults,
-} from "./resultsNormalization";
-import type { EventResults } from "./resultsTypes";
+import { config } from "../../../lib/config";
+import { normalizeEventResults, serializeEventResults } from "./resultsCodec";
+import { isLegacyEventResults, migrateLegacyEventResults } from "./resultsMigration";
+import type { EventResults } from "../domain/resultsTypes";
 
 function toEventResults(record: unknown): EventResults | null {
   if (!record || typeof record !== "object") return null;
@@ -16,27 +11,14 @@ function toEventResults(record: unknown): EventResults | null {
       !Array.isArray(envelope.data)
     ? { ...(envelope.data as Record<string, unknown>), event: envelope.event }
     : envelope;
-  const groupedData = !("results" in data) &&
-    (
-      "round1Day1" in data ||
-      "round1Day2" in data ||
-      "round2Day1" in data ||
-      "round2Day2" in data ||
-      (data.finals !== null && typeof data.finals === "object")
-    );
-  if (!groupedData) {
-    // REMOVE legacy API response validation after old-format server records are migrated.
-    const assignments = data.buildAssignments ?? data.buildOverrides;
-    if (
-      !isTeamResults(data.results) ||
-      (assignments !== undefined && !isTeamBuildAssignments(assignments)) ||
-      (
-        data.ticketBuildResults !== undefined &&
-        !isTeamTicketBuildResults(data.ticketBuildResults)
-      )
-    ) return null;
-  }
-  return normalizeEventResults(data, envelope.event);
+  const current = normalizeEventResults(data, envelope.event);
+  if (current.event === envelope.event && !("results" in data) && (
+    "round1Day1" in data || "round1Day2" in data ||
+    "round2Day1" in data || "round2Day2" in data || "finals" in data
+  )) return current;
+  return isLegacyEventResults(data)
+    ? migrateLegacyEventResults(data, envelope.event)
+    : null;
 }
 
 export async function fetchAllResults(): Promise<EventResults[]> {

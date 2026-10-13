@@ -4,10 +4,10 @@ import type {
   TeamRaceResultRow,
   TeamTicket,
   TeamUmaPlacement,
-} from "./resultsTypes";
+} from "./domain/resultsTypes";
 import type { UmaEntry } from "../../types/UmaEntry";
 import BrandedImage from "../../components/image/BrandedImage";
-import { formatUmaPlacement, formatWinRate } from "./utils";
+import { formatUmaPlacement, formatWinRate } from "./domain/utils";
 import UmaImage from "../../components/UmaImage";
 import "../../styles/ResultImage.css";
 

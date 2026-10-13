@@ -1,6 +1,6 @@
 import { config } from "../../lib/config";
-import { getLegacyEventResults } from "../results/resultsNormalization";
-import type { EventResults } from "../results/resultsTypes";
+import { getLegacyEventResults } from "../results/data/resultsMigration";
+import type { EventResults } from "../results/domain/resultsTypes";
 import {
   type EventTeam,
 } from "./plannerTypes";

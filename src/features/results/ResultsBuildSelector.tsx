@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
-import type { UmaSlot } from "./resultsTypes";
+import type { UmaSlot } from "./domain/resultsTypes";
 import UmaImage from "../../components/UmaImage";
 import UmaBuildSavedBuildDialog from "../../components/UmaBuild/team/SavedBuildDialog";
 

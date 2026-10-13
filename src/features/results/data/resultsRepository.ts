@@ -1,12 +1,13 @@
-import { IndexedDbRepository } from "../../components/indexedDbRepository";
+import { IndexedDbRepository } from "../../../components/indexedDbRepository";
 import {
   normalizeEventResults,
   serializeEventResults,
-} from "./resultsNormalization";
+} from "./resultsCodec";
+import { isLegacyEventResults, migrateLegacyEventResults } from "./resultsMigration";
 import {
   createEmptyEventResults,
   type EventResults,
-} from "./resultsTypes";
+} from "../domain/resultsTypes";
 
 export function createResultsRepository() {
   const repository = new IndexedDbRepository<Record<string, unknown>>({
@@ -20,22 +21,12 @@ export function createResultsRepository() {
     record: Record<string, unknown>,
     event: string,
   ): Promise<EventResults> {
-    const results = normalizeEventResults(record, event);
-    const isGroupedRecord = !("results" in record) &&
-      (
-        "round1Day1" in record ||
-        "round1Day2" in record ||
-        "round2Day1" in record ||
-        "round2Day2" in record ||
-        (record.finals !== null && typeof record.finals === "object")
-      );
-    if (!isGroupedRecord) {
-      // REMOVE once all existing TeamResultsDB records have been rewritten.
-      await repository.put({
-        event,
-        ...serializeEventResults(results),
-      });
-    }
+    const isCurrent = "round1Day1" in record || "round1Day2" in record ||
+      "round2Day1" in record || "round2Day2" in record || "finals" in record;
+    if (isCurrent) return normalizeEventResults(record, event);
+    if (!isLegacyEventResults(record)) return createEmptyEventResults(event);
+    const results = migrateLegacyEventResults(record, event);
+    await repository.put({ event, ...serializeEventResults(results) });
     return results;
   }
 

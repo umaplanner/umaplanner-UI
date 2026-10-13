@@ -5,7 +5,7 @@ import type {
   TeamUmaPlacement,
   UmaSlot,
 } from "./resultsTypes";
-import type { StoredUmaBuild } from "../../types/UmaBuild";
+import type { StoredUmaBuild } from "../../../types/UmaBuild";
 
 export type ResultGroup = {
   title: "Round 1" | "Round 2";

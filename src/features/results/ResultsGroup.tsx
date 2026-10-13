@@ -5,16 +5,16 @@ import type {
   TeamTicket,
   TeamTicketCount,
   TeamResultRow,
-} from "./resultsTypes";
+} from "./domain/resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type {
   ResolvedTicketBuildResult,
   ResultGroup,
-} from "./types";
+} from "./domain/types";
 import CopyIcon from "../../components/CopyIcon";
-import BuildSelector from "./BuildSelector";
-import { formatResultOpeningDate, formatWinRate } from "./utils";
+import BuildSelector from "./ResultsBuildSelector";
+import { formatResultOpeningDate, formatWinRate } from "./domain/utils";
 
 interface Props {
   group: ResultGroup;

@@ -4,18 +4,18 @@ import type {
   TeamFinalBuildPlacements,
   TeamFinalPlacement,
   UmaSlot,
-} from "./resultsTypes";
+} from "./domain/resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaEntry } from "../../types/UmaEntry";
 import UmaImage from "../../components/UmaImage";
 import UmaBuildTeam from "../../components/UmaBuild/team/Team";
-import type { ResultBuildSummary } from "./types";
+import type { ResultBuildSummary } from "./domain/types";
 import {
   formatResultOpeningDate,
   formatUmaPlacement,
   formatWinRate,
-} from "./utils";
+} from "./domain/utils";
 
 interface Props {
   imageActions?: ReactNode;

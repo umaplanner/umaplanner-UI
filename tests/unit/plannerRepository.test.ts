@@ -1,7 +1,7 @@
 import { openDB } from "idb";
 import { describe, expect, it } from "vitest";
-import { createResultsRepository } from "../../src/features/results/resultsRepository";
-import { createEmptyEventResults } from "../../src/features/results/resultsTypes";
+import { createResultsRepository } from "../../src/features/results/data/resultsRepository";
+import { createEmptyEventResults } from "../../src/features/results/domain/resultsTypes";
 
 describe("results repository migration", () => {
   it("rewrites legacy IndexedDB results into grouped containers when loaded", async () => {

@@ -1,4 +1,4 @@
-import type { StoredUmaBuild } from "../../types/UmaBuild";
+import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import {
   hasDuplicateBaseUmaIds,
   resolveResultBuildId,

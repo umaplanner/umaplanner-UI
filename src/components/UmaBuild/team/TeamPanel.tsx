@@ -8,8 +8,8 @@ import BuildImage from "../../image/BuildImage";
 import UmaBuildTeam from "./Team";
 import {
   hasDuplicateBaseUmaIds,
-} from "../../../features/results/resultsTypes";
-import type { UmaSlot } from "../../../features/results/resultsTypes";
+} from "../../../features/results/domain/resultsTypes";
+import type { UmaSlot } from "../../../features/results/domain/resultsTypes";
 import "../../../styles/UmaBuildTeam.css";
 
 interface TeamBuild {

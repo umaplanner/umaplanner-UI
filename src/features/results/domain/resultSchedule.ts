@@ -1,4 +1,4 @@
-import type { RaceEntry } from "../../types/RaceEntry";
+import type { RaceEntry } from "../../../types/RaceEntry";
 import type { TeamResultRow } from "./resultsTypes";
 
 export const resultDayOffsets: Record<TeamResultRow, number> = {

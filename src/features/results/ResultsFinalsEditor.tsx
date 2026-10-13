@@ -6,16 +6,16 @@ import {
   type TeamFinalBuildPlacements,
   type TeamFinalPlacement,
   type TeamUmaPlacement,
-} from "./resultsTypes";
+} from "./domain/resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
-import BuildSelector from "./BuildSelector";
+import BuildSelector from "./ResultsBuildSelector";
 import type {
   EffectiveResultBuildLookup,
   FinalsDraft,
   ResultBuildLookup,
-} from "./types";
-import { formatUmaPlacement, umaPlacements } from "./utils";
+} from "./domain/types";
+import { formatUmaPlacement, umaPlacements } from "./domain/utils";
 
 interface Props {
   hasFinalsData: boolean;

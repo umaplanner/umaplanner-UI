@@ -17,7 +17,7 @@ import {
 import {
   hasDuplicateBaseUmaIds,
   type InitialTeamBuildIds,
-} from "../results/resultsTypes";
+} from "../results/domain/resultsTypes";
 import { deleteBuild, fetchBuilds, postBuilds } from "./buildApi";
 import { fetchTeams, postTeams } from "./teamApi";
 import { postAnonymousTeam } from "./anonymousTeamApi";

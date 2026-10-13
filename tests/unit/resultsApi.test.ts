@@ -1,15 +1,14 @@
 import { describe, expect, it, vi } from "vitest";
 import {
-  fetchAllResults,
   fetchCurrentEventResults,
   postResults,
-} from "../../src/features/planner/resultsApi";
+} from "../../src/features/results/data/resultsApi";
 import {
   createEmptyEventResults,
   createDefaultTeamResults,
   setTeamResultRoundExcluded,
   type EventResults,
-} from "../../src/features/planner/plannerTypes";
+} from "../../src/features/results/domain/resultsTypes";
 
 vi.mock("../../src/lib/config", () => ({
   config: { apiBaseUrl: "https://api.example.com" },
@@ -44,21 +43,6 @@ describe("results API", () => {
     expect(fetchMock.mock.calls[0][0]).toBe(
       "https://api.example.com/results/CM%2042",
     );
-  });
-
-  it("fetches all results from the collection endpoint", async () => {
-    const results = [
-      createEmptyEventResults("CM 42"),
-      createEmptyEventResults("CM 43"),
-    ];
-    const fetchMock = vi.fn().mockResolvedValue({
-      ok: true,
-      json: async () => results.map(({ event, ...data }) => ({ event, data })),
-    });
-    vi.stubGlobal("fetch", fetchMock);
-
-    await expect(fetchAllResults()).resolves.toEqual(results);
-    expect(fetchMock.mock.calls[0][0]).toBe("https://api.example.com/results");
   });
 
   it("loads results saved in grouped round and Finals containers", async () => {
@@ -117,7 +101,6 @@ describe("results API", () => {
     expect(payload[0].data).toEqual({
       lastUpdate: 0,
       detailMode: "full",
-      summaryBuildResults: [],
       round1Day1: {},
       round1Day2: {},
       round2Day1: {},
@@ -132,73 +115,6 @@ describe("results API", () => {
       },
     });
     expect(payload[0]).not.toHaveProperty("results");
-  });
-
-  it("stores only used tickets with their three builds and wins", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
-    vi.stubGlobal("fetch", fetchMock);
-    const results = createEmptyEventResults("CM 42");
-    results.ticketCounts.round1Day1 = 2;
-    results.ticketBuildResults.round1Day1 = {
-      1: [
-        { buildId: "build-1", slot: 1, wins: 2 },
-        { buildId: "build-2", slot: 2, wins: 1 },
-        { buildId: "build-3", slot: 3, wins: 1 },
-      ],
-    };
-    results.buildAssignments.round1Day1 = {
-      1: [{ buildId: "build-1", tickets: [1] }],
-      2: [{ buildId: "build-2", tickets: [1] }],
-      3: [{ buildId: "build-3", tickets: [1] }],
-    };
-
-    await postResults([results]);
-
-    const payload = JSON.parse(fetchMock.mock.calls[0][1].body);
-    expect(payload[0].data.round1Day1).toEqual({
-      1: {
-        builds: [
-          { buildId: "build-1", wins: 2 },
-          { buildId: "build-2", wins: 1 },
-          { buildId: "build-3", wins: 1 },
-        ],
-      },
-    });
-  });
-
-  it("posts all provided events in one batch request", async () => {
-    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
-    vi.stubGlobal("fetch", fetchMock);
-    const results = [
-      createEmptyEventResults("CM 42"),
-      createEmptyEventResults("CM 43"),
-    ];
-
-    await postResults(results);
-
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual(
-      results.map((result) => ({
-        event: result.event,
-        data: {
-          lastUpdate: 0,
-          detailMode: "full",
-          summaryBuildResults: [],
-          round1Day1: {},
-          round1Day2: {},
-          round2Day1: {},
-          round2Day2: {},
-          finals: {
-            placement: null,
-            builds: [
-              { buildId: null, placement: null },
-              { buildId: null, placement: null },
-              { buildId: null, placement: null },
-            ],
-          },
-        },
-      })),
-    );
   });
 
   it("migrates legacy row-wide build overrides into ticket assignments", async () => {

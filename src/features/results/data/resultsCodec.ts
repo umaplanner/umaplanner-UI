@@ -20,10 +20,9 @@ import {
   type TeamTicketBuildResults,
   type TeamTicketCount,
   type TeamTicketCounts,
-  type TeamSummaryBuildResult,
   type TeamUmaPlacement,
   type UmaSlot,
-} from "./resultsTypes";
+} from "../domain/resultsTypes";
 
 type LegacyTeamBuildOverrides = Record<string, unknown>;
 
@@ -382,44 +381,10 @@ export function normalizeEventResults(value: unknown, event: string): EventResul
       data.ticketBuildResults,
       ticketCounts,
     ),
-    summaryBuildResults: normalizeSummaryBuildResults(data.summaryBuildResults),
     ticketCounts,
     initialBuildIds: normalizeInitialBuildIds(data.initialBuildIds),
     lastUpdate: typeof data.lastUpdate === "number" ? data.lastUpdate : 0,
   };
-}
-
-function normalizeSummaryBuildResults(value: unknown): TeamSummaryBuildResult[] {
-  if (!Array.isArray(value)) return [];
-  const normalized: TeamSummaryBuildResult[] = [];
-  const rowCounts = new Map<TeamRaceResultRow, number>();
-  let totalWins = 0;
-  for (const entry of value) {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) continue;
-    const data = entry as Record<string, unknown>;
-    if (
-      !["round1Day1", "round1Day2", "round2Day1", "round2Day2"].includes(
-        String(data.row),
-      ) ||
-      typeof data.buildId !== "string" ||
-      data.buildId.length === 0 ||
-      !Number.isInteger(data.wins) ||
-      Number(data.wins) < 0 ||
-      Number(data.wins) > 5
-    ) continue;
-    const row = data.row as TeamRaceResultRow;
-    const wins = Number(data.wins);
-    const count = rowCounts.get(row) ?? 0;
-    if (count >= 4 || normalized.length >= 16 || totalWins + wins > 80) continue;
-    normalized.push({
-      row,
-      buildId: data.buildId,
-      wins,
-    });
-    rowCounts.set(row, count + 1);
-    totalWins += wins;
-  }
-  return normalized;
 }
 
 function normalizeGroupedEventResults(
@@ -532,7 +497,6 @@ export function serializeEventResults(results: EventResults): Record<string, unk
   const serialized: Record<string, unknown> = {
     lastUpdate: results.lastUpdate,
     detailMode: results.detailMode,
-    summaryBuildResults: results.summaryBuildResults,
   };
   for (const row of teamResultRows) {
     if (row === "finals") continue;
@@ -571,24 +535,4 @@ export function serializeEventResults(results: EventResults): Record<string, unk
     })),
   };
   return serialized;
-}
-
-// REMOVE after legacy team records no longer embed results.
-export function getLegacyEventResults(value: unknown, event: string): EventResults | null {
-  if (!value || typeof value !== "object") return null;
-  const data = value as Record<string, unknown>;
-  if (!isTeamResults(data.results)) return null;
-  return {
-    event,
-    detailMode: "full",
-    results: normalizeTeamResults(data.results),
-    finalPlacement: null,
-    finalBuildPlacements: [null, null, null],
-    buildAssignments: {},
-    ticketBuildResults: {},
-    summaryBuildResults: [],
-    ticketCounts: normalizeTeamTicketCounts(undefined),
-    initialBuildIds: [null, null, null],
-    lastUpdate: typeof data.lastUpdate === "number" ? data.lastUpdate : 0,
-  };
 }

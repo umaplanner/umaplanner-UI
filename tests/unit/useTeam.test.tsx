@@ -48,7 +48,7 @@ vi.mock("../../src/features/planner/anonymousTeamApi", () => ({
   postAnonymousTeam: mocks.postAnonymousTeam,
 }));
 
-vi.mock("../../src/features/results/resultsApi", () => ({
+vi.mock("../../src/features/results/data/resultsApi", () => ({
   fetchAllResults: mocks.fetchAllResults,
   fetchCurrentEventResults: mocks.fetchCurrentEventResults,
   postResults: mocks.postResults,

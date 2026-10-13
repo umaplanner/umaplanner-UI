@@ -3,14 +3,16 @@ import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toBlob } from "html-to-image";
-import UmaBuildResults from "../../src/components/UmaBuild/results/Results";
+import UmaBuildResults from "../../src/features/results/Results";
 import UmaBuildSavedBuildDialog from "../../src/components/UmaBuild/team/SavedBuildDialog";
 import {
-  createDefaultTicketCounts,
   createDefaultBuild,
+} from "../../src/features/planner/plannerTypes";
+import {
+  createDefaultTicketCounts,
   createDefaultTeamResults,
   setTeamResultRoundExcluded,
-} from "../../src/features/planner/plannerTypes";
+} from "../../src/features/results/domain/resultsTypes";
 
 vi.mock("html-to-image", () => ({ toBlob: vi.fn() }));
 

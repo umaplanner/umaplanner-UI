@@ -9,7 +9,7 @@ import {
   getNextResultOpeningAt,
   getResultAvailability,
   getResultOpeningDates,
-} from "../features/results/resultSchedule";
+} from "../features/results/domain/resultSchedule";
 
 
 export default function ResultsPage() {

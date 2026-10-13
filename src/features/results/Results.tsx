@@ -3,8 +3,7 @@ import { copyElementAsPng } from "../../lib/copyElementAsPng";
 import CopyIcon from "../../components/CopyIcon";
 import {
   resolveResultBuildId,
-  teamResultRows,
-} from "./resultsTypes";
+} from "./domain/resultsTypes";
 import type {
   InitialTeamBuildIds,
   TeamBuildAssignments,
@@ -17,27 +16,28 @@ import type {
   TeamTicketBuildResult,
   TeamTicketBuildResults,
   TeamTicketCount,
-} from "./resultsTypes";
+} from "./domain/resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { SkillEntry } from "../../types/SkillEntry";
 import type { UmaEntry } from "../../types/UmaEntry";
 import { useResultCollapsePreferences } from "../../components/Preferences";
-import FinalsEditor from "./FinalsEditor";
-import Group from "./Group";
+import FinalsEditor from "./ResultsFinalsEditor";
+import Group from "./ResultsGroup";
 import type {
   EffectiveResultBuildLookup,
   ResultBuildLookup,
   ResultGroup,
-  ResultBuildSummary,
-  ResolvedTicketBuildResult,
-} from "./types";
-import Summary from "./Summary";
-import ResultImage from "./ResultImage";
-import type {
-  ResultImageDayBuild,
-  ResultImageDay,
-  ResultImageSummary,
-} from "./ResultImage";
+} from "./domain/types";
+import Summary from "./ResultsSummary";
+import ResultImage from "./ResultsImage";
+import { getResultImageData } from "./domain/resultImageSelectors";
+import {
+  getFinalBuilds,
+  getResultBuildSummaries,
+  getResultTotals,
+  getTicketBuildResults as selectTicketBuildResults,
+  hasFinalsData as selectHasFinalsData,
+} from "./domain/resultSelectors";
 import "../../styles/Builds.css";
 import "../../styles/UmaBuildResults.css";
 
@@ -146,28 +146,12 @@ export default function Results({
   const getBuild: ResultBuildLookup = (buildId) =>
     buildId ? availableBuilds.find((entry) => entry.id === buildId) : undefined;
 
-  function getTicketBuildResults(
-    row: TeamRaceResultRow,
-    ticket: TeamTicket,
-  ): ResolvedTicketBuildResult[] {
-    return ([1, 2, 3] as const).flatMap((slot) => {
-      const saved = ticketBuildResults[row]?.[ticket]?.find(
-        (build) => build.slot === slot,
-      );
-      const assigned = buildAssignments[row]?.[slot]
-        ?.find((assignment) => assignment.tickets.includes(ticket))
-        ?.buildId;
-      const buildId = saved?.buildId ?? assigned ??
-        (ticketBuildResults[row]?.[ticket] === undefined
-          ? getEffectiveBuildId(row, ticket, slot)
-          : null);
-      return [{
-        buildId: buildId ?? "",
-        slot,
-        wins: saved?.wins ?? null,
-      }];
-    });
-  }
+  const getTicketBuildResults = (row: TeamRaceResultRow, ticket: TeamTicket) =>
+    selectTicketBuildResults(
+      { buildAssignments, ticketBuildResults, ticketCounts, initialBuildIds },
+      row,
+      ticket,
+    );
 
   function addTicket(row: TeamRaceResultRow) {
     const count = ticketCounts[row];
@@ -185,200 +169,47 @@ export default function Results({
     );
   }
 
-  const summaryBuilds: ResultBuildSummary[] = (() => {
-    const byBuild = new Map<string, ResultBuildSummary>();
-
-    for (const row of teamResultRows) {
-      if (row === "finals" || results[row] === null) continue;
-      for (let index = 0; index < ticketCounts[row]; index += 1) {
-        const ticket = (index + 1) as TeamTicket;
-        const savedBuildResults = ticketBuildResults[row]?.[ticket] ?? [];
-        for (const slot of [1, 2, 3] as const) {
-          const saved = savedBuildResults.find((entry) => entry.slot === slot);
-          const assigned = buildAssignments[row]?.[slot]
-            ?.find((assignment) => assignment.tickets.includes(ticket))
-            ?.buildId;
-          const buildId = saved?.buildId ?? assigned ??
-            (ticketBuildResults[row]?.[ticket] === undefined
-              ? getEffectiveBuildId(row, ticket, slot)
-              : null);
-          const build = getBuild(buildId);
-          if (!build) continue;
-
-          const summary = byBuild.get(build.id) ?? {
-            build,
-            wins: 0,
-            raceCount: 0,
-            slot,
-          };
-          if (saved?.wins !== undefined) summary.wins += saved.wins;
-          summary.raceCount += 5;
-          byBuild.set(build.id, summary);
-        }
-      }
-    }
-
-    if (finalPlacement !== null) {
-      for (const slot of [1, 2, 3] as const) {
-        const finalBuildId = buildAssignments.finals?.[slot]
-          ?.find((assignment) => assignment.tickets.includes(1))
-          ?.buildId;
-        if (!finalBuildId) continue;
-
-        const summary = byBuild.get(finalBuildId);
-        const finalBuild = getBuild(finalBuildId);
-        if (!finalBuild) continue;
-        const finalSummary = summary ?? {
-          build: finalBuild,
-          wins: 0,
-          raceCount: 0,
-          slot,
-        };
-
-        finalSummary.raceCount += 1;
-        if (finalBuildPlacements[slot - 1] === 1) {
-          finalSummary.wins += 1;
-        }
-        byBuild.set(finalBuildId, finalSummary);
-      }
-    }
-
-    return Array.from(byBuild.values());
-  })();
+  const summaryBuilds = getResultBuildSummaries({
+    results,
+    buildAssignments,
+    ticketBuildResults,
+    ticketCounts,
+    initialBuildIds,
+    finalPlacement,
+    finalBuildPlacements,
+  }, availableBuilds);
 
   const canShowBuildWinRates =
     results.round1Day1 !== null || results.round1Day2 !== null ||
     results.round2Day1 !== null || results.round2Day2 !== null;
-  const roundWins = teamResultRows.reduce((total, row) => {
-      if (row === "finals" || results[row] === null) return total;
-      return total + (results[row]?.slice(0, ticketCounts[row])
-        .reduce((rowTotal, wins) => rowTotal + wins, 0) ?? 0);
-    }, 0);
-  const roundTicketCount = teamResultRows.reduce((total, row) => {
-      if (row === "finals" || results[row] === null) return total;
-      return total + ticketCounts[row];
-    }, 0);
-  const totalWins = roundWins + (finalPlacement === 1 ? 1 : 0);
-  const totalRaces = roundTicketCount * 5 + (finalPlacement === null ? 0 : 1);
-  const totalWinRate = totalRaces > 0
-    ? (totalWins / totalRaces) * 100
-    : null;
-  const hasFinalsData = finalPlacement !== null ||
-    ([1, 2, 3] as const).some((slot) =>
-      buildAssignments.finals?.[slot]?.some((assignment) => assignment.tickets.includes(1)),
+    const { totalWins, totalRaces, totalWinRate } = getResultTotals({
+      results,
+      ticketCounts,
+      finalPlacement,
+    });
+    const hasFinalsData = selectHasFinalsData({ buildAssignments, finalPlacement });
+    const finalBuilds = getFinalBuilds(
+      { buildAssignments, ticketCounts, initialBuildIds },
+      availableBuilds,
     );
-  const finalBuilds = ([1, 2, 3] as const).map((slot) =>
-    getBuild(getEffectiveBuildId("finals", 1, slot)),
-  ) as [StoredUmaBuild | undefined, StoredUmaBuild | undefined, StoredUmaBuild | undefined];
-  const getUmaForBuild = (build: StoredUmaBuild | undefined) =>
-    build
-      ? umaList.find((entry) => String(entry.id) === build.outfitId) ?? null
-      : null;
-  const imageDays: ResultImageDay[] = resultGroups.flatMap((group) =>
-    group.rows.flatMap(({ row, label }) => {
-      const count = ticketCounts[row];
-      const counts = results[row];
-      if (!counts || count === 0) return [];
-
-      const wins = counts.slice(0, count).reduce((total, value) => total + value, 0);
-      const dayBuilds = new Map<string, {
-        id: string;
-        slot: 1 | 2 | 3;
-        name: string;
-        uma: ReturnType<typeof getUmaForBuild>;
-        wins: number;
-        appearances: number;
-        recordedWins: number;
-        ticketNumbers: Set<TeamTicket>;
-      }>();
-      const tickets = Array.from({ length: count }, (_, index) => {
-        const ticket = (index + 1) as TeamTicket;
-        const builds = getTicketBuildResults(row, ticket);
-        for (const build of builds) {
-          if (!build.buildId) continue;
-          const storedBuild = getBuild(build.buildId);
-          const aggregate = dayBuilds.get(build.buildId) ?? {
-            id: build.buildId,
-            slot: build.slot,
-            name: storedBuild?.name || `Uma ${build.slot}`,
-            uma: getUmaForBuild(storedBuild),
-            wins: 0,
-            appearances: 0,
-            recordedWins: 0,
-            ticketNumbers: new Set<TeamTicket>(),
-          };
-          aggregate.appearances += 1;
-          aggregate.ticketNumbers.add(ticket);
-          if (build.wins !== null) {
-            aggregate.wins += build.wins;
-            aggregate.recordedWins += 1;
-          }
-          dayBuilds.set(build.buildId, aggregate);
-        }
-        const allBuildWinsRecorded = builds.every((build) => build.wins !== null);
-        const ticketWins = allBuildWinsRecorded
-          ? builds.reduce((total, build) => total + (build.wins ?? 0), 0)
-          : counts[index];
-        return { number: ticket, wins: ticketWins };
-      });
-      const buildStats: ResultImageDayBuild[] = Array.from(dayBuilds.values(), (build) => {
-        const hasCompleteWinData = build.recordedWins === build.appearances;
-        const raceCount = build.appearances * 5;
-        return {
-          id: build.id,
-          slot: build.slot,
-          name: build.name,
-          uma: build.uma,
-          wins: build.wins,
-          raceCount,
-          winRate: hasCompleteWinData && raceCount > 0
-            ? (build.wins / raceCount) * 100
-            : null,
-          ticketNumbers: Array.from(build.ticketNumbers),
-          hasCompleteWinData,
-        };
-      });
-      return [{
-        row,
-        round: group.title,
-        label,
-        wins,
-        ticketCount: count,
-        winRate: (wins / (count * 5)) * 100,
-        tickets,
-        builds: buildStats,
-      }];
-    }),
-  );
-  const canCopyFullSummary = imageDays.length > 0 || hasFinalsData;
-  const imageSummary: ResultImageSummary = {
+  const { days: imageDays, summary: imageSummary } = getResultImageData({
+    results,
+    buildAssignments,
+    ticketBuildResults,
+    ticketCounts,
+    initialBuildIds,
+    finalPlacement,
+    finalBuildPlacements,
+    availableBuilds,
+    umaList,
+    summaryBuilds,
+    finalBuilds,
+    hasFinalsData,
     totalWins,
     totalRaces,
     totalWinRate,
-    finalPlacement,
-    finalsBuilds: hasFinalsData
-      ? ([1, 2, 3] as const).flatMap((slot, index) => {
-        const build = finalBuilds[index];
-        return build
-          ? [{
-            id: build.id,
-            slot,
-            name: build.name || "Unnamed build",
-            uma: getUmaForBuild(build),
-            placement: finalBuildPlacements[index],
-          }]
-          : [];
-      })
-      : [],
-    builds: summaryBuilds.map(({ build, wins, raceCount, slot }) => ({
-      id: build.id,
-      slot,
-      name: build.name || "Unnamed build",
-      wins,
-      raceCount,
-      uma: getUmaForBuild(build),
-    })),
-  };
+  });
+  const canCopyFullSummary = imageDays.length > 0 || hasFinalsData;
 
   function showCopyStatus(
     target: "summary" | { row: TeamRaceResultRow },

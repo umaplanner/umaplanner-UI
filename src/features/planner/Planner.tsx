@@ -11,7 +11,7 @@ import { useTeam } from "./useTeam";
 import {
   createDefaultBuild,
 } from "./plannerTypes";
-import type { InitialTeamBuildIds, UmaSlot } from "../results/resultsTypes";
+import type { InitialTeamBuildIds, UmaSlot } from "../results/domain/resultsTypes";
 import {
   findSkill,
   getUmaUniqueSkillId,

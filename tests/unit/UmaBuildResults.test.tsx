@@ -984,9 +984,10 @@ describe("UmaBuildResults", () => {
     const user = userEvent.setup();
     const builds = [
       { id: "build-a", outfitId: "100101", name: "Build A" },
-      { id: "build-b", outfitId: "100102", name: "Build B" },
-      { id: "build-c", outfitId: "200101", name: "Build C" },
-      { id: "build-plan", outfitId: "300101", name: "Plan", buildType: "plan" },
+      { id: "build-a-alt", outfitId: "100102", name: "Build A alt" },
+      { id: "build-b", outfitId: "200102", name: "Build B" },
+      { id: "build-c", outfitId: "300101", name: "Build C" },
+      { id: "build-plan", outfitId: "400101", name: "Plan", buildType: "plan" },
     ].map(({ buildType, ...build }) => ({
       ...createDefaultBuild(build.outfitId),
       ...build,
@@ -1012,9 +1013,10 @@ describe("UmaBuildResults", () => {
         availableBuilds={builds}
         umaList={[
           { id: 100101, charaId: 1, baseCharacterName: "Character A", outfitTitle: "Uma A" },
-          { id: 100102, charaId: 2, baseCharacterName: "Character B", outfitTitle: "Uma B" },
-          { id: 200101, charaId: 3, baseCharacterName: "Character C", outfitTitle: "Uma C" },
-          { id: 300101, charaId: 4, baseCharacterName: "Character Plan", outfitTitle: "Uma Plan" },
+          { id: 100102, charaId: 2, baseCharacterName: "Character A", outfitTitle: "Uma A alt" },
+          { id: 200102, charaId: 3, baseCharacterName: "Character B", outfitTitle: "Uma B" },
+          { id: 300101, charaId: 4, baseCharacterName: "Character C", outfitTitle: "Uma C" },
+          { id: 400101, charaId: 5, baseCharacterName: "Character Plan", outfitTitle: "Uma Plan" },
         ]}
         skillList={[]}
         showSupportCards={false}
@@ -1036,7 +1038,9 @@ describe("UmaBuildResults", () => {
     expect(editButton).toHaveAttribute("aria-pressed", "true");
     expect(buildButton).toBeEnabled();
     const firstBuildPicker = await openSavedBuildPicker(user, ticketCard, 1);
-    expect(within(firstBuildPicker).getByRole("button", { name: /Build A/ }))
+    expect(within(firstBuildPicker).getByRole("button", {
+      name: /^Build AUma ACharacter A/,
+    }))
       .toHaveTextContent("Speed 1200");
     await user.click(within(firstBuildPicker).getByRole("button", {
       name: "Close saved builds",
@@ -1054,6 +1058,8 @@ describe("UmaBuildResults", () => {
       .toBeInTheDocument();
     expect(within(secondBuildPicker).getByRole("button", { name: /Build C/ }))
       .toBeInTheDocument();
+    expect(within(secondBuildPicker).queryByRole("button", { name: /Build A alt/ }))
+      .not.toBeInTheDocument();
     await user.click(within(secondBuildPicker).getByRole("button", {
       name: "Close saved builds",
     }));

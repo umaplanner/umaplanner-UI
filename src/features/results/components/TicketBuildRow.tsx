@@ -1,7 +1,10 @@
 import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import type { ResolvedTicketBuildResult } from "../domain/types";
-import type { TeamTicket } from "../domain/resultsTypes";
+import {
+  getBaseUmaId,
+  type TeamTicket,
+} from "../domain/resultsTypes";
 import BuildSelector from "../ResultsBuildSelector";
 import TicketWinStepper from "./TicketWinStepper";
 
@@ -34,6 +37,19 @@ export default function TicketBuildRow({
 }: Props) {
   const build = getBuild(ticketBuild.buildId || null);
   const buildName = build?.name || `Uma ${ticketBuild.slot}`;
+  const usedBaseUmaIds = new Set(
+    builds
+      .filter((entry) => entry.slot !== ticketBuild.slot)
+      .map((entry) => getBuild(entry.buildId))
+      .filter((entry): entry is StoredUmaBuild => entry !== undefined)
+      .map((entry) => getBaseUmaId(entry.outfitId))
+      .filter(Boolean),
+  );
+  const choices = availableBuilds.filter(
+    (entry) =>
+      entry.id === ticketBuild.buildId ||
+      !usedBaseUmaIds.has(getBaseUmaId(entry.outfitId)),
+  );
 
   function saveBuilds(nextBuilds: typeof builds) {
     onSaveTicket(
@@ -73,7 +89,7 @@ export default function TicketBuildRow({
           compact
           disabled={!isEditing}
           nativeModal={false}
-          choices={availableBuilds}
+          choices={choices}
           availableBuilds={availableBuilds}
           umaList={umaList}
           ariaLabel={`Choose build for Uma ${ticketBuild.slot} on Ticket ${ticket}`}

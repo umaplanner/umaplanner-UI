@@ -93,7 +93,7 @@ describe("Planner build mode", () => {
     mocks.getNextResultOpeningAt.mockReturnValue(null);
   });
 
-  it("does not switch to Results when the selected event changes", async () => {
+  it("does not switch to Builds when the selected event changes", async () => {
     localStorage.setItem("selectedEvent", "CM 42");
     const teamState = mocks.useTeam();
     mocks.useTeam.mockImplementation((event: string | null) => ({
@@ -120,7 +120,7 @@ describe("Planner build mode", () => {
     expect(screen.queryByRole("status")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Show support cards")).toBeInTheDocument();
     expect(buildArea).toHaveAttribute("inert");
-    expect(screen.getByRole("button", { name: "Results" })).toHaveAttribute(
+    expect(screen.getByRole("button", { name: "Builds" })).toHaveAttribute(
       "aria-pressed",
       "false",
     );

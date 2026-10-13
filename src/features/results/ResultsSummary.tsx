@@ -1,21 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import type { ReactNode } from "react";
 import type {
   TeamFinalBuildPlacements,
   TeamFinalPlacement,
   UmaSlot,
-} from "../../../features/planner/plannerTypes";
-import type { StoredUmaBuild } from "../../../types/UmaBuild";
-import type { SkillEntry } from "../../../types/SkillEntry";
-import type { UmaEntry } from "../../../types/UmaEntry";
-import UmaImage from "../../UmaImage";
-import UmaBuildTeam from "../team/Team";
-import type { ResultBuildSummary } from "./types";
+} from "./domain/resultsTypes";
+import type { StoredUmaBuild } from "../../types/UmaBuild";
+import type { SkillEntry } from "../../types/SkillEntry";
+import type { UmaEntry } from "../../types/UmaEntry";
+import UmaImage from "../../components/UmaImage";
+import type { ResultBuildSummary } from "./domain/types";
 import {
   formatResultOpeningDate,
   formatUmaPlacement,
   formatWinRate,
-} from "./utils";
+} from "./domain/utils";
+import BuildDetailsDialog from "./components/BuildDetailsDialog";
 
 interface Props {
   imageActions?: ReactNode;
@@ -59,17 +59,6 @@ export default function Summary({
     slot: UmaSlot;
     title: string;
   } | null>(null);
-  const detailsDialogRef = useRef<HTMLDialogElement | null>(null);
-
-  useEffect(() => {
-    const dialog = detailsDialogRef.current;
-    if (!dialog || !summaryDetails) return;
-    dialog.showModal();
-    return () => {
-      if (dialog.open) dialog.close?.();
-    };
-  }, [summaryDetails]);
-
   return (
     <>
       <section
@@ -225,41 +214,13 @@ export default function Summary({
           </div>
         </>
       </section>
-      {summaryDetails ? (
-        <dialog
-          ref={detailsDialogRef}
-          className="build-card__details-dialog"
-          aria-labelledby="uma-build-results-summary-details-heading"
-          onCancel={() => setSummaryDetails(null)}
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setSummaryDetails(null);
-          }}
-        >
-          <button
-            className="build-card__details-close"
-            type="button"
-            aria-label="Close build details"
-            onClick={() => setSummaryDetails(null)}
-          >
-            ×
-          </button>
-          <h2
-            className="uma-build-results__summary-details-heading"
-            id="uma-build-results-summary-details-heading"
-          >
-            {summaryDetails.title}
-          </h2>
-          <UmaBuildTeam
-            teamNumber={summaryDetails.slot}
-            build={summaryDetails.build}
-            availableBuilds={[]}
-            umaList={umaList}
-            skillList={skillList}
-            showSupportCards={showSupportCards}
-            onSelectBuild={() => undefined}
-          />
-        </dialog>
-      ) : null}
+      <BuildDetailsDialog
+        details={summaryDetails}
+        umaList={umaList}
+        skillList={skillList}
+        showSupportCards={showSupportCards}
+        onClose={() => setSummaryDetails(null)}
+      />
     </>
   );
 }

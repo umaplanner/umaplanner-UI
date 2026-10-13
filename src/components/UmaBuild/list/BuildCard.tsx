@@ -6,7 +6,7 @@ import type { SkillEntry } from "../../../types/SkillEntry";
 import UmaImage from "../../UmaImage";
 import { copyElementAsPng } from "../../../lib/copyElementAsPng";
 import CopyIcon from "../../CopyIcon";
-import BuildImage from "../image/BuildImage";
+import BuildImage from "../../image/BuildImage";
 import UmaBuildTeam from "../team/Team";
 import {
   aptitudeRankImages,

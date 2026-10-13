@@ -20,9 +20,6 @@ export type TeamState = EventTeam & {
   uma3BuildName: string;
 }
 
-export * from "./resultsTypes";
-export * from "./resultsNormalization";
-
 export function createDefaultBuild(outfitId = ""): UmaBuildData {
   return {
     outfitId,

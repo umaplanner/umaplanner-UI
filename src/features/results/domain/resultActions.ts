@@ -1,4 +1,4 @@
-import type { StoredUmaBuild } from "../../types/UmaBuild";
+import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import {
   hasDuplicateBaseUmaIds,
   resolveResultBuildId,
@@ -12,7 +12,7 @@ import {
   type TeamTicket,
   type TeamTicketBuildResult,
   type UmaSlot,
-} from "./plannerTypes";
+} from "./resultsTypes";
 
 interface Dependencies {
   selectedEvent: string | null;
@@ -39,6 +39,7 @@ export function createResultActions({
     const winsTotal = teamWins ?? builds.reduce((total, build) => total + build.wins, 0);
     const uniqueBuilds = new Set(builds.map((build) => build.buildId));
     const uniqueSlots = new Set(builds.map((build) => build.slot));
+
     if (
       !selectedEvent ||
       !current ||
@@ -46,6 +47,7 @@ export function createResultActions({
       rowResults === null ||
       rowResults === undefined
     ) return;
+
     if (
       currentTicketCount === undefined ||
       ticket > currentTicketCount + 1 ||
@@ -102,6 +104,7 @@ export function createResultActions({
     const current = getCurrentResults();
     const count = current?.ticketCounts[row];
     const rowResults = current?.results[row];
+
     if (
       !selectedEvent ||
       !current ||
@@ -130,6 +133,7 @@ export function createResultActions({
     let buildAssignments = current.buildAssignments;
     for (const slot of [1, 2, 3] as const) {
       const lineup = originalLineups.get(slot) ?? [];
+
       for (let index = ticket; index <= count; index += 1) {
         const sourceIndex = index < count ? index : -1;
         buildAssignments = setBuildAssignmentTickets(
@@ -151,9 +155,11 @@ export function createResultActions({
           tickets: assignment.tickets.filter((assigned) => assigned <= nextCount),
         }))
         .filter((assignment) => assignment.tickets.length > 0);
+
       if (assignments.length === 0) delete rowAssignments[slot];
       else rowAssignments[slot] = assignments;
     }
+
     buildAssignments = { ...buildAssignments };
     if (Object.keys(rowAssignments).length === 0) delete buildAssignments[row];
     else buildAssignments[row] = rowAssignments;
@@ -169,10 +175,12 @@ export function createResultActions({
     for (let index = ticket; index <= count; index += 1) {
       delete nextTicketResults[index as TeamTicket];
     }
+
     for (let index = ticket + 1; index <= count; index += 1) {
       const builds = rowTicketResults[index as TeamTicket];
       if (builds) nextTicketResults[(index - 1) as TeamTicket] = builds;
     }
+
     const ticketBuildResults = { ...current.ticketBuildResults };
     if (Object.keys(nextTicketResults).length === 0) delete ticketBuildResults[row];
     else ticketBuildResults[row] = nextTicketResults;
@@ -193,9 +201,11 @@ export function createResultActions({
   ) {
     const current = getCurrentResults();
     if (!selectedEvent || !current || current.event !== selectedEvent) return;
+
     const builds = buildIds.map((buildId) =>
       buildId ? allBuilds.find((build) => build.id === buildId) : null,
     );
+
     const hasFirstPlace = buildPlacements.includes(1);
     if (
       buildIds.some((buildId, index) => buildId !== null && !builds[index]) ||

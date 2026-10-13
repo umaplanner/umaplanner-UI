@@ -4,12 +4,12 @@ import type { SkillEntry } from "../../../types/SkillEntry";
 import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import CopyIcon from "../../CopyIcon";
-import BuildImage from "../image/BuildImage";
+import BuildImage from "../../image/BuildImage";
 import UmaBuildTeam from "./Team";
 import {
   hasDuplicateBaseUmaIds,
-  type UmaSlot,
-} from "../../../features/planner/plannerTypes";
+} from "../../../features/results/domain/resultsTypes";
+import type { UmaSlot } from "../../../features/results/domain/resultsTypes";
 import "../../../styles/UmaBuildTeam.css";
 
 interface TeamBuild {

@@ -1,20 +1,17 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import { useEvent } from "../../contexts/EventContext";
-import { useAuth } from "../../contexts/AuthContext";
 import UmaBuild from "../../components/UmaBuild/editor/BuildEditor";
 import TeamPanel from "../../components/UmaBuild/team/TeamPanel";
 import UmaBuildList from "../../components/UmaBuild/list/List";
-import UmaBuildResults from "../../components/UmaBuild/results/Results";
 import RaceDisplay from "../../components/RaceDisplay";
 import "../../styles/Planner.css";
 import { usePlannerData } from "./usePlannerData";
 import { useTeam } from "./useTeam";
 import {
   createDefaultBuild,
-  type InitialTeamBuildIds,
-  type UmaSlot,
 } from "./plannerTypes";
+import type { InitialTeamBuildIds, UmaSlot } from "../results/domain/resultsTypes";
 import {
   findSkill,
   getUmaUniqueSkillId,
@@ -22,15 +19,9 @@ import {
   runawayStrategy,
   umaHasRunawaySkill,
 } from "../../components/UmaBuild/utils";
-import {
-  getNextResultOpeningAt,
-  getResultAvailability,
-  getResultOpeningDates,
-} from "./resultSchedule";
 
 export default function Planner() {
-  const [buildMode, setBuildMode] = useState<"team" | "edit" | "builds" | "results">("team");
-  const [currentTime, setCurrentTime] = useState(() => new Date());
+  const [buildMode, setBuildMode] = useState<"team" | "edit" | "builds">("team");
   const [showSupportCards, setShowSupportCards] = useState(true);
   const [editingBuild] = useState<UmaSlot>(1);
   const [editingBuildDraft, setEditingBuildDraft] = useState<{
@@ -46,51 +37,14 @@ export default function Planner() {
     null,
   ]);
   const { selectedEvent } = useEvent();
-  const { user } = useAuth();
-  const initialEvent = useRef(selectedEvent);
-  const hasInitializedBuildMode = useRef(false);
   const { raceEntry, umaList, skillList, supportCardList } = usePlannerData(selectedEvent);
-  const activeRaceEntry = raceEntry?.eventTitle === selectedEvent
-    ? raceEntry
-    : undefined;
-  const resultAvailability = getResultAvailability(activeRaceEntry, currentTime);
-  const resultOpeningDates = getResultOpeningDates(activeRaceEntry);
   const {
     umas,
     allBuilds,
-    eventResults,
     isTeamLoading,
     saveBuild,
     swapTeamBuild,
-    saveTicketResult,
-    removeTicketResult,
-    saveFinalsResult,
   } = useTeam(selectedEvent);
-  useEffect(() => {
-    const nextOpening = getNextResultOpeningAt(activeRaceEntry);
-    if (!nextOpening) return;
-
-    const timeout = window.setTimeout(
-      () => setCurrentTime(new Date()),
-      Math.max(0, nextOpening.getTime() - Date.now()),
-    );
-    return () => window.clearTimeout(timeout);
-  }, [activeRaceEntry, currentTime]);
-  useEffect(() => {
-    if (hasInitializedBuildMode.current) {
-      return;
-    }
-    if (selectedEvent !== initialEvent.current) {
-      hasInitializedBuildMode.current = true;
-      return;
-    }
-    if (!initialEvent.current || activeRaceEntry?.eventTitle !== initialEvent.current) {
-      return;
-    }
-
-    setBuildMode(resultAvailability.round1Day1 ? "results" : "team");
-    hasInitializedBuildMode.current = true;
-  }, [activeRaceEntry, resultAvailability.round1Day1, selectedEvent]);
   useEffect(() => {
     setTeamBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
   }, [umas]);
@@ -256,20 +210,7 @@ export default function Planner() {
   return (
     <div className="planner">
       <RaceDisplay raceEntry={raceEntry} />
-      {!user && (
-        <p className="anonymous-contribution-notice">
-          While logged out, your selected team and build stats are sent under a
-          random browser ID and included in event overview statistics.
-        </p>
-      )}
       <div className="uma-build-mode" role="group" aria-label="Build mode">
-        <button
-          type="button"
-          aria-pressed={buildMode === "results"}
-          onClick={() => setBuildMode("results")}
-        >
-          Results
-        </button>
         <button
           type="button"
           aria-pressed={buildMode === "team"}
@@ -300,27 +241,6 @@ export default function Planner() {
       >
         {buildMode === "builds" ? (
           <UmaBuildList onSaveBuild={saveBuild} />
-        ) : buildMode === "results" ? (
-          <UmaBuildResults
-            key={selectedEvent}
-            event={selectedEvent}
-            results={eventResults.results}
-            resultAvailability={resultAvailability}
-            resultOpeningDates={resultOpeningDates}
-            buildAssignments={eventResults.buildAssignments}
-            ticketBuildResults={eventResults.ticketBuildResults}
-            ticketCounts={eventResults.ticketCounts}
-            initialBuildIds={eventResults.initialBuildIds}
-            finalPlacement={eventResults.finalPlacement}
-            finalBuildPlacements={eventResults.finalBuildPlacements}
-            availableBuilds={allBuilds}
-            umaList={umaList}
-            skillList={skillList}
-            showSupportCards={showSupportCards}
-            onSaveTicket={saveTicketResult}
-            onRemoveTicket={removeTicketResult}
-            onSaveFinals={saveFinalsResult}
-          />
         ) : buildMode === "team" ? (
           <TeamPanel
             event={selectedEvent}

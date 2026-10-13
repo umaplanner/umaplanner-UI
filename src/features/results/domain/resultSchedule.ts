@@ -1,5 +1,5 @@
-import type { RaceEntry } from "../../types/RaceEntry";
-import type { TeamResultRow } from "./plannerTypes";
+import type { RaceEntry } from "../../../types/RaceEntry";
+import type { TeamResultRow } from "./resultsTypes";
 
 export const resultDayOffsets: Record<TeamResultRow, number> = {
   round1Day1: 4,
@@ -39,6 +39,7 @@ export function getResultAvailability(
   now = new Date(),
 ): Record<TeamResultRow, boolean> {
   const openingDates = getResultOpeningDates(raceEntry);
+
   return Object.fromEntries(
     (Object.keys(openingDates) as TeamResultRow[]).map((row) => [
       row,

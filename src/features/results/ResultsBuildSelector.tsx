@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import type { StoredUmaBuild } from "../../../types/UmaBuild";
-import type { UmaEntry } from "../../../types/UmaEntry";
-import type { UmaSlot } from "../../../features/planner/plannerTypes";
-import UmaImage from "../../UmaImage";
-import UmaBuildSavedBuildDialog from "../team/SavedBuildDialog";
+import type { StoredUmaBuild } from "../../types/UmaBuild";
+import type { UmaEntry } from "../../types/UmaEntry";
+import type { UmaSlot } from "./domain/resultsTypes";
+import UmaImage from "../../components/UmaImage";
+import UmaBuildSavedBuildDialog from "../../components/UmaBuild/team/SavedBuildDialog";
 
 interface Props {
   slot: UmaSlot;

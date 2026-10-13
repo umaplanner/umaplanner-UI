@@ -1,5 +1,4 @@
 import { Analytics } from "@vercel/analytics/react";
-import { SpeedInsights } from "@vercel/speed-insights/react";
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { NavLink } from "react-router";
@@ -31,6 +30,7 @@ export default function Layout({children}: LayoutProps) {
         <nav aria-label="Main navigation">
           <NavLink to={routes.planner}>Planner</NavLink>
           <NavLink to={routes.overview}>Overview</NavLink>
+          <NavLink to={routes.results}>Results</NavLink>
           <EventSelector />
           <NavLink to={routes.umaImport}>Imports</NavLink>
           <UserMenu />
@@ -39,7 +39,6 @@ export default function Layout({children}: LayoutProps) {
 
       <main className="site-main">{children}</main>
       <Analytics />
-      <SpeedInsights />
     </>
   );
 }

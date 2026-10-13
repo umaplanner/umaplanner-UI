@@ -1,7 +1,7 @@
 import { config } from "../../lib/config";
+import { getLegacyEventResults } from "../results/data/resultsMigration";
+import type { EventResults } from "../results/domain/resultsTypes";
 import {
-  getLegacyEventResults,
-  type EventResults,
   type EventTeam,
 } from "./plannerTypes";
 

@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   createEmptyEventResults,
-} from "../../src/features/planner/plannerTypes";
-import { createResultActions } from "../../src/features/planner/resultActions";
+} from "../../src/features/results/domain/resultsTypes";
+import { createResultActions } from "../../src/features/results/domain/resultActions";
 
 describe("result actions", () => {
   it("creates a ticket immediately with its saved team lineup and team wins", () => {

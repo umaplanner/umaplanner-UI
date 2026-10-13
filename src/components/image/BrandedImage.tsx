@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import type { ReactNode } from "react";
-import "../../../styles/UmaBuildImage.css";
+import "../../styles/UmaBuildImage.css";
 
 interface BrandedImageProps {
   event: string;

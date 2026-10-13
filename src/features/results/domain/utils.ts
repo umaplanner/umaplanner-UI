@@ -1,4 +1,4 @@
-import type { TeamUmaPlacement } from "../../../features/planner/plannerTypes";
+import type { TeamUmaPlacement } from "./resultsTypes";
 
 export const umaPlacements: TeamUmaPlacement[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useEvent } from "../contexts/EventContext";
-import { useTeam } from "../features/planner/useTeam";
-import { usePlannerData } from "../features/planner/usePlannerData";
+import { useTeam } from "../features/planner/hooks/useTeam";
+import { usePlannerData } from "../features/planner/hooks/usePlannerData";
 import { useResults } from "../features/results/useResults";
 
-import UmaBuildResults from "../features/results/Results";
+import Results from "../features/results/Results"
 import {
   getNextResultOpeningAt,
   getResultAvailability,
@@ -43,7 +43,7 @@ export default function ResultsPage() {
 
   return (
     <main className="results-page">
-      <UmaBuildResults
+      <Results
         key={selectedEvent}
         event={selectedEvent}
         results={eventResults.results}

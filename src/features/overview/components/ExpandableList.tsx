@@ -1,6 +1,7 @@
 import { Children, cloneElement, isValidElement, useEffect, useRef, useState } from "react";
 import type { CSSProperties, ReactNode, Ref } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { CloseIcon } from "../../../components/UiIcons";
 
 type ExpandableListProps = {
   className: string;
@@ -157,7 +158,7 @@ export default function ExpandableList({
                 aria-label="Close"
                 onClick={() => setExpanded(false)}
               >
-                <span aria-hidden="true">×</span>
+                <CloseIcon />
               </button>
             </div>
             <div

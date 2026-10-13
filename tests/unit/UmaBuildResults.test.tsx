@@ -4,10 +4,10 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { toBlob } from "html-to-image";
 import UmaBuildResults from "../../src/features/results/Results";
-import UmaBuildSavedBuildDialog from "../../src/components/UmaBuild/team/SavedBuildDialog";
+import UmaBuildSavedBuildDialog from "../../src/features/planner/components/SavedBuildDialog";
 import {
   createDefaultBuild,
-} from "../../src/features/planner/plannerTypes";
+} from "../../src/features/planner/domain/types";
 import {
   createDefaultTicketCounts,
   createDefaultTeamResults,
@@ -186,7 +186,7 @@ describe("UmaBuildResults", () => {
     expect(imageStage).toHaveTextContent("Tickets 1, 2");
     expect(imageStage?.querySelector(".result-image__ticket-build"))
       .not.toBeInTheDocument();
-    expect(imageStage).not.toHaveTextContent("PLAN · RACE · REPEAT");
+    expect(imageStage).not.toHaveTextContent("PLAN RACE REPEAT");
   });
 
   it("copies the selected results layout as a PNG", async () => {

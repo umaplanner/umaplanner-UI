@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { normalizeStrategyName } from "../../components/UmaBuild/utils";
+import { normalizeStrategyName } from "../planner/domain/buildUtils";
 import type { RunningStyleOverview } from "./types";
 import type { OverviewProps } from "./types";
 import GlobalUsage from "./sections/GlobalUsage";
 import OutfitsAndTeams from "./sections/OutfitsAndTeams";
 import RunningStyle from "./sections/RunningStyle";
 import NextUpdateCountdown from "./NextUpdateCountdown";
+import { SeparatorIcon } from "../../components/UiIcons";
 import {
   asRecord,
   formatBuildCount,
@@ -91,7 +92,7 @@ export default function Overview({
                   {userCount !== undefined
                     ? `${formatCount(userCount)} ${userCount === 1 ? "user" : "users"}`
                     : null}
-                  {userCount !== undefined && totalRunningBuilds > 0 ? " · " : null}
+                  {userCount !== undefined && totalRunningBuilds > 0 ? <SeparatorIcon /> : null}
                   {totalRunningBuilds > 0 ? formatBuildCount(totalRunningBuilds) : null}
                 </p>
               ) : null}

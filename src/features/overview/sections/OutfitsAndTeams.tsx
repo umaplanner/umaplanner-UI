@@ -1,5 +1,5 @@
 import UmaImage from "../../../components/UmaImage";
-import { strategyIcons } from "../../../components/UmaBuild/utils";
+import { strategyIcons } from "../../planner/domain/buildUtils";
 import ExpandableList from "../components/ExpandableList";
 import type { CountedOutfit, CountedTeam } from "../types";
 import { formatCount } from "../utils";

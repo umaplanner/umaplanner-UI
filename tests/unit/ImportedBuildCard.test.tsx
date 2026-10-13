@@ -3,7 +3,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import ImportedBuildCard from "../../src/features/uma-import/ImportedBuildCard";
 import { copyElementAsPng } from "../../src/lib/copyElementAsPng";
-import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
+import { createDefaultBuild } from "../../src/features/planner/domain/types";
 
 vi.mock("../../src/lib/copyElementAsPng", () => ({
   copyElementAsPng: vi.fn().mockResolvedValue("copied"),

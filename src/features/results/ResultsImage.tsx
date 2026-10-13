@@ -9,6 +9,7 @@ import type { UmaEntry } from "../../types/UmaEntry";
 import BrandedImage from "../../components/image/BrandedImage";
 import { formatUmaPlacement, formatWinRate } from "./domain/utils";
 import ResultImageBuild from "./components/ResultImageBuild";
+import { SeparatorIcon } from "../../components/UiIcons";
 import "../../styles/ResultImage.css";
 
 export interface ResultImageBuild {
@@ -214,13 +215,17 @@ const ResultImage = forwardRef<HTMLElement, Props>(
                             <strong>{build.name}</strong>
                             <span>
                               {formatRate(build.winRate)} WR
-                              {build.hasCompleteWinData ? "" : " · INCOMPLETE"}
+                              {build.hasCompleteWinData ? null : (
+                                <>
+                                  <SeparatorIcon /> INCOMPLETE
+                                </>
+                              )}
                             </span>
                             <small>
                               {build.hasCompleteWinData
                                 ? `${build.wins}/${build.raceCount} wins`
                                 : "Wins not recorded on all tickets"}
-                              {" · "}
+                              <SeparatorIcon />
                               Tickets {build.ticketNumbers.join(", ")}
                             </small>
                           </div>

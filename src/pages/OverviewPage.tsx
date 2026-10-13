@@ -6,8 +6,8 @@ import {
   fetchAndCacheOverview,
   getCachedOverview,
 } from "../lib/data";
-import { normalizeSkillData } from "../features/planner/skillData";
-import { normalizeSupportCardList } from "../features/planner/supportCardData";
+import { normalizeSkillData } from "../features/planner/data/skillData";
+import { normalizeSupportCardList } from "../features/planner/data/supportCardData";
 import type { SkillEntry } from "../types/SkillEntry";
 import type { UmaEntry } from "../types/UmaEntry";
 import type { SupportCardEntry } from "../types/UmaBuild";

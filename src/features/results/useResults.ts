@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import { useAuth } from "../../contexts/AuthContext";
-import { createTeamRepository, normalizeStoredTeam } from "../planner/plannerRepository";
-import { createEmptyTeam } from "../planner/plannerTypes";
-import { fetchTeams } from "../planner/teamApi";
+import { createTeamRepository, normalizeStoredTeam } from "../planner/data/plannerRepository";
+import { createEmptyTeam } from "../planner/domain/types";
+import { fetchTeams } from "../planner/data/teamApi";
 import {
   createEmptyEventResults,
   type EventResults,

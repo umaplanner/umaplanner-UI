@@ -13,6 +13,7 @@ import type {
   ResultGroup,
 } from "./domain/types";
 import ResultDay from "./components/ResultDay";
+import { ChevronIcon } from "../../components/UiIcons";
 
 interface Props {
   group: ResultGroup;
@@ -78,9 +79,7 @@ export default function Group({
           aria-expanded={!collapsed}
           onClick={() => onToggleCollapsed(title)}
         >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d={collapsed ? "m6 14 6-6 6 6" : "m6 10 6 6 6-6"} />
-          </svg>
+          <ChevronIcon direction={collapsed ? "up" : "down"} />
         </button>
       </div>
       {!collapsed ? (

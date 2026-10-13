@@ -3,7 +3,8 @@ import type { UmaSlot } from "../domain/resultsTypes";
 import type { StoredUmaBuild } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";
 import type { SkillEntry } from "../../../types/SkillEntry";
-import UmaBuildTeam from "../../../components/UmaBuild/team/Team";
+import Team from "../../planner/components/Team";
+import { CloseIcon } from "../../../components/UiIcons";
 
 interface Props {
   details: {
@@ -53,7 +54,7 @@ export default function BuildDetailsDialog({
         aria-label="Close build details"
         onClick={onClose}
       >
-        ×
+        <CloseIcon />
       </button>
       <h2
         className="uma-build-results__summary-details-heading"
@@ -61,7 +62,7 @@ export default function BuildDetailsDialog({
       >
         {details.title}
       </h2>
-      <UmaBuildTeam
+      <Team
         teamNumber={details.slot}
         build={details.build}
         availableBuilds={[]}

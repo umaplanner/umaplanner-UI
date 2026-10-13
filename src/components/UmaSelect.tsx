@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { UmaEntry } from "../types/UmaEntry";
 import UmaImage from "./UmaImage";
+import { CloseIcon } from "./UiIcons";
 import "../styles/UmaSelect.css";
 
 interface UmaSelectProps {
@@ -128,7 +129,7 @@ export default function UmaSelect({
                 aria-label="Close Uma selector"
                 onClick={closePopup}
               >
-                ×
+                <CloseIcon />
               </button>
             </header>
 

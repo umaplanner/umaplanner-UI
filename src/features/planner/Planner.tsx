@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
 import type { UmaBuild as UmaBuildData } from "../../types/UmaBuild";
 import { useEvent } from "../../contexts/EventContext";
-import UmaBuild from "../../components/UmaBuild/editor/BuildEditor";
-import TeamPanel from "../../components/UmaBuild/team/TeamPanel";
-import UmaBuildList from "../../components/UmaBuild/list/List";
+import Editor from "./Editor";
+import TeamPanel from "./components/TeamPanel";
+import Builds from "./Builds";
 import RaceDisplay from "../../components/RaceDisplay";
 import "../../styles/Planner.css";
-import { usePlannerData } from "./usePlannerData";
-import { useTeam } from "./useTeam";
+import { usePlannerData } from "./hooks/usePlannerData";
+import { useTeam } from "./hooks/useTeam";
 import {
   createDefaultBuild,
-} from "./plannerTypes";
+} from "./domain/types";
 import type { InitialTeamBuildIds, UmaSlot } from "../results/domain/resultsTypes";
 import {
   findSkill,
@@ -18,7 +18,7 @@ import {
   getUniqueBuildNameForEvent,
   runawayStrategy,
   umaHasRunawaySkill,
-} from "../../components/UmaBuild/utils";
+} from "./domain/buildUtils";
 
 export default function Planner() {
   const [buildMode, setBuildMode] = useState<"team" | "edit" | "builds">("team");
@@ -31,11 +31,13 @@ export default function Planner() {
     id: string | null;
     isSavedBuild: boolean;
   } | null>(null);
+
   const [teamBuildIds, setTeamBuildIds] = useState<Array<string | null>>([
     null,
     null,
     null,
   ]);
+
   const { selectedEvent } = useEvent();
   const { raceEntry, umaList, skillList, supportCardList } = usePlannerData(selectedEvent);
   const {
@@ -45,6 +47,7 @@ export default function Planner() {
     saveBuild,
     swapTeamBuild,
   } = useTeam(selectedEvent);
+
   useEffect(() => {
     setTeamBuildIds(([1, 2, 3] as const).map((slot) => umas[`uma${slot}`]));
   }, [umas]);
@@ -52,6 +55,7 @@ export default function Planner() {
     teamNumber: (index + 1) as UmaSlot,
     build: allBuilds.find((entry) => entry.id === buildId) ?? null,
   }));
+
   const selectTeamBuild = (teamNumber: UmaSlot, buildId: string | null) => {
     const nextIds = [...teamBuildIds] as InitialTeamBuildIds;
     nextIds[teamNumber - 1] = buildId;
@@ -60,22 +64,26 @@ export default function Planner() {
       console.error("Error swapping team build:", error);
     });
   };
+
   const selectedBuild = umas[`uma${editingBuild}Build`];
   const selectedUma = selectedBuild.outfitId === ""
     ? null
     : umaList.find((uma) => String(uma.id) === selectedBuild.outfitId) ?? null;
+
   const editorBuild = editingBuildDraft?.slot === editingBuild
     ? editingBuildDraft.build
     : selectedBuild;
   const editorUma = editorBuild.outfitId === ""
     ? null
     : umaList.find((uma) => String(uma.id) === editorBuild.outfitId) ?? null;
+
   const editorBuildId = editingBuildDraft?.slot === editingBuild
     ? editingBuildDraft.id
     : umas[`uma${editingBuild}`];
   const editorBuildIsSaved = editingBuildDraft?.slot === editingBuild
     ? editingBuildDraft.isSavedBuild
     : editorBuildId !== null;
+
   const editProps = {
     teamNumber: editingBuild,
     buildId: editorBuildId,
@@ -89,13 +97,16 @@ export default function Planner() {
     onSelectUma: (uma: typeof selectedUma) => {
       const outfitId = uma ? String(uma.id) : "";
       const changedUma = outfitId !== editorBuild.outfitId;
+
       const previousUniqueSkillId = getUmaUniqueSkillId(editorUma);
       const isPreviousUniqueSkill = (skillId: string) =>
         previousUniqueSkillId !== undefined &&
         (findSkill(skillList, skillId)?.id ?? skillId) === String(previousUniqueSkillId);
+
       const skills = changedUma
         ? editorBuild.skills.filter((skillId) => !isPreviousUniqueSkill(skillId))
         : editorBuild.skills;
+
       const forcedSkillPositions = changedUma
         ? Object.fromEntries(
             Object.entries(editorBuild.forcedSkillPositions).filter(
@@ -184,12 +195,15 @@ export default function Planner() {
       const requestedName = name.trim();
       const umaName = umaList.find((uma) => String(uma.id) === build.outfitId)?.baseCharacterName ?? "Uma";
       const saveName = requestedName || getUniqueBuildNameForEvent(umaName, allBuilds);
+
       const existingNames = new Set(
         allBuilds.map((savedBuild) => savedBuild.name.trim().toLowerCase()),
       );
+
       if (!editorBuildIsSaved && requestedName && existingNames.has(requestedName.toLowerCase())) {
         return;
       }
+
       const savedId = await saveBuild(
         build,
         saveName,
@@ -240,7 +254,7 @@ export default function Planner() {
         inert={isTeamLoading && buildMode !== "builds"}
       >
         {buildMode === "builds" ? (
-          <UmaBuildList onSaveBuild={saveBuild} />
+          <Builds onSaveBuild={saveBuild} />
         ) : buildMode === "team" ? (
           <TeamPanel
             event={selectedEvent}
@@ -252,7 +266,7 @@ export default function Planner() {
             onShowSupportCardsChange={setShowSupportCards}
             onSelectBuild={selectTeamBuild}
           />
-        ) : <UmaBuild {...editProps} teamNumber={editingBuild} />}
+        ) : <Editor {...editProps} teamNumber={editingBuild} />}
       </section>
     </div>
   );

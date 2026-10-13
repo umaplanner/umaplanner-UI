@@ -3,8 +3,8 @@ import {
   getStatRank,
   statFields,
   strategyIcons,
-} from "../../../components/UmaBuild/utils";
-import SupportCardImage from "../../../components/UmaBuild/support-cards/Image";
+} from "../../planner/domain/buildUtils";
+import SupportCardImage from "../../planner/components/SupportCardImage";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import type { SupportCardEntry } from "../../../types/UmaBuild";
 import type { UmaEntry } from "../../../types/UmaEntry";

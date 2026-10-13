@@ -1,6 +1,6 @@
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { usePlannerData } from "../../src/features/planner/usePlannerData";
+import { usePlannerData } from "../../src/features/planner/hooks/usePlannerData";
 
 const mocks = vi.hoisted(() => ({
   ensureDataLoaded: vi.fn(),

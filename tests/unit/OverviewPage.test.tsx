@@ -291,10 +291,10 @@ describe("OverviewPage", () => {
       </EventProvider>,
     );
 
-    expect(await screen.findByText("1 user · 3 builds taken into account")).toBeInTheDocument();
+    expect(await screen.findByText(/1 user.*3 builds taken into account/)).toBeInTheDocument();
     expect(await getCachedOverview("CM 42/Final"))
       .toEqual(expect.objectContaining({ nextUpdate }));
-    const summaryRow = screen.getByText("1 user · 3 builds taken into account").parentElement;
+    const summaryRow = screen.getByText(/1 user.*3 builds taken into account/).parentElement;
     expect(summaryRow).toHaveClass("overview-summary-row");
     expect(within(summaryRow as HTMLElement).getByRole("timer"))
       .toHaveTextContent("Next update in");

@@ -17,6 +17,36 @@
   text-rendering: optimizeLegibility;
 }
 
+.ui-icon {
+  display: inline-block;
+  flex: 0 0 auto;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
+.ui-icon--close {
+  width: 1.15em;
+  height: 1.15em;
+}
+
+.ui-icon--separator {
+  width: 0.5em;
+  height: 0.5em;
+  margin: 0 0.25em;
+  fill: currentColor;
+  stroke: none;
+  vertical-align: 0.08em;
+}
+
+.ui-icon--chevron {
+  fill: none;
+  stroke: currentColor;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -345,3 +375,4 @@ button:hover {
     font-size: 0.72rem;
   }
 }
+:root {

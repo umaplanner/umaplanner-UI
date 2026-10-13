@@ -1,12 +1,12 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { BuildFetchResult } from "../../src/features/planner/buildApi";
+import type { BuildFetchResult } from "../../src/features/planner/data/buildApi";
 import {
   createBuildRepository,
   createTeamRepository,
-} from "../../src/features/planner/plannerRepository";
-import { useTeam } from "../../src/features/planner/useTeam";
-import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
+} from "../../src/features/planner/data/plannerRepository";
+import { useTeam } from "../../src/features/planner/hooks/useTeam";
+import { createDefaultBuild } from "../../src/features/planner/domain/types";
 import type { StoredUmaBuild } from "../../src/types/UmaBuild";
 
 const mocks = vi.hoisted(() => ({
@@ -33,18 +33,18 @@ vi.mock("../../src/contexts/AuthContext", () => ({
   }),
 }));
 
-vi.mock("../../src/features/planner/buildApi", () => ({
+vi.mock("../../src/features/planner/data/buildApi", () => ({
   fetchBuilds: mocks.fetchBuilds,
   postBuilds: mocks.postBuilds,
   deleteBuild: mocks.deleteBuild,
 }));
 
-vi.mock("../../src/features/planner/teamApi", () => ({
+vi.mock("../../src/features/planner/data/teamApi", () => ({
   fetchTeams: mocks.fetchTeams,
   postTeams: mocks.postTeams,
 }));
 
-vi.mock("../../src/features/planner/anonymousTeamApi", () => ({
+vi.mock("../../src/features/planner/data/anonymousTeamApi", () => ({
   postAnonymousTeam: mocks.postAnonymousTeam,
 }));
 

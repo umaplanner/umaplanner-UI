@@ -1,7 +1,7 @@
 import UmaImage from "../../components/UmaImage";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type { UmaSlot } from "../results/domain/resultsTypes";
-import type { TeamState } from "./plannerTypes";
+import type { TeamState } from "./domain/types";
 
 interface TeamTabsProps {
   umas: TeamState;

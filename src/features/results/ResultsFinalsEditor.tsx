@@ -9,6 +9,7 @@ import {
 } from "./domain/resultsTypes";
 import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
+import { CloseIcon } from "../../components/UiIcons";
 import type {
   EffectiveResultBuildLookup,
   FinalsDraft,
@@ -152,7 +153,7 @@ export default function FinalsEditor({
         aria-label="Close Finals editor"
         onClick={onClose}
       >
-        ×
+        <CloseIcon />
       </button>
       <h2 id="uma-build-results-finals-heading">
         {hasFinalsData ? "Edit Finals results" : "Add Finals results"}

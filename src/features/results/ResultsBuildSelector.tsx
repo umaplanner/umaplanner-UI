@@ -3,7 +3,8 @@ import type { StoredUmaBuild } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type { UmaSlot } from "./domain/resultsTypes";
 import UmaImage from "../../components/UmaImage";
-import UmaBuildSavedBuildDialog from "../../components/UmaBuild/team/SavedBuildDialog";
+import { SeparatorIcon } from "../../components/UiIcons";
+import SavedBuildDialog from "../planner/components/SavedBuildDialog"
 
 interface Props {
   slot: UmaSlot;
@@ -93,7 +94,9 @@ export default function BuildSelector({
                 <span className="uma-build-results__build-picker-info">
                   <strong>{build.name || "Unnamed build"}</strong>
                   {uma ? (
-                    <small>{uma.outfitTitle} · {uma.baseCharacterName}</small>
+                    <small>
+                      {uma.outfitTitle} <SeparatorIcon /> {uma.baseCharacterName}
+                    </small>
                   ) : null}
                 </span>
                 <span className="uma-build-results__build-picker-action">Choose</span>
@@ -107,7 +110,7 @@ export default function BuildSelector({
         )}
       </div>
       {isOpen && !disabled ? (
-        <UmaBuildSavedBuildDialog
+        <SavedBuildDialog
           teamNumber={slot}
           builds={choices}
           umaList={umaList}

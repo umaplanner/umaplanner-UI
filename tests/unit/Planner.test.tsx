@@ -3,7 +3,7 @@ import { userEvent } from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EventProvider, useEvent } from "../../src/contexts/EventContext";
 import Planner from "../../src/features/planner/Planner";
-import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
+import { createDefaultBuild } from "../../src/features/planner/domain/types";
 
 const mocks = vi.hoisted(() => ({
   usePlannerData: vi.fn(),
@@ -13,11 +13,11 @@ const mocks = vi.hoisted(() => ({
   getNextResultOpeningAt: vi.fn(),
 }));
 
-vi.mock("../../src/features/planner/usePlannerData", () => ({
+vi.mock("../../src/features/planner/hooks/usePlannerData", () => ({
   usePlannerData: mocks.usePlannerData,
 }));
 
-vi.mock("../../src/features/planner/useTeam", () => ({
+vi.mock("../../src/features/planner/hooks/useTeam", () => ({
   useTeam: mocks.useTeam,
 }));
 
@@ -38,7 +38,7 @@ vi.mock("../../src/components/RaceDisplay", () => ({
   default: () => null,
 }));
 
-vi.mock("../../src/components/UmaBuild/results/Results", () => ({
+vi.mock("../../src/features/results/Results", () => ({
   default: () => null,
 }));
 

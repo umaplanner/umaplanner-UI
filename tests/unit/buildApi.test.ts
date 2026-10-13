@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { createDefaultBuild } from "../../src/features/planner/plannerTypes";
+import { createDefaultBuild } from "../../src/features/planner/domain/types";
 import {
   deleteBuild,
   fetchBuilds,
   postBuilds,
-} from "../../src/features/planner/buildApi";
+} from "../../src/features/planner/data/buildApi";
 import type { StoredUmaBuild } from "../../src/types/UmaBuild";
 
 vi.mock("../../src/lib/config", () => ({

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { fetchTeams, postTeams } from "../../src/features/planner/teamApi";
-import { postAnonymousTeam } from "../../src/features/planner/anonymousTeamApi";
-import { createEmptyTeam } from "../../src/features/planner/plannerTypes";
+import { fetchTeams, postTeams } from "../../src/features/planner/data/teamApi";
+import { postAnonymousTeam } from "../../src/features/planner/data/anonymousTeamApi";
+import { createEmptyTeam } from "../../src/features/planner/domain/types";
 import type { StoredUmaBuild } from "../../src/types/UmaBuild";
 
 vi.mock("../../src/lib/config", () => ({

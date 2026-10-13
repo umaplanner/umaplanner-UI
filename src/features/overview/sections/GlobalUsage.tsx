@@ -1,4 +1,4 @@
-import SupportCardImage from "../../../components/UmaBuild/support-cards/Image";
+import SupportCardImage from "../../planner/components/SupportCardImage";
 import type { SkillEntry } from "../../../types/SkillEntry";
 import type { SupportCardEntry } from "../../../types/UmaBuild";
 import ExpandableList from "../components/ExpandableList";

@@ -3,15 +3,15 @@ import type { ImportedUmaBuild, StoredUmaBuild } from "../../types/UmaBuild";
 import { getImportedSkillIds } from "../../types/UmaBuild";
 import type { UmaEntry } from "../../types/UmaEntry";
 import type { SkillEntry } from "../../types/SkillEntry";
-import BuildCard from "../../components/UmaBuild/list/BuildCard";
-import EditableBuildName from "../../components/UmaBuild/list/EditableBuildName";
+import BuildCard from "../planner/components/BuildCard";
+import EditableBuildName from "../planner/components/EditableBuildName";
 import {
   getAptitudeRank,
   getUniqueBuildNameForEvent,
   hasRunawaySkill,
   runawayStrategy,
   runningStyleNames,
-} from "../../components/UmaBuild/utils";
+} from "../planner/domain/buildUtils";
 
 interface ImportedBuildCardProps {
   build: ImportedUmaBuild;

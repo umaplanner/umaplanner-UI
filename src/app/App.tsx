@@ -1,5 +1,6 @@
-import { Navigate, Routes, Route } from "react-router";
+import { Routes, Route } from "react-router";
 import Layout from "../components/Layout";
+import HomePage from "../pages/HomePage";
 import OverviewPage from "../pages/OverviewPage";
 import PlannerPage from "../pages/PlannerPage";
 import ResultsPage from "../pages/ResultsPage";
@@ -15,10 +16,7 @@ export default function App() {
       <EventProvider>
         <Layout>
           <Routes>
-            <Route
-              path={routes.plannerLegacy}
-              element={<Navigate to={routes.planner} replace />}
-            />
+            <Route path={routes.home} element={<HomePage />} />
             <Route path={routes.overview} element={<OverviewPage />} />
             <Route path={routes.results} element={<ResultsPage />} />
             <Route path={routes.planner} element={<PlannerPage />} />

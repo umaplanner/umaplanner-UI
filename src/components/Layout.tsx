@@ -28,6 +28,7 @@ export default function Layout({children}: LayoutProps) {
     <>
       <header className="site-header">
         <nav aria-label="Main navigation">
+          <NavLink to={routes.home}>Home</NavLink>
           <NavLink to={routes.planner}>Planner</NavLink>
           <NavLink to={routes.overview}>Overview</NavLink>
           <NavLink to={routes.results}>Results</NavLink>
